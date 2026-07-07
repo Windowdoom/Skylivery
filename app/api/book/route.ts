@@ -99,6 +99,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Fire-and-forget ntfy push so dispatch gets an instant phone ping.
+    // Configure via NTFY_URL (e.g. https://ntfy.sh/skylivery-bookings-xxxx).
+    const ntfyUrl = process.env.NTFY_URL;
+    if (ntfyUrl) {
+      const body = [
+        `${tripId}`,
+        `${name} · ${phone}`,
+        `${pickup} → ${dropoff}`,
+        `${tripDate} ${tripTime} · $${rate ?? "?"}`,
+      ].join("\n");
+      fetch(ntfyUrl, {
+        method: "POST",
+        headers: {
+          Title: "New Sky Livery booking",
+          Priority: "high",
+          Tags: "oncoming_automobile,sparkles",
+        },
+        body,
+      }).catch(() => {});
+    }
+
     return NextResponse.json({ ok: true, tripId });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Something went wrong";
