@@ -53,7 +53,7 @@ export default function Footer() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-14 pt-6 border-t border-gold/15 flex flex-col sm:flex-row justify-between items-center gap-3">
         <p className="text-cream/50 text-xs">
-          © {year} Sky Livery LLC · CPNC licensed, City of New Orleans, Sec. 162-841 · $1M insured
+          © {year} Sky Livery LLC · CPNC licensed, City of New Orleans, Sec. 162-841 · Fully insured
         </p>
         <p className="text-gold/70 text-xs italic font-display">Arrive like you own the city.</p>
       </div>

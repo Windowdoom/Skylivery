@@ -2,7 +2,7 @@ import { FleurIcon } from "./Fleur";
 
 const items = [
   "CPNC Licensed",
-  "$1M Insured",
+  "Fully Insured",
   "No Surge Pricing",
   "Gratuity Included",
   "Sec. 162-841 Compliant",

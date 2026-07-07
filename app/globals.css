@@ -74,3 +74,66 @@ html, body {
 .brass-shimmer {
   animation: brassShimmer 4s ease-in-out infinite;
 }
+
+/* Slow parade drift for background glows */
+@keyframes driftLeft {
+  0% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-40px, 15px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes driftRight {
+  0% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(40px, -15px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+.drift-left { animation: driftLeft 22s ease-in-out infinite; }
+.drift-right { animation: driftRight 26s ease-in-out infinite; }
+
+/* Gold shimmer sweep for the display headline */
+@keyframes goldSweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.gold-sweep {
+  background: linear-gradient(
+    100deg,
+    rgba(201, 169, 97, 0.55) 0%,
+    rgba(242, 233, 210, 0.95) 45%,
+    rgba(201, 169, 97, 0.55) 55%,
+    rgba(201, 169, 97, 0.55) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: goldSweep 6s linear infinite;
+}
+
+/* Marquee scroll for the neighborhood ticker */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee {
+  animation: marquee 60s linear infinite;
+}
+
+/* Very subtle grain overlay (data-URI SVG noise) */
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.8  0 0 0 0 0.5  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Slow float for fleur-de-lis particles */
+@keyframes floatUp {
+  0% { transform: translateY(20px) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.4; }
+  90% { opacity: 0.4; }
+  100% { transform: translateY(-140vh) rotate(20deg); opacity: 0; }
+}
+.float-up { animation: floatUp linear infinite; }

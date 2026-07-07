@@ -99,7 +99,7 @@ export default function BookPage() {
 
                 <FadeIn delay={0.45}>
                   <div className="text-center text-xs text-cream/60 space-y-1">
-                    <p>CPNC Licensed · $1M Insured · Sec. 162-841 Compliant</p>
+                    <p>CPNC Licensed · Fully Insured · Sec. 162-841 Compliant</p>
                     <p className="text-gold/80 italic font-display">
                       Arrive like you own the city.
                     </p>
