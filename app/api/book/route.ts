@@ -56,7 +56,10 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient(url, anonKey);
 
-    const { data, error } = await supabase
+    // Insert without .select() — anon doesn't have SELECT grant on bookings
+    // (and shouldn't; we don't want the public reading anyone's bookings).
+    // Chaining .select() would trigger a RETURNING clause that requires SELECT.
+    const { error } = await supabase
       .from("bookings")
       .insert({
         name,
@@ -71,15 +74,13 @@ export async function POST(req: NextRequest) {
         quoted_rate: rate ?? null,
         rate_type: rateType ?? null,
         status: "pending",
-      })
-      .select()
-      .single();
+      });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, id: data?.id });
+    return NextResponse.json({ ok: true });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Something went wrong";
     return NextResponse.json({ error: msg }, { status: 500 });
