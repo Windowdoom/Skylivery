@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { FleurIcon } from "./Fleur";
+import AddressAutocomplete from "./AddressAutocomplete";
 
 type Quote = { rate: number; note: string; rateType?: string };
 type Step = "form" | "quote" | "details" | "confirmed";
@@ -138,24 +139,28 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
           </div>
 
           <div className="space-y-3 mb-4">
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold text-xs">●</span>
-              <input
-                value={pickup}
-                onChange={(e) => setPickup(e.target.value)}
-                placeholder="Pickup address"
-                className={input + " pl-7"}
-              />
-            </div>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold text-xs">◉</span>
-              <input
-                value={dropoff}
-                onChange={(e) => setDropoff(e.target.value)}
-                placeholder="Dropoff address"
-                className={input + " pl-7"}
-              />
-            </div>
+            <AddressAutocomplete
+              value={pickup}
+              onChange={setPickup}
+              placeholder="Pickup address"
+              className={input + " pl-7"}
+              icon={
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold text-xs z-10">
+                  ●
+                </span>
+              }
+            />
+            <AddressAutocomplete
+              value={dropoff}
+              onChange={setDropoff}
+              placeholder="Dropoff address"
+              className={input + " pl-7"}
+              icon={
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold text-xs z-10">
+                  ◉
+                </span>
+              }
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-2 mb-4">

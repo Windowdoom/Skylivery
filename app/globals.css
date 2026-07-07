@@ -33,6 +33,39 @@ html, body {
   background: linear-gradient(90deg, transparent, rgba(201, 169, 97, 0.5), transparent);
 }
 
+/* Google Places autocomplete dropdown — dark theme to match the form */
+.pac-container {
+  background-color: #0A1628 !important;
+  border: 1px solid rgba(201, 169, 97, 0.4) !important;
+  border-radius: 10px !important;
+  margin-top: 6px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(201, 169, 97, 0.15) !important;
+  font-family: var(--font-inter), system-ui, sans-serif !important;
+  overflow: hidden;
+  z-index: 9999 !important;
+}
+.pac-item {
+  padding: 10px 14px !important;
+  border-top: 1px solid rgba(201, 169, 97, 0.10) !important;
+  color: rgba(242, 233, 210, 0.85) !important;
+  font-size: 13px !important;
+  cursor: pointer;
+}
+.pac-item:first-child { border-top: none !important; }
+.pac-item:hover, .pac-item-selected {
+  background-color: rgba(201, 169, 97, 0.12) !important;
+}
+.pac-item-query {
+  color: #F2E9D2 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+.pac-matched { color: #C9A961 !important; }
+.pac-icon {
+  filter: invert(78%) sepia(30%) saturate(400%) hue-rotate(5deg) brightness(95%) contrast(85%);
+}
+.hdpi.pac-logo:after { display: none !important; }
+
 /* Slow gold shimmer for accents */
 @keyframes brassShimmer {
   0%, 100% { opacity: 0.85; }
