@@ -50,19 +50,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { rate, isAirport } = calculateRate(
+    const { rate, isAirport, surcharge } = calculateRate(
       pickupCoords.lat,
       pickupCoords.lng,
       dropoffCoords.lat,
       dropoffCoords.lng
     );
 
+    let note: string;
+    if (isAirport && surcharge > 0) {
+      note = `$${rate} all-inclusive MSY transfer · gratuity included · extended-area destination`;
+    } else if (isAirport) {
+      note = `$${rate} flat-rate MSY transfer · gratuity included`;
+    } else {
+      note = `$${rate} flat rate · gratuity included · no surge`;
+    }
+
     return NextResponse.json({
       rate,
       rateType: isAirport ? "airport" : "flat",
-      note: isAirport
-        ? `$${rate} flat-rate MSY transfer · gratuity included`
-        : `$${rate} flat rate · gratuity included · no surge`,
+      note,
     });
   } catch {
     return NextResponse.json({ error: "Something went wrong. Please call to book." }, { status: 500 });
