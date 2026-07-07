@@ -30,6 +30,17 @@ export type Driver = {
   phone: string;
   gtb_permit_id: string;
   status: string;
+  primary_vehicle: string | null;
+  payout_percent: number | null;
+};
+
+export type Vehicle = {
+  id: string;
+  cpnc_number: string;
+  make: string | null;
+  model: string | null;
+  color: string | null;
+  active: boolean;
 };
 
 export type MonthlyRow = {
@@ -74,11 +85,13 @@ function driverName(drivers: Driver[], id: string | null): string {
 export default function AdminDashboard({
   bookings,
   drivers,
+  vehicles,
   monthly,
   volume,
 }: {
   bookings: Booking[];
   drivers: Driver[];
+  vehicles: Vehicle[];
   monthly: MonthlyRow[];
   volume: DriverVolumeRow[];
 }) {
@@ -155,7 +168,7 @@ export default function AdminDashboard({
             <Empty>No pending bookings.</Empty>
           ) : (
             pending.map((b) => (
-              <PendingCard key={b.id} b={b} drivers={drivers} />
+              <PendingCard key={b.id} b={b} drivers={drivers} vehicles={vehicles} />
             ))
           )}
         </Column>
@@ -165,7 +178,7 @@ export default function AdminDashboard({
             <Empty>Nothing on the road.</Empty>
           ) : (
             assigned.map((b) => (
-              <AssignedCard key={b.id} b={b} drivers={drivers} />
+              <AssignedCard key={b.id} b={b} drivers={drivers} vehicles={vehicles} />
             ))
           )}
         </Column>
@@ -323,14 +336,29 @@ function BookingCore({ b }: { b: Booking }) {
   );
 }
 
-function PendingCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
+function PendingCard({
+  b,
+  drivers,
+  vehicles,
+}: {
+  b: Booking;
+  drivers: Driver[];
+  vehicles: Vehicle[];
+}) {
   const [driverId, setDriverId] = useState("");
+  const [vehicleId, setVehicleId] = useState("");
   const [pending, start] = useTransition();
+
+  function onPickDriver(id: string) {
+    setDriverId(id);
+    const drv = drivers.find((d) => d.id === id);
+    if (drv?.primary_vehicle) setVehicleId(drv.primary_vehicle);
+  }
 
   function submit() {
     if (!driverId) return;
     start(async () => {
-      await assignDriver(b.id, driverId);
+      await assignDriver(b.id, driverId, vehicleId || null);
     });
   }
   function decline() {
@@ -343,27 +371,39 @@ function PendingCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
   return (
     <div className="bg-navy/70 border border-gold/40 rounded-xl p-4">
       <BookingCore b={b} />
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <select
           value={driverId}
-          onChange={(e) => setDriverId(e.target.value)}
-          className="flex-1 bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
+          onChange={(e) => onPickDriver(e.target.value)}
+          className="bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
         >
-          <option value="">Assign driver…</option>
+          <option value="">Driver…</option>
           {drivers.map((d) => (
             <option key={d.id} value={d.id} className="bg-navy">
               {d.name}
             </option>
           ))}
         </select>
-        <button
-          onClick={submit}
-          disabled={!driverId || pending}
-          className="bg-gold text-navy px-3 rounded-md text-sm font-bold hover:bg-cream disabled:opacity-50"
+        <select
+          value={vehicleId}
+          onChange={(e) => setVehicleId(e.target.value)}
+          className="bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
         >
-          {pending ? "…" : "Send"}
-        </button>
+          <option value="">Vehicle…</option>
+          {vehicles.map((v) => (
+            <option key={v.id} value={v.id} className="bg-navy">
+              {v.cpnc_number}
+            </option>
+          ))}
+        </select>
       </div>
+      <button
+        onClick={submit}
+        disabled={!driverId || pending}
+        className="mt-2 w-full bg-gold text-navy px-3 py-2 rounded-md text-sm font-bold hover:bg-cream disabled:opacity-50"
+      >
+        {pending ? "Assigning…" : "Send"}
+      </button>
       <button
         onClick={decline}
         className="mt-2 w-full text-cream/50 hover:text-red-400 text-xs"
@@ -374,10 +414,19 @@ function PendingCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
   );
 }
 
-function AssignedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
-  const [paymentMethod, setPaymentMethod] = useState("card");
+function AssignedCard({
+  b,
+  drivers,
+  vehicles,
+}: {
+  b: Booking;
+  drivers: Driver[];
+  vehicles: Vehicle[];
+}) {
+  const [paymentMethod, setPaymentMethod] = useState("square");
   const [pending, start] = useTransition();
   const drv = drivers.find((d) => d.id === b.assigned_driver);
+  const veh = vehicles.find((v) => v.id === (b as unknown as { vehicle_id?: string }).vehicle_id);
 
   function complete() {
     start(async () => {
@@ -391,6 +440,9 @@ function AssignedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
       <div className="mt-3 text-xs text-cream/70">
         Driver: <span className="text-cream">{drv?.name ?? "—"}</span>
         {drv?.phone && <span className="text-cream/50"> · {drv.phone}</span>}
+        {veh?.cpnc_number && (
+          <span className="text-gold"> · {veh.cpnc_number}</span>
+        )}
       </div>
       <div className="mt-3 flex gap-2">
         <select
@@ -398,7 +450,7 @@ function AssignedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
           onChange={(e) => setPaymentMethod(e.target.value)}
           className="flex-1 bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
         >
-          <option value="card" className="bg-navy">Card</option>
+          <option value="square" className="bg-navy">Square (card)</option>
           <option value="cash" className="bg-navy">Cash</option>
           <option value="invoice" className="bg-navy">Invoice</option>
           <option value="third_party" className="bg-navy">Third party</option>

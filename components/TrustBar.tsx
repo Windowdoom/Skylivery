@@ -1,11 +1,11 @@
 import { FleurIcon } from "./Fleur";
 
 const items = [
-  "CPNC Licensed",
-  "Fully Insured",
+  "Licensed",
+  "Insured",
   "No Surge Pricing",
   "Gratuity Included",
-  "Sec. 162-841 Compliant",
+  "45+ Years Chauffeur Experience",
 ];
 
 export default function TrustBar() {

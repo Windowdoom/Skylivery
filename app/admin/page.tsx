@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import AdminDashboard, {
   Booking,
   Driver,
+  Vehicle,
   MonthlyRow,
   DriverVolumeRow,
 } from "@/components/admin/AdminDashboard";
@@ -27,16 +28,19 @@ export default async function AdminPage() {
     );
   }
 
-  const [bookingsRes, driversRes, monthlyRes, volumeRes] = await Promise.all([
-    sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(200),
-    sb.from("drivers").select("*").eq("active", true).order("name"),
-    sb.from("monthly_revenue").select("*").limit(12),
-    sb.from("driver_volume").select("*"),
-  ]);
+  const [bookingsRes, driversRes, vehiclesRes, monthlyRes, volumeRes] =
+    await Promise.all([
+      sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(200),
+      sb.from("drivers").select("*").eq("active", true).order("name"),
+      sb.from("vehicles").select("*").eq("active", true).order("cpnc_number"),
+      sb.from("monthly_revenue").select("*").limit(12),
+      sb.from("driver_volume").select("*"),
+    ]);
 
   const errors = [
     bookingsRes.error && `bookings: ${bookingsRes.error.message}`,
     driversRes.error && `drivers: ${driversRes.error.message}`,
+    vehiclesRes.error && `vehicles: ${vehiclesRes.error.message}`,
     monthlyRes.error && `monthly_revenue: ${monthlyRes.error.message}`,
     volumeRes.error && `driver_volume: ${volumeRes.error.message}`,
   ].filter(Boolean) as string[];
@@ -51,6 +55,7 @@ export default async function AdminPage() {
       <AdminDashboard
         bookings={(bookingsRes.data ?? []) as Booking[]}
         drivers={(driversRes.data ?? []) as Driver[]}
+        vehicles={(vehiclesRes.data ?? []) as Vehicle[]}
         monthly={(monthlyRes.data ?? []) as MonthlyRow[]}
         volume={(volumeRes.data ?? []) as DriverVolumeRow[]}
       />

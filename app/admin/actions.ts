@@ -7,13 +7,19 @@ function guard() {
   if (!isAuthed()) throw new Error("unauthorized");
 }
 
-export async function assignDriver(bookingId: string, driverId: string) {
+export async function assignDriver(
+  bookingId: string,
+  driverId: string,
+  vehicleId: string | null
+) {
   guard();
   const sb = supabaseAdmin();
-  const { error } = await sb
-    .from("bookings")
-    .update({ assigned_driver: driverId, status: "assigned" })
-    .eq("id", bookingId);
+  const update: Record<string, unknown> = {
+    assigned_driver: driverId,
+    status: "assigned",
+  };
+  if (vehicleId) update.vehicle_id = vehicleId;
+  const { error } = await sb.from("bookings").update(update).eq("id", bookingId);
   if (error) throw new Error(error.message);
   revalidatePath("/admin");
 }
