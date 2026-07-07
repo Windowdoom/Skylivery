@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-4 gap-10">
         <div className="md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
-            <img src="/logo.png" alt="Sky Livery LLC" className="h-11 w-11" />
+            <img src="/logo-emblem.png" alt="Sky Livery LLC" className="h-11 w-11 object-contain" />
             <div>
               <div className="text-cream font-display text-lg tracking-[0.14em]">Sky Livery</div>
               <div className="text-gold text-[9px] tracking-[0.35em] mt-0.5 flex items-center gap-1">
@@ -52,8 +52,8 @@ export default function Footer() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-14 pt-6 border-t border-gold/15 flex flex-col sm:flex-row justify-between items-center gap-3">
-        <p className="text-cream/50 text-xs">
-          © {year} Sky Livery LLC · Licensed and insured · New Orleans
+        <p className="text-silver/70 text-xs tracking-wide">
+          © {year} <span className="text-silver font-semibold tracking-[0.15em]">SKY LIVERY LLC</span> · Licensed and insured · New Orleans
         </p>
         <p className="text-gold/70 text-xs italic font-display">Arrive like you own the city.</p>
       </div>

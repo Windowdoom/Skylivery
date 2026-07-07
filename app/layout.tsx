@@ -19,15 +19,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Sky Livery LLC",
     url: "https://skylivery.llc",
-    images: ["/logo.png"],
+    images: ["/logo-full.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Sky Livery LLC | Luxury SUV Service New Orleans",
     description: "Flat-rate luxury SUV service. MSY from $105. No surge. Gratuity included.",
-    images: ["/logo.png"],
+    images: ["/logo-full.png"],
   },
-  icons: { icon: "/logo.png", apple: "/logo.png" },
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 const businessSchema = {
@@ -35,8 +43,8 @@ const businessSchema = {
   "@type": "LimousineService",
   name: "Sky Livery LLC",
   url: "https://skylivery.llc",
-  logo: "https://skylivery.llc/logo.png",
-  image: "https://skylivery.llc/logo.png",
+  logo: "https://skylivery.llc/logo-full.png",
+  image: "https://skylivery.llc/logo-full.png",
   telephone: "(504) 479-0454",
   email: "skyliveryllc@gmail.com",
   description:

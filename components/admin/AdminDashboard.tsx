@@ -119,7 +119,7 @@ export default function AdminDashboard({
       <header className="border-b border-gold/25 bg-dark/80 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="" className="h-8 w-8" />
+            <img src="/logo-emblem.png" alt="" className="h-8 w-8 object-contain" />
             <div>
               <div className="text-cream font-display text-lg tracking-[0.14em]">
                 Sky Livery Dispatch

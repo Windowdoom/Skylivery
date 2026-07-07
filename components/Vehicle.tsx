@@ -22,7 +22,7 @@ export default function Vehicle() {
               <path d="M200 40 Q 180 60 200 80 Q 220 60 200 40 Z" fill="currentColor" />
               <path d="M200 220 Q 180 240 200 260 Q 220 240 200 220 Z" fill="currentColor" />
             </svg>
-            <img src="/logo.png" alt="Sky Livery LLC luxury SUV" className="w-2/3 max-w-sm relative z-10 drop-shadow-2xl" />
+            <img src="/logo-full.png" alt="Sky Livery LLC" className="w-2/3 max-w-sm relative z-10 drop-shadow-2xl" />
             <div className="absolute bottom-4 left-4 flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase text-gold">
               <FleurIcon className="w-2.5 h-3" />
               Luxury SUV · Onyx Black

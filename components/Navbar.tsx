@@ -24,7 +24,7 @@ export default function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <a href="/" className="flex items-center gap-3">
-          <img src="/logo.png" alt="Sky Livery LLC" className="h-10 w-10 object-contain" />
+          <img src="/logo-emblem.png" alt="Sky Livery LLC" className="h-10 w-10 object-contain" />
           <div className="leading-none">
             <div className="text-cream font-display text-lg sm:text-xl tracking-[0.14em]">
               Sky Livery
