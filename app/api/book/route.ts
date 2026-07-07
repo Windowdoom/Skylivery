@@ -56,12 +56,22 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient(url, anonKey);
 
+    // Human-readable booking reference: SL-YYYY-XXXXX (uppercase alphanumeric)
+    const year = new Date().getFullYear();
+    const suffix = Array.from({ length: 5 }, () =>
+      "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".charAt(
+        Math.floor(Math.random() * 32)
+      )
+    ).join("");
+    const tripId = `SL-${year}-${suffix}`;
+
     // Insert without .select() — anon doesn't have SELECT grant on bookings
     // (and shouldn't; we don't want the public reading anyone's bookings).
     // Chaining .select() would trigger a RETURNING clause that requires SELECT.
     const { error } = await supabase
       .from("bookings")
       .insert({
+        trip_id: tripId,
         name,
         phone,
         email: email || null,
@@ -80,7 +90,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, tripId });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Something went wrong";
     return NextResponse.json({ error: msg }, { status: 500 });

@@ -21,6 +21,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tripId, setTripId] = useState<string | null>(null);
 
   // Prefill from ?pickup=&dropoff=&date=&time= when routed from the Hero quick-quote bar
   useEffect(() => {
@@ -88,6 +89,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
       if (!res.ok) {
         setError(data.error || "Could not save your booking. Please call to book.");
       } else {
+        setTripId(data.tripId ?? null);
         setStep("confirmed");
       }
     } catch {
@@ -268,6 +270,11 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
             <FleurIcon className="w-6 h-8 text-gold" />
           </div>
           <h3 className="text-cream font-display text-2xl font-semibold mb-2">Merci. Booking received.</h3>
+          {tripId && (
+            <p className="text-gold text-xs tracking-[0.25em] uppercase mb-3">
+              Reference {tripId}
+            </p>
+          )}
           <p className="text-cream/70 text-sm mb-4">
             We&apos;ll text {phone} shortly to confirm your ride.
             <br />
