@@ -281,8 +281,8 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
       <p className="text-center text-cream/50 text-xs mt-5">
         Or call{" "}
-        <a href="tel:+15040000000" className="text-gold font-semibold hover:underline">
-          (504) 000-0000
+        <a href="tel:+15044790454" className="text-gold font-semibold hover:underline">
+          (504) 479-0454
         </a>{" "}
         · 24/7 dispatch
       </p>

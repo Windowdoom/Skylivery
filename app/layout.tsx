@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://skylivery.llc"),
   title: "Sky Livery LLC | Luxury SUV Service New Orleans | Airport Transfers from $105",
   description:
-    "Flat-rate luxury SUV service in New Orleans. MSY airport transfers, corporate travel, weddings, events. No surge pricing. CPNC licensed. Gratuity included. Book online or call (504) 000-0000.",
+    "Flat-rate luxury SUV service in New Orleans. MSY airport transfers, corporate travel, weddings, events. No surge pricing. CPNC licensed. Gratuity included. Book online or call (504) 479-0454.",
   keywords:
     "New Orleans car service, luxury SUV New Orleans, airport transfer MSY, limo service New Orleans, CPNC licensed, no surge pricing, French Quarter car service, Kenner limo, Metairie car service",
   openGraph: {
@@ -37,7 +37,7 @@ const businessSchema = {
   url: "https://skylivery.llc",
   logo: "https://skylivery.llc/logo.png",
   image: "https://skylivery.llc/logo.png",
-  telephone: "(504) 000-0000",
+  telephone: "(504) 479-0454",
   email: "info@skylivery.llc",
   description:
     "Flat-rate luxury SUV service in New Orleans. Airport transfers, corporate travel, weddings, events. No surge pricing. CPNC licensed under Sec. 162-841.",

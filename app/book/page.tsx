@@ -86,10 +86,10 @@ export default function BookPage() {
                   <div className="bg-gold/[0.05] border border-gold/30 rounded-2xl p-6 text-center">
                     <p className="text-cream/70 text-sm">Prefer to speak with dispatch?</p>
                     <a
-                      href="tel:+15040000000"
+                      href="tel:+15044790454"
                       className="block mt-2 text-gold font-display text-3xl font-semibold hover:text-cream transition-colors"
                     >
-                      (504) 000-0000
+                      (504) 479-0454
                     </a>
                     <p className="text-cream/50 text-xs mt-2">
                       24 hours · 7 days · every day of the year

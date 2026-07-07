@@ -27,10 +27,10 @@ export default function CTA() {
               Book a ride
             </a>
             <a
-              href="tel:+15040000000"
+              href="tel:+15044790454"
               className="border border-gold/50 text-cream px-8 py-4 rounded-lg font-semibold hover:bg-gold/5 hover:border-gold transition-colors"
             >
-              (504) 000-0000
+              (504) 479-0454
             </a>
           </div>
         </FadeIn>

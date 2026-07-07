@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { FleurIcon } from "./Fleur";
 
-const PHONE = "(504) 000-0000";
-const PHONE_HREF = "tel:+15040000000";
+const PHONE = "(504) 479-0454";
+const PHONE_HREF = "tel:+15044790454";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);

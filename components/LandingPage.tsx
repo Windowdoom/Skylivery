@@ -49,10 +49,10 @@ export default function LandingPage({ eyebrow, h1, intro, highlights, faqs }: Pr
                     Book a ride
                   </a>
                   <a
-                    href="tel:+15040000000"
+                    href="tel:+15044790454"
                     className="border border-gold/40 text-cream px-6 py-3 rounded-md font-semibold hover:bg-gold/5 hover:border-gold transition-colors inline-block text-center"
                   >
-                    (504) 000-0000
+                    (504) 479-0454
                   </a>
                 </div>
               </FadeIn>
