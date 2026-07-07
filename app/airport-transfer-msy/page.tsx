@@ -47,7 +47,7 @@ export default function Page() {
         { title: "$105 flat rate", body: "Any address in the New Orleans metro. All-in, gratuity included." },
         { title: "Flight tracking", body: "Delayed? We already know. Your driver adjusts automatically." },
         { title: "Meet & greet", body: "Chauffeur at baggage claim with a Sky Livery sign." },
-        { title: "6 passengers, 6 bags", body: "Full-size luxury SUV. Plenty of room for a family or crew." },
+        { title: "Up to 7 passengers, 6 bags", body: "Full-size luxury SUV. Plenty of room for a family or crew." },
       ]}
       faqs={[
         { q: "What is the MSY flat rate?", a: "$105 for a luxury SUV to or from any New Orleans metro address. Gratuity included." },

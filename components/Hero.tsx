@@ -16,8 +16,8 @@ const stats = [
   ["$105", "MSY flat rate"],
   ["24/7", "Dispatch"],
   ["0%", "Surge, ever"],
-  ["6", "Passengers"],
-  ["CPNC", "Licensed"],
+  ["Up to 7", "Passengers"],
+  ["Insured", "& Licensed"],
 ];
 
 const neighborhoods = [

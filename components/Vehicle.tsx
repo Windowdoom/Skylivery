@@ -3,7 +3,7 @@ import FadeIn from "./FadeIn";
 import { FleurIcon } from "./Fleur";
 
 const specs = [
-  ["6", "Passengers"],
+  ["Up to 7", "Passengers"],
   ["6", "Bags"],
   ["Leather", "Interior"],
   ["Climate", "Dual-zone"],
@@ -47,9 +47,9 @@ export default function Vehicle() {
             Luxury SUV. Ready when you are.
           </h2>
           <p className="text-cream/70 text-base leading-relaxed mb-8 max-w-lg">
-            Our fleet is full-size luxury SUVs. Room for six adults and six bags, detailed daily,
-            staged discreetly. Every ride goes out with a professional chauffeur who knows every block
-            from Kenner to the Bywater.
+            Our fleet is full-size luxury SUVs. Room for up to seven passengers and six bags,
+            detailed daily, staged discreetly. Every ride goes out with a professional chauffeur
+            who knows every block from Kenner to the Bywater.
           </p>
           <div className="grid grid-cols-3 gap-4">
             {specs.map(([v, l]) => (
