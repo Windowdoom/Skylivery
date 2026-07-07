@@ -72,6 +72,12 @@ export async function POST(req: NextRequest) {
       .from("bookings")
       .insert({
         trip_id: tripId,
+        // Match both the original schema (customer_name / customer_phone /
+        // customer_email) and the columns we added (name / phone / email)
+        // so the insert satisfies whichever NOT NULL constraints exist.
+        customer_name: name,
+        customer_phone: phone,
+        customer_email: email || null,
         name,
         phone,
         email: email || null,
