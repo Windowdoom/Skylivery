@@ -94,7 +94,11 @@ export default function AdminDashboard({
     return [p, a, c];
   }, [bookings]);
 
-  const thisMonth = monthly[0];
+  // Filter to the actual current calendar month, not just the newest row.
+  const currentMonthKey = new Date().toISOString().slice(0, 7); // "2026-07"
+  const thisMonth = monthly.find((m) =>
+    typeof m.month === "string" && m.month.startsWith(currentMonthKey)
+  );
 
   return (
     <div className="min-h-screen bg-navy text-cream">
@@ -110,14 +114,26 @@ export default function AdminDashboard({
               <div className="text-gold text-[9px] tracking-[0.35em]">CONTROL ROOM</div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <a
               href="/api/admin/export?scope=month"
               className="text-xs text-cream/80 border border-gold/30 rounded-md px-3 py-1.5 hover:border-gold hover:text-gold"
             >
-              Export this month
+              Month CSV
             </a>
-            <form action="/api/admin/logout" method="post">
+            <a
+              href="/api/admin/export?scope=quarter"
+              className="text-xs text-cream/80 border border-gold/30 rounded-md px-3 py-1.5 hover:border-gold hover:text-gold"
+            >
+              Quarter CSV
+            </a>
+            <a
+              href="/api/admin/export?scope=year"
+              className="text-xs text-cream/80 border border-gold/30 rounded-md px-3 py-1.5 hover:border-gold hover:text-gold"
+            >
+              Year CSV
+            </a>
+            <form action="/api/admin/logout" method="post" className="ml-3">
               <button className="text-xs text-cream/70 hover:text-gold">Sign out</button>
             </form>
           </div>
