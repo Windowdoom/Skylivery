@@ -81,25 +81,53 @@ export async function cancelBooking(bookingId: string) {
 
 // Permanently remove a single booking. Use for test bookings that never
 // happened; real cancellations should stay in the record via
-// cancelBooking so trip_log analytics remain honest.
-export async function deleteBooking(bookingId: string) {
+// cancelBooking so trip_log analytics remain honest. Cascades to
+// trip_log rows so a completed test booking can still be removed.
+export async function deleteBooking(
+  bookingId: string
+): Promise<{ ok: boolean; error?: string }> {
   guard();
   const sb = supabaseAdmin();
+
+  // Best-effort cascade: remove any trip_log rows tied to the booking,
+  // by either booking_id column or the trip_id string. Ignore per-table
+  // errors so a missing column on one shape doesn't fail the whole call.
+  const { data: booking } = await sb
+    .from("bookings")
+    .select("trip_id")
+    .eq("id", bookingId)
+    .single();
+
+  await sb.from("trip_log").delete().eq("booking_id", bookingId).then(
+    () => undefined,
+    () => undefined
+  );
+  if (booking?.trip_id) {
+    await sb.from("trip_log").delete().eq("trip_id", booking.trip_id).then(
+      () => undefined,
+      () => undefined
+    );
+  }
+
   const { error } = await sb.from("bookings").delete().eq("id", bookingId);
-  if (error) throw new Error(error.message);
+  if (error) return { ok: false, error: error.message };
   revalidatePath("/admin");
+  return { ok: true };
 }
 
 // Bulk-clear obvious test bookings. Matches anything whose customer name
 // looks like a test entry ("test", "demo", "asdf", etc.) OR whose phone
 // is one of the well-known throwaway numbers. Real customer data is
 // never touched.
-export async function clearTestBookings(): Promise<{ deleted: number }> {
+export async function clearTestBookings(): Promise<{
+  deleted: number;
+  error?: string;
+}> {
   guard();
   const sb = supabaseAdmin();
   const { data: matches, error: findErr } = await sb
     .from("bookings")
-    .select("id, customer_name, customer_phone")
+    .select("id, trip_id, customer_name, customer_phone")
     .or(
       [
         "customer_name.ilike.%test%",
@@ -111,11 +139,27 @@ export async function clearTestBookings(): Promise<{ deleted: number }> {
         "customer_phone.eq.0000000000",
       ].join(",")
     );
-  if (findErr) throw new Error(findErr.message);
+  if (findErr) return { deleted: 0, error: findErr.message };
   const ids = (matches ?? []).map((m) => m.id);
+  const tripIds = (matches ?? [])
+    .map((m) => m.trip_id)
+    .filter(Boolean) as string[];
   if (ids.length === 0) return { deleted: 0 };
+
+  // Cascade to trip_log first, best-effort.
+  await sb.from("trip_log").delete().in("booking_id", ids).then(
+    () => undefined,
+    () => undefined
+  );
+  if (tripIds.length > 0) {
+    await sb.from("trip_log").delete().in("trip_id", tripIds).then(
+      () => undefined,
+      () => undefined
+    );
+  }
+
   const { error: delErr } = await sb.from("bookings").delete().in("id", ids);
-  if (delErr) throw new Error(delErr.message);
+  if (delErr) return { deleted: 0, error: delErr.message };
   revalidatePath("/admin");
   return { deleted: ids.length };
 }

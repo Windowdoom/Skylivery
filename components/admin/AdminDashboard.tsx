@@ -125,7 +125,11 @@ export default function AdminDashboard({
       return;
     startClear(async () => {
       const res = await clearTestBookings();
-      alert(`Removed ${res.deleted} test booking${res.deleted === 1 ? "" : "s"}.`);
+      if (res.error) {
+        alert(`Clear failed: ${res.error}`);
+      } else {
+        alert(`Removed ${res.deleted} test booking${res.deleted === 1 ? "" : "s"}.`);
+      }
     });
   }
 
@@ -468,7 +472,8 @@ function PendingCard({
           onClick={() => {
             if (!confirm(`Permanently delete ${b.trip_id}? Use only for test data.`)) return;
             start(async () => {
-              await deleteBooking(b.id);
+              const res = await deleteBooking(b.id);
+              if (!res.ok) alert(`Delete failed: ${res.error}`);
             });
           }}
           className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
@@ -543,7 +548,8 @@ function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
     )
       return;
     start(async () => {
-      await deleteBooking(b.id);
+      const res = await deleteBooking(b.id);
+      if (!res.ok) alert(`Delete failed: ${res.error}`);
     });
   }
   return (
@@ -572,7 +578,8 @@ function CancelledCard({ b }: { b: Booking }) {
   function onDelete() {
     if (!confirm(`Permanently delete ${b.trip_id}?`)) return;
     start(async () => {
-      await deleteBooking(b.id);
+      const res = await deleteBooking(b.id);
+      if (!res.ok) alert(`Delete failed: ${res.error}`);
     });
   }
   return (
