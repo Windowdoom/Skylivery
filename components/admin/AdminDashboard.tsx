@@ -31,6 +31,7 @@ export type Booking = {
   payment_method: string | null;
   payment_intent: string | null;
   paid: boolean | null;
+  assigned_at: string | null;
   completed_at: string | null;
 };
 
@@ -85,6 +86,22 @@ function fmtTime(t: string): string {
   const am = hi < 12;
   const h12 = hi === 0 ? 12 : hi > 12 ? hi - 12 : hi;
   return `${h12}:${m} ${am ? "AM" : "PM"}`;
+}
+
+// Compact New Orleans-local timestamp for display on cards.
+// Example: "Jul 7, 3:42 PM CT"
+function fmtStamp(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-US", {
+    timeZone: "America/Chicago",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }) + " CT";
 }
 
 function driverName(drivers: Driver[], id: string | null): string {
@@ -533,6 +550,9 @@ function AssignedCard({
           <span className="text-gold"> · {veh.cpnc_number}</span>
         )}
       </div>
+      <div className="mt-1 text-[10px] tracking-[0.15em] uppercase text-gold/70">
+        Assigned {fmtStamp(b.assigned_at)}
+      </div>
       <div className="mt-3 flex gap-2">
         <select
           value={paymentMethod}
@@ -583,7 +603,11 @@ function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
       }`}
     >
       <BookingCore b={b} />
-      <div className="mt-3 text-xs text-cream/60 flex items-center justify-between">
+      <div className="mt-1 text-[10px] tracking-[0.15em] uppercase text-gold/60 space-x-3">
+        <span>Assigned {fmtStamp(b.assigned_at)}</span>
+        <span>Closed {fmtStamp(b.completed_at)}</span>
+      </div>
+      <div className="mt-2 text-xs text-cream/60 flex items-center justify-between">
         <span>
           Driver: {driverName(drivers, b.assigned_driver)} · Paid via{" "}
           {b.payment_method ?? "—"}{" "}

@@ -16,9 +16,11 @@ export async function assignDriver(
 ) {
   guard();
   const sb = supabaseAdmin();
+  const assignedAtIso = new Date().toISOString();
   const update: Record<string, unknown> = {
     assigned_driver: driverId,
     status: "assigned",
+    assigned_at: assignedAtIso,
   };
   if (vehicleId) update.vehicle_id = vehicleId;
   const { error } = await sb.from("bookings").update(update).eq("id", bookingId);
