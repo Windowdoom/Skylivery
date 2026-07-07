@@ -12,16 +12,16 @@ export default function Page() {
     <LandingPage
       eyebrow="Garden District & Uptown"
       h1="St. Charles to Magazine, curbside."
-      intro="From Commander&apos;s Palace to the streetcar, from the Pontchartrain to a home on Prytania — Sky Livery gets you there in the black SUV you&apos;d expect."
+      intro="From Commander&apos;s Palace to the streetcar, from the Pontchartrain to a home on Prytania. Sky Livery gets you there in the black SUV you&apos;d expect."
       highlights={[
-        { title: "Restaurant reservations", body: "Commander&apos;s, Emeril&apos;s, Coquette, Superior, Clancy&apos;s — dropped at the door." },
+        { title: "Restaurant reservations", body: "Commander&apos;s, Emeril&apos;s, Coquette, Superior, Clancy&apos;s. Dropped at the door." },
         { title: "Wedding-friendly", body: "Getting-ready to ceremony to reception, one driver, all night." },
         { title: "Historic-home tours", body: "Book by the hour with a chauffeur who knows Prytania and 1st." },
         { title: "Flat-rate certainty", body: "Same rate to Uptown from anywhere in the metro." },
       ]}
       faqs={[
         { q: "Do you know the Garden District streets?", a: "Yes. We know the one-ways, the streetcar timing, and the driveways that fit an SUV." },
-        { q: "Can we book by the hour for a wedding?", a: "Yes — hourly charter is $85/hr with a 3-hour weekday, 4-hour weekend minimum." },
+        { q: "Can we book by the hour for a wedding?", a: "Yes. Hourly charter is $85/hr with a 3-hour weekday, 4-hour weekend minimum." },
         { q: "Do you drop at the Pontchartrain and Columns hotels?", a: "Yes, and at every historic hotel Uptown." },
         { q: "Any Mardi Gras parade-day surge?", a: "No. Same rate 365 days a year." },
       ]}

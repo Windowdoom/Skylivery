@@ -21,7 +21,7 @@ export default function Page() {
       ]}
       faqs={[
         { q: "Can we set up a corporate account?", a: "Yes. Email us and we&apos;ll open an account with monthly invoicing and priority dispatch." },
-        { q: "Do you handle multi-city roadshows?", a: "Yes — we quote the day as a block and coordinate with your assistant or EA." },
+        { q: "Do you handle multi-city roadshows?", a: "Yes. We quote the day as a block and coordinate with your assistant or EA." },
         { q: "What&apos;s the Convention Center flat rate?", a: "Depends on hotel; the online calculator returns your all-in price in seconds." },
         { q: "Do drivers dress in business attire?", a: "Yes. Suit and tie standard, chauffeur cap available on request." },
       ]}

@@ -16,12 +16,12 @@ export default function Page() {
       highlights={[
         { title: "0% surge, always", body: "Same rate on Fat Tuesday as any Tuesday." },
         { title: "Parade route savvy", body: "We know which streets close, when, and where to drop." },
-        { title: "Ball & krewe transfers", body: "Bacchus, Endymion, Orpheus — pre-book the block." },
+        { title: "Ball & krewe transfers", body: "Bacchus, Endymion, Orpheus. Pre-book the block." },
         { title: "24/7 during Carnival", body: "Dispatch stays open through the whole season." },
       ]}
       faqs={[
         { q: "Do you surge on Fat Tuesday?", a: "Never. Same rate 365 days a year, including Mardi Gras." },
-        { q: "Can you drop near the parade route?", a: "Yes — we know the closures and pick the closest legal drop." },
+        { q: "Can you drop near the parade route?", a: "Yes. We know the closures and pick the closest legal drop." },
         { q: "Should I book in advance?", a: "Yes, especially for Bacchus Sunday and Fat Tuesday. Book a week ahead if possible." },
         { q: "Do you serve Endymion in Mid-City?", a: "Yes, and every krewe route in the parish." },
       ]}

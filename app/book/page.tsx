@@ -6,7 +6,7 @@ import Fleur, { FleurIcon } from "@/components/Fleur";
 import FadeIn from "@/components/FadeIn";
 
 export const metadata: Metadata = {
-  title: "Book Your Ride | Sky Livery LLC — Luxury SUV, New Orleans",
+  title: "Book Your Ride | Sky Livery LLC | Luxury SUV, New Orleans",
   description:
     "Reserve a luxury SUV in New Orleans. Flat rate, gratuity included, no surge. MSY airport transfers, hourly charter, weddings, corporate. Book online in 60 seconds.",
 };
@@ -47,8 +47,8 @@ export default function BookPage() {
               </FadeIn>
               <FadeIn delay={0.2}>
                 <p className="text-cream/75 mt-6 text-base sm:text-lg leading-relaxed">
-                  Enter your pickup and dropoff. We&apos;ll return a flat, all-inclusive rate — gratuity
-                  and taxes included, no surge, ever. Confirm and we&apos;ll text you before pickup.
+                  Enter your pickup and dropoff. We&apos;ll return a flat, all-inclusive rate.
+                  Gratuity and taxes included, no surge, ever. Confirm and we&apos;ll text you before pickup.
                 </p>
               </FadeIn>
             </div>

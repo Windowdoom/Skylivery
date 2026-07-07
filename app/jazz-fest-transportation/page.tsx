@@ -22,7 +22,7 @@ export default function Page() {
       faqs={[
         { q: "Do you surge on show days?", a: "No. Same flat rate on Jazz Fest weekends as any other day." },
         { q: "Where do you drop at the Fair Grounds?", a: "The closest legal cross-street. Ranges depending on the day&apos;s closures." },
-        { q: "Can I lock in a return pickup?", a: "Yes — pre-book both legs so you&apos;re not waiting when the set ends." },
+        { q: "Can I lock in a return pickup?", a: "Yes. Pre-book both legs so you&apos;re not waiting when the set ends." },
         { q: "Do you serve hotels in the Quarter and CBD?", a: "Yes, plus Metairie, Kenner, and both sides of the lake." },
       ]}
     />

@@ -33,7 +33,7 @@ html, body {
   background: linear-gradient(90deg, transparent, rgba(201, 169, 97, 0.5), transparent);
 }
 
-/* Google Places autocomplete dropdown — dark theme to match the form */
+/* Google Places autocomplete dropdown, dark theme to match the form */
 .pac-container {
   background-color: #0A1628 !important;
   border: 1px solid rgba(201, 169, 97, 0.4) !important;

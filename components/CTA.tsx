@@ -17,7 +17,7 @@ export default function CTA() {
             Ready to <span className="italic text-gold">ride?</span>
           </h2>
           <p className="text-cream/70 text-lg mb-10 max-w-xl mx-auto">
-            Get a flat-rate quote in seconds. Or call — we&apos;re dispatching 24 hours a day, seven days a week.
+            Get a flat-rate quote in seconds. Or call us. We dispatch 24 hours a day, seven days a week.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a

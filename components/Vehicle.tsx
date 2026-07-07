@@ -25,18 +25,19 @@ export default function Vehicle() {
             <img src="/logo.png" alt="Sky Livery LLC luxury SUV" className="w-2/3 max-w-sm relative z-10 drop-shadow-2xl" />
             <div className="absolute bottom-4 left-4 flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase text-gold">
               <FleurIcon className="w-2.5 h-3" />
-              Chevrolet Suburban · Onyx Black
+              Luxury SUV · Onyx Black
             </div>
           </div>
         </FadeIn>
         <FadeIn delay={0.1}>
           <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-3">The Vehicle</p>
           <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold mb-4">
-            One vehicle. <span className="italic text-gold">Fully outfitted.</span>
+            Luxury SUV. <span className="italic text-gold">Ready when you are.</span>
           </h2>
           <p className="text-cream/70 text-base leading-relaxed mb-8 max-w-lg">
-            A full-size luxury SUV built for six adults and six bags. Detailed daily, staged discreetly,
-            and driven by a professional chauffeur who knows every block from Kenner to the Bywater.
+            Our fleet is full-size luxury SUVs. Room for six adults and six bags, detailed daily,
+            staged discreetly. Every ride goes out with a professional chauffeur who knows every block
+            from Kenner to the Bywater.
           </p>
           <div className="grid grid-cols-3 gap-4">
             {specs.map(([v, l]) => (

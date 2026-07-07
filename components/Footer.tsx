@@ -18,7 +18,7 @@ export default function Footer() {
             </div>
           </div>
           <p className="text-cream/65 text-sm max-w-sm leading-relaxed mb-6">
-            Luxury SUV car service across Greater New Orleans. Flat rates, gratuity included, no surge —
+            Luxury SUV car service across Greater New Orleans. Flat rates, gratuity included, no surge,
             365 days a year.
           </p>
           <a

@@ -6,7 +6,7 @@ const items = [
   { title: "No surge, ever", desc: "Same rate on Fat Tuesday as any Tuesday." },
   { title: "Flight tracking", desc: "We watch your inbound flight and adjust automatically." },
   { title: "Professional chauffeur", desc: "Vetted, licensed, dressed for business." },
-  { title: "Door-to-door", desc: "Meet & greet, luggage, curbside — every time." },
+  { title: "Door-to-door", desc: "Meet and greet, luggage, curbside, every time." },
   { title: "24/7 dispatch", desc: "Real humans answering the phone, any hour." },
 ];
 
@@ -23,8 +23,8 @@ export default function WhySection() {
             Why Sky Livery
           </p>
           <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold text-center max-w-2xl mx-auto mb-14">
-            Everything you&apos;d expect from a premium car service.
-            <span className="italic text-gold"> Nothing you wouldn&apos;t.</span>
+            Everything you expect from a premium car service.
+            <span className="italic text-gold"> None of what you don&apos;t.</span>
           </h2>
         </FadeIn>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">

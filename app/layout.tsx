@@ -101,7 +101,7 @@ const faqSchema = {
       name: "What vehicle does Sky Livery use?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Sky Livery operates a full-size luxury SUV (Chevrolet Suburban or equivalent) seating up to 6 passengers with 6 bags.",
+        text: "Sky Livery operates a fleet of full-size luxury SUVs, each seating up to 6 passengers with 6 bags.",
       },
     },
   ],

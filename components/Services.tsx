@@ -17,7 +17,7 @@ const services = [
   {
     title: "Weddings & Events",
     tag: "Full-day charter",
-    desc: "Bride, party, and family — one chauffeur, all night, black tie on request.",
+    desc: "Bride, party, and family. One chauffeur, all night, black tie on request.",
     href: "/wedding-limo-new-orleans",
   },
   {
@@ -50,7 +50,7 @@ export default function Services() {
         <FadeIn delay={0.05}>
           <p className="text-[10px] tracking-[0.3em] uppercase text-gold text-center mb-3">Services</p>
           <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold text-center max-w-2xl mx-auto mb-14">
-            One SUV. <span className="italic text-gold">Every occasion that matters.</span>
+            Luxury SUV service. <span className="italic text-gold">For every occasion.</span>
           </h2>
         </FadeIn>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

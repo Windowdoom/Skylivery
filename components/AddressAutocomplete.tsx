@@ -89,7 +89,7 @@ export default function AddressAutocomplete({
         });
       })
       .catch(() => {
-        // Silent — plain input still works
+        // Silent; plain input still works
       });
 
     return () => {

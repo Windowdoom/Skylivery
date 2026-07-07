@@ -17,12 +17,12 @@ export default function Page() {
         { title: "$105 flat rate", body: "Any address in New Orleans metro. All-in, gratuity included." },
         { title: "Flight tracking", body: "Delayed? We already know. Your driver adjusts automatically." },
         { title: "Meet & greet", body: "Chauffeur at baggage claim with a Sky Livery sign." },
-        { title: "6 passengers, 6 bags", body: "Full-size luxury SUV — plenty of room for a family or crew." },
+        { title: "6 passengers, 6 bags", body: "Full-size luxury SUV. Plenty of room for a family or crew." },
       ]}
       faqs={[
         { q: "What is the MSY flat rate?", a: "$105 for a luxury SUV to or from any New Orleans metro address. Gratuity included." },
         { q: "Do you charge extra during festivals?", a: "No. Same rate during Mardi Gras, Jazz Fest, Sugar Bowl, and every day of the year." },
-        { q: "How early should I book?", a: "The sooner the better, but same-day and 24/7 requests are welcome — we&apos;re dispatch around the clock." },
+        { q: "How early should I book?", a: "The sooner the better, but same-day and 24/7 requests are welcome. We dispatch around the clock." },
         { q: "Do you track my flight?", a: "Yes. We monitor arrivals and adjust pickup automatically for delays or early arrivals." },
       ]}
     />

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FleurIcon } from "./Fleur";
 import AddressAutocomplete from "./AddressAutocomplete";
 
@@ -21,6 +21,20 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prefill from ?pickup=&dropoff=&date=&time= when routed from the Hero quick-quote bar
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const p = new URLSearchParams(window.location.search);
+    const pk = p.get("pickup");
+    const dr = p.get("dropoff");
+    const dt = p.get("date");
+    const tm = p.get("time");
+    if (pk) setPickup(pk);
+    if (dr) setDropoff(dr);
+    if (dt) setDate(dt);
+    if (tm) setTime(tm);
+  }, []);
 
   async function getQuote() {
     if (!pickup || !dropoff) return;
@@ -253,7 +267,7 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
           <div className="w-16 h-16 rounded-full border border-gold/60 flex items-center justify-center mx-auto mb-4">
             <FleurIcon className="w-6 h-8 text-gold" />
           </div>
-          <h3 className="text-cream font-display text-2xl font-semibold mb-2">Merci — booking received.</h3>
+          <h3 className="text-cream font-display text-2xl font-semibold mb-2">Merci. Booking received.</h3>
           <p className="text-cream/70 text-sm mb-4">
             We&apos;ll text {phone} shortly to confirm your ride.
             <br />
