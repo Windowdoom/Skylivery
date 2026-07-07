@@ -22,12 +22,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Accept either the browser-safe names or the plain ones added by
+    // Supabase's Vercel integration.
+    const url =
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.SUPABASE_URL ||
+      "";
+    const anonKey =
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      "";
 
     if (!url || !anonKey) {
       return NextResponse.json(
         { error: "Booking service is not configured yet. Please call to book." },
+        { status: 500 }
+      );
+    }
+
+    // Guard against malformed URLs so we return a friendly JSON error instead
+    // of crashing on createClient throwing "Invalid supabaseUrl".
+    try {
+      new URL(url);
+    } catch {
+      return NextResponse.json(
+        { error: "Booking service is misconfigured. Please call to book." },
         { status: 500 }
       );
     }
