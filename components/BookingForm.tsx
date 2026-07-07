@@ -37,6 +37,7 @@ export default function BookingForm({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [paymentIntent, setPaymentIntent] = useState("in-vehicle");
   const [quote, setQuote] = useState<Quote | null>(null);
   const [step, setStep] = useState<Step>("form");
   const [loading, setLoading] = useState(false);
@@ -120,6 +121,7 @@ export default function BookingForm({
           dropoffLat: quote?.dropoffLat ?? null,
           dropoffLng: quote?.dropoffLng ?? null,
           distanceMiles: quote?.distanceMiles ?? null,
+          paymentIntent,
         }),
       });
       const data = await res.json();
@@ -305,6 +307,32 @@ export default function BookingForm({
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className={input} />
           <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className={input} />
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" type="email" className={input} />
+          <div>
+            <p className="text-gold text-[10px] font-semibold tracking-[0.2em] uppercase mb-2 mt-1">
+              How would you like to pay?
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { v: "online", l: "Online link", h: "We text a Square link before pickup" },
+                { v: "in-vehicle", l: "In vehicle", h: "Card or cash with the driver" },
+                { v: "invoice", l: "Invoice", h: "Emailed after the ride" },
+              ].map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => setPaymentIntent(opt.v)}
+                  className={`text-left rounded-md border p-2.5 transition ${
+                    paymentIntent === opt.v
+                      ? "border-gold bg-gold/[0.10] text-cream"
+                      : "border-gold/25 bg-navy/40 text-cream/70 hover:border-gold/50"
+                  }`}
+                >
+                  <div className="text-xs font-semibold">{opt.l}</div>
+                  <div className="text-[10px] text-cream/50 mt-0.5 leading-tight">{opt.h}</div>
+                </button>
+              ))}
+            </div>
+          </div>
           {error && <p className="text-red-400 text-xs">{error}</p>}
           <button
             onClick={confirmBooking}
@@ -331,12 +359,15 @@ export default function BookingForm({
             For trips this long, dispatch handles the quote personally so we can plan the driver, timing, and any overnight arrangement for your route.
           </p>
           <a
-            href="tel:+15044790454"
+            href="tel:+15043396861"
             className="inline-block bg-gold text-navy px-6 py-3 rounded-md text-base font-bold tracking-wide hover:bg-cream transition-colors"
           >
-            Call (504) 479-0454
+            Call (504) 339-6861
           </a>
-          <p className="text-cream/50 text-xs mt-4">
+          <p className="text-cream/60 text-xs mt-3">
+            or <a href="tel:+15044790454" className="hover:text-gold">(504) 479-0454</a>
+          </p>
+          <p className="text-cream/50 text-xs mt-3">
             24 hours, 7 days, every day of the year.
           </p>
           <button
@@ -372,10 +403,14 @@ export default function BookingForm({
 
       <p className="text-center text-cream/50 text-xs mt-5">
         Or call{" "}
+        <a href="tel:+15043396861" className="text-gold font-semibold hover:underline">
+          (504) 339-6861
+        </a>{" "}
+        or{" "}
         <a href="tel:+15044790454" className="text-gold font-semibold hover:underline">
           (504) 479-0454
-        </a>{" "}
-        · 24/7 dispatch
+        </a>
+        {" "}· 24/7 dispatch
       </p>
     </div>
   );

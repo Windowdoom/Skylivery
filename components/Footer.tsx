@@ -51,6 +51,7 @@ export default function Footer() {
         <div>
           <div className="text-gold text-xs uppercase tracking-[0.25em] mb-4">Contact</div>
           <ul className="space-y-2 text-cream/75 text-sm">
+            <li><a href="tel:+15043396861" className="hover:text-gold">(504) 339-6861 <span className="text-gold/50 text-[10px]">primary</span></a></li>
             <li><a href="tel:+15044790454" className="hover:text-gold">(504) 479-0454</a></li>
             <li><a href="mailto:skyliveryllc@gmail.com" className="hover:text-gold">skyliveryllc@gmail.com</a></li>
             <li>New Orleans, LA</li>

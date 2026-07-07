@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       dropoffLng,
       distanceMiles,
       internalZone,
+      paymentIntent,
     } = body;
 
     if (!name || !phone || !pickup || !dropoff) {
@@ -93,6 +94,8 @@ export async function POST(req: NextRequest) {
       is_airport: rateType === "airport",
       distance_miles: distanceMiles ?? null,
       status: "pending",
+      payment_intent: paymentIntent || "in-vehicle",
+      paid: false,
     };
 
     const { error } = await supabase.from("bookings").insert(row);
@@ -106,15 +109,29 @@ export async function POST(req: NextRequest) {
     // soon as the response is sent and kills pending promises. Running
     // them in parallel keeps the user-facing delay to the slower of the
     // two (~1–2s for Gmail SMTP handshake).
+    const intentLabel =
+      paymentIntent === "online"
+        ? "Online link (Square)"
+        : paymentIntent === "invoice"
+          ? "Invoice"
+          : "In-vehicle (card or cash)";
+
     await Promise.allSettled([
       ntfyPush({
         title: "New Sky Livery booking",
         body: [
           `${tripId}`,
-          `${name} · ${phone}`,
+          ``,
+          `${name}`,
+          `${phone}`,
+          email ? email : "(no email)",
+          ``,
           `↑ ${pickup}`,
           `↓ ${dropoff}`,
-          `${tripDate} ${tripTime} · $${rate ?? "?"}`,
+          `Pickup: ${tripDate} ${tripTime}`,
+          `Fare: $${rate ?? "?"}`,
+          `Pay: ${intentLabel}`,
+          `Paid: no`,
         ].join("\n"),
         tags: "oncoming_automobile,sparkles",
       }),

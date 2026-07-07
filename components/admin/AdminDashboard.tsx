@@ -6,6 +6,8 @@ import {
   cancelBooking,
   deleteBooking,
   clearTestBookings,
+  markPaid,
+  createBookingManually,
 } from "@/app/admin/actions";
 
 export type Booking = {
@@ -27,6 +29,8 @@ export type Booking = {
   status: string;
   assigned_driver: string | null;
   payment_method: string | null;
+  payment_intent: string | null;
+  paid: boolean | null;
   completed_at: string | null;
 };
 
@@ -116,6 +120,7 @@ export default function AdminDashboard({
   }, [bookings]);
 
   const [clearing, startClear] = useTransition();
+  const [showNewBooking, setShowNewBooking] = useState(false);
   function onClearTests() {
     if (
       !confirm(
@@ -172,6 +177,12 @@ export default function AdminDashboard({
             >
               Year CSV
             </a>
+            <button
+              onClick={() => setShowNewBooking(true)}
+              className="text-xs text-navy bg-gold rounded-md px-3 py-1.5 font-bold hover:bg-cream"
+            >
+              + New booking
+            </button>
             <button
               onClick={onClearTests}
               disabled={clearing}
@@ -322,6 +333,13 @@ export default function AdminDashboard({
           </table>
         </div>
       </section>
+
+      {showNewBooking && (
+        <NewBookingModal
+          drivers={drivers}
+          onClose={() => setShowNewBooking(false)}
+        />
+      )}
     </div>
   );
 }
@@ -552,22 +570,237 @@ function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
       if (!res.ok) alert(`Delete failed: ${res.error}`);
     });
   }
+  function onMarkPaid() {
+    start(async () => {
+      await markPaid(b.id, true);
+    });
+  }
+  const isPaid = b.paid === true;
   return (
-    <div className="bg-navy/30 border border-cream/10 rounded-xl p-4 opacity-90">
+    <div
+      className={`bg-navy/30 border rounded-xl p-4 opacity-90 ${
+        isPaid ? "border-cream/10" : "border-yellow-400/40"
+      }`}
+    >
       <BookingCore b={b} />
       <div className="mt-3 text-xs text-cream/60 flex items-center justify-between">
         <span>
           Driver: {driverName(drivers, b.assigned_driver)} · Paid via{" "}
-          {b.payment_method ?? "—"}
+          {b.payment_method ?? "—"}{" "}
+          <span
+            className={
+              isPaid
+                ? "text-green-400 font-semibold ml-1"
+                : "text-yellow-300 font-semibold ml-1"
+            }
+          >
+            {isPaid ? "PAID" : "UNPAID"}
+          </span>
         </span>
-        <button
-          onClick={onDelete}
-          disabled={pending}
-          className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em] ml-2"
-          title="Delete (permanent)"
-        >
-          {pending ? "…" : "Delete"}
-        </button>
+        <div className="flex items-center gap-2 ml-2">
+          {!isPaid && (
+            <button
+              onClick={onMarkPaid}
+              disabled={pending}
+              className="text-green-300 hover:text-green-200 text-[10px] uppercase tracking-[0.2em]"
+            >
+              {pending ? "…" : "Mark paid"}
+            </button>
+          )}
+          <button
+            onClick={onDelete}
+            disabled={pending}
+            className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
+            title="Delete (permanent)"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NewBookingModal({
+  onClose,
+  drivers,
+}: {
+  onClose: () => void;
+  drivers: Driver[];
+}) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [rate, setRate] = useState("");
+  const [passengers, setPassengers] = useState("1");
+  const [paymentIntent, setPaymentIntent] = useState("in-vehicle");
+  const [serviceType, setServiceType] = useState("transfer");
+  const [pending, start] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
+  void drivers;
+
+  function submit() {
+    setErr(null);
+    if (!name || !phone || !pickup || !dropoff || !date || !time || !rate) {
+      setErr("Fill in every field except email.");
+      return;
+    }
+    start(async () => {
+      const res = await createBookingManually({
+        name,
+        phone,
+        email: email || undefined,
+        pickup,
+        dropoff,
+        date,
+        time,
+        rate: Math.round(Number(rate)) || 0,
+        serviceType,
+        passengers: Number(passengers) || 1,
+        paymentIntent,
+      });
+      if (!res.ok) {
+        setErr(res.error || "Could not save booking.");
+        return;
+      }
+      onClose();
+    });
+  }
+
+  const input =
+    "w-full px-3 py-2 bg-navy/60 border border-gold/25 rounded-md text-cream text-sm placeholder:text-cream/40 focus:border-gold focus:outline-none";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-navy border border-gold/40 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-cream font-display text-xl">Manual booking</h2>
+            <p className="text-gold text-[10px] tracking-[0.25em] uppercase">
+              Entered by dispatch
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-cream/60 hover:text-gold text-xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Full name"
+            className={input}
+          />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Phone number"
+            type="tel"
+            className={input}
+          />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email (optional)"
+            type="email"
+            className={input + " col-span-2"}
+          />
+          <input
+            value={pickup}
+            onChange={(e) => setPickup(e.target.value)}
+            placeholder="Pickup address"
+            className={input + " col-span-2"}
+          />
+          <input
+            value={dropoff}
+            onChange={(e) => setDropoff(e.target.value)}
+            placeholder="Dropoff address"
+            className={input + " col-span-2"}
+          />
+          <input
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            type="date"
+            className={input}
+          />
+          <input
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            type="time"
+            className={input}
+          />
+          <input
+            value={rate}
+            onChange={(e) => setRate(e.target.value)}
+            placeholder="Fare in dollars"
+            type="number"
+            className={input}
+          />
+          <select
+            value={passengers}
+            onChange={(e) => setPassengers(e.target.value)}
+            className={input}
+          >
+            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+              <option key={n} value={n} className="bg-navy">
+                {n} pax
+              </option>
+            ))}
+          </select>
+          <select
+            value={serviceType}
+            onChange={(e) => setServiceType(e.target.value)}
+            className={input}
+          >
+            <option value="transfer" className="bg-navy">Transfer</option>
+            <option value="airport" className="bg-navy">Airport (MSY)</option>
+            <option value="hourly" className="bg-navy">Hourly</option>
+            <option value="wedding" className="bg-navy">Wedding</option>
+            <option value="corporate" className="bg-navy">Corporate</option>
+            <option value="event" className="bg-navy">Event</option>
+          </select>
+          <select
+            value={paymentIntent}
+            onChange={(e) => setPaymentIntent(e.target.value)}
+            className={input}
+          >
+            <option value="in-vehicle" className="bg-navy">Pay in vehicle</option>
+            <option value="online" className="bg-navy">Online link (Square)</option>
+            <option value="invoice" className="bg-navy">Invoice</option>
+          </select>
+        </div>
+
+        {err && <p className="text-red-400 text-xs mt-3">{err}</p>}
+
+        <div className="flex items-center gap-3 mt-5">
+          <button
+            onClick={submit}
+            disabled={pending}
+            className="bg-gold text-navy px-5 py-2.5 rounded-md text-sm font-bold hover:bg-cream disabled:opacity-50"
+          >
+            {pending ? "Saving…" : "Create booking"}
+          </button>
+          <button
+            onClick={onClose}
+            className="text-cream/60 hover:text-gold text-sm"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );

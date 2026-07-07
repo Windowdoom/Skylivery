@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { isAuthed } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { sendReceipt } from "@/lib/email";
+import { sendReceipt, sendBookingConfirmation } from "@/lib/email";
 import { ntfyPush } from "@/lib/ntfy";
 
 function guard() {
@@ -29,17 +29,15 @@ export async function assignDriver(
   const { data: joined } = await sb
     .from("bookings")
     .select(
-      "trip_id, customer_name, customer_phone, pickup_address, dropoff_address, trip_date, trip_time, rate, drivers(name), vehicles(cpnc_number)"
+      "trip_id, customer_name, customer_phone, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, payment_intent, paid, drivers(name, phone), vehicles(cpnc_number)"
     )
     .eq("id", bookingId)
     .single();
 
   if (joined) {
-    const drv = (joined.drivers as unknown as { name?: string } | null)?.name;
-    const veh = (joined.vehicles as unknown as { cpnc_number?: string } | null)
-      ?.cpnc_number;
-    // Timestamp of the assignment itself (Central Time, which is New
-    // Orleans local). Distinct from the customer's chosen pickup time.
+    const drvName = (joined.drivers as unknown as { name?: string } | null)?.name;
+    const drvPhone = (joined.drivers as unknown as { phone?: string } | null)?.phone;
+    const veh = (joined.vehicles as unknown as { cpnc_number?: string } | null)?.cpnc_number;
     const assignedAt = new Date().toLocaleString("en-US", {
       timeZone: "America/Chicago",
       month: "short",
@@ -48,19 +46,37 @@ export async function assignDriver(
       minute: "2-digit",
       hour12: true,
     });
+    const intentLabel = (() => {
+      switch (joined.payment_intent) {
+        case "online":
+          return "Online link (Square)";
+        case "invoice":
+          return "Invoice";
+        case "in-vehicle":
+          return "In-vehicle (card or cash)";
+        default:
+          return joined.payment_intent || "—";
+      }
+    })();
     await ntfyPush({
-      title: `Assigned → ${drv ?? "driver"}${veh ? " · " + veh : ""}`,
+      title: `Assigned → ${drvName ?? "driver"}${veh ? " · " + veh : ""}`,
       body: [
         `${joined.trip_id}`,
-        `Driver: ${drv ?? "—"}`,
+        `Driver: ${drvName ?? "—"}`,
+        drvPhone ? `Driver phone: ${drvPhone}` : "",
         veh ? `Vehicle: ${veh}` : "",
         `Assigned at: ${assignedAt} CT`,
         ``,
-        `${joined.customer_name} · ${joined.customer_phone}`,
+        `Customer: ${joined.customer_name}`,
+        `Phone: ${joined.customer_phone}`,
+        joined.customer_email ? `Email: ${joined.customer_email}` : "",
+        ``,
         `↑ ${joined.pickup_address}`,
         `↓ ${joined.dropoff_address}`,
         `Pickup: ${joined.trip_date} ${joined.trip_time}`,
         `Fare: $${joined.rate ?? "?"}`,
+        `Pay: ${intentLabel}`,
+        `Paid: ${joined.paid ? "YES" : "NO"}`,
       ]
         .filter(Boolean)
         .join("\n"),
@@ -71,16 +87,28 @@ export async function assignDriver(
   revalidatePath("/admin");
 }
 
-export async function markCompleted(bookingId: string, paymentMethod: string) {
+export async function markCompleted(
+  bookingId: string,
+  paymentMethod: string,
+  paid?: boolean
+) {
   guard();
   const sb = supabaseAdmin();
   const completedAt = new Date().toISOString();
+  // If caller passes an explicit paid flag, honor it. Otherwise infer:
+  // invoice + online-link default to unpaid; cash + in-vehicle card
+  // default to paid on the spot.
+  const paidResolved =
+    paid !== undefined
+      ? paid
+      : !["invoice", "online"].includes((paymentMethod || "").toLowerCase());
   const { error } = await sb
     .from("bookings")
     .update({
       status: "completed",
       completed_at: completedAt,
       payment_method: paymentMethod || null,
+      paid: paidResolved,
     })
     .eq("id", bookingId);
   if (error) throw new Error(error.message);
@@ -155,6 +183,137 @@ export async function markCompleted(bookingId: string, paymentMethod: string) {
   ]);
 
   revalidatePath("/admin");
+}
+
+// Flip an existing booking's paid flag. Used for invoice and online-
+// link bookings that get paid after the ride is complete.
+export async function markPaid(bookingId: string, paid: boolean = true) {
+  guard();
+  const sb = supabaseAdmin();
+  const { error } = await sb
+    .from("bookings")
+    .update({ paid })
+    .eq("id", bookingId);
+  if (error) throw new Error(error.message);
+
+  if (paid) {
+    const { data: b } = await sb
+      .from("bookings")
+      .select("trip_id, customer_name, rate, payment_method")
+      .eq("id", bookingId)
+      .single();
+    if (b) {
+      await ntfyPush({
+        title: `Payment received · $${b.rate ?? "?"}`,
+        body: [
+          `${b.trip_id}`,
+          `${b.customer_name}`,
+          `Method: ${b.payment_method ?? "—"}`,
+          `Paid: YES`,
+        ].join("\n"),
+        tags: "moneybag,white_check_mark",
+        priority: "default",
+      });
+    }
+  }
+  revalidatePath("/admin");
+}
+
+// Manually create a booking from the admin dashboard. Used when a
+// customer calls dispatch instead of using the site. Fires the same
+// ntfy + email flow as a self-service booking.
+export async function createBookingManually(input: {
+  name: string;
+  phone: string;
+  email?: string;
+  pickup: string;
+  dropoff: string;
+  date: string;
+  time: string;
+  rate: number;
+  serviceType?: string;
+  passengers?: number;
+  isAirport?: boolean;
+  distanceMiles?: number;
+  paymentIntent?: string;
+}): Promise<{ ok: boolean; tripId?: string; error?: string }> {
+  guard();
+  const sb = supabaseAdmin();
+
+  const year = new Date().getFullYear();
+  const suffix = Array.from({ length: 5 }, () =>
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".charAt(Math.floor(Math.random() * 32))
+  ).join("");
+  const tripId = `SL-${year}-${suffix}`;
+
+  const row = {
+    trip_id: tripId,
+    customer_name: input.name,
+    customer_phone: input.phone,
+    customer_email: input.email || null,
+    pickup_address: input.pickup,
+    dropoff_address: input.dropoff,
+    trip_date: input.date,
+    trip_time: input.time,
+    service_type: input.serviceType || "transfer",
+    passengers: input.passengers || 1,
+    rate: input.rate,
+    is_airport: !!input.isAirport,
+    distance_miles: input.distanceMiles ?? null,
+    status: "pending",
+    payment_intent: input.paymentIntent || "in-vehicle",
+    paid: false,
+  };
+
+  const { error } = await sb.from("bookings").insert(row);
+  if (error) return { ok: false, error: error.message };
+
+  const intentLabel =
+    input.paymentIntent === "online"
+      ? "Online link (Square)"
+      : input.paymentIntent === "invoice"
+        ? "Invoice"
+        : "In-vehicle (card or cash)";
+
+  await Promise.allSettled([
+    ntfyPush({
+      title: "New booking (via dispatch)",
+      body: [
+        `${tripId}`,
+        ``,
+        `${input.name}`,
+        `${input.phone}`,
+        input.email || "(no email)",
+        ``,
+        `↑ ${input.pickup}`,
+        `↓ ${input.dropoff}`,
+        `Pickup: ${input.date} ${input.time}`,
+        `Fare: $${input.rate}`,
+        `Pay: ${intentLabel}`,
+        `Paid: no`,
+        ``,
+        `Entered manually by dispatch.`,
+      ].join("\n"),
+      tags: "telephone_receiver,sparkles",
+    }),
+    input.email
+      ? sendBookingConfirmation({
+          to: input.email,
+          customerName: input.name,
+          tripId,
+          pickup: input.pickup,
+          dropoff: input.dropoff,
+          tripDate: input.date,
+          tripTime: input.time,
+          rate: input.rate,
+          passengers: input.passengers ?? 1,
+          serviceType: input.serviceType || "transfer",
+        })
+      : Promise.resolve(),
+  ]);
+
+  revalidatePath("/admin");
+  return { ok: true, tripId };
 }
 
 export async function cancelBooking(bookingId: string) {

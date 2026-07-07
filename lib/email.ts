@@ -199,7 +199,8 @@ export async function sendBookingConfirmation(b: {
       <td style="padding:0 36px 26px 36px;">
         <div style="font-family:Arial,sans-serif;font-size:12px;color:#0A1628;opacity:0.75;line-height:1.6;">
           Need to make a change? Reply to this email or call dispatch at
-          <a href="tel:+15044790454" style="color:#8C7A46;text-decoration:none;font-weight:600;">(504) 479-0454</a>.
+          <a href="tel:+15043396861" style="color:#8C7A46;text-decoration:none;font-weight:600;">(504) 339-6861</a>
+          or <a href="tel:+15044790454" style="color:#8C7A46;text-decoration:none;font-weight:600;">(504) 479-0454</a>.
           We answer 24 hours a day, every day of the year.
         </div>
       </td>
@@ -295,7 +296,7 @@ export async function sendReceipt(b: {
         <div style="font-family:Arial,sans-serif;font-size:12px;color:#0A1628;opacity:0.75;line-height:1.6;">
           Loved the ride? Book us again anytime at
           <a href="https://skylivery1.vercel.app/book" style="color:#8C7A46;text-decoration:none;font-weight:600;">skylivery1.vercel.app/book</a>
-          or call <a href="tel:+15044790454" style="color:#8C7A46;text-decoration:none;font-weight:600;">(504) 479-0454</a>.
+          or call <a href="tel:+15043396861" style="color:#8C7A46;text-decoration:none;font-weight:600;">(504) 339-6861</a> or <a href="tel:+15044790454" style="color:#8C7A46;text-decoration:none;font-weight:600;">(504) 479-0454</a>.
         </div>
       </td>
     </tr>
