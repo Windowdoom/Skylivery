@@ -10,8 +10,11 @@ type Transporter = ReturnType<typeof nodemailer.createTransport>;
 let cachedTransporter: Transporter | null = null;
 
 function getTransporter(): Transporter | null {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
+  const user = process.env.GMAIL_USER?.trim();
+  // Google displays App Passwords as "abcd efgh ijkl mnop" (16 chars with
+  // three spaces = 19). Some SMTP libraries choke on the spaces, so strip
+  // them defensively.
+  const pass = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, "");
   if (!user || !pass) return null;
   if (cachedTransporter) return cachedTransporter;
   cachedTransporter = nodemailer.createTransport({
