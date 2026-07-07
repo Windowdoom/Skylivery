@@ -137,3 +137,79 @@ html, body {
   100% { transform: translateY(-140vh) rotate(20deg); opacity: 0; }
 }
 .float-up { animation: floatUp linear infinite; }
+
+/* Ken Burns slow pan for hero/showcase photography */
+@keyframes kenBurns {
+  0%   { transform: scale(1.05) translate(0, 0); }
+  50%  { transform: scale(1.10) translate(-1.5%, -1%); }
+  100% { transform: scale(1.05) translate(0, 0); }
+}
+.ken-burns { animation: kenBurns 22s ease-in-out infinite; will-change: transform; }
+
+/* Slow rotating brass glow ring for premium cards */
+@keyframes brassRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.brass-ring::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from 0deg,
+    rgba(201, 169, 97, 0.05),
+    rgba(201, 169, 97, 0.55),
+    rgba(242, 233, 210, 0.75),
+    rgba(201, 169, 97, 0.55),
+    rgba(201, 169, 97, 0.05));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: brassRotate 12s linear infinite;
+  pointer-events: none;
+}
+
+/* Card hover lift with brass shadow */
+.lift-hover {
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+.lift-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px -20px rgba(201, 169, 97, 0.35);
+}
+
+/* Staggered fade-in-up for grouped elements */
+@keyframes stagFade {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stag > * { opacity: 0; animation: stagFade 0.7s ease forwards; }
+.stag > *:nth-child(1) { animation-delay: 0.05s; }
+.stag > *:nth-child(2) { animation-delay: 0.15s; }
+.stag > *:nth-child(3) { animation-delay: 0.25s; }
+.stag > *:nth-child(4) { animation-delay: 0.35s; }
+.stag > *:nth-child(5) { animation-delay: 0.45s; }
+.stag > *:nth-child(6) { animation-delay: 0.55s; }
+.stag > *:nth-child(7) { animation-delay: 0.65s; }
+.stag > *:nth-child(8) { animation-delay: 0.75s; }
+
+/* Underline draw-in for headings */
+@keyframes drawLine {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.draw-line {
+  transform-origin: left;
+  animation: drawLine 1s ease forwards 0.3s;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .ken-burns, .drift-left, .drift-right, .gold-sweep, .marquee, .float-up,
+  .brass-shimmer, .brass-ring::before, .stag > *, .draw-line {
+    animation: none !important;
+  }
+  .stag > * { opacity: 1; }
+  .draw-line { transform: scaleX(1); }
+}

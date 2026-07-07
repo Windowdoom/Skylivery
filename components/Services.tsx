@@ -58,7 +58,7 @@ export default function Services() {
             <FadeIn key={s.title} delay={i * 0.05}>
               <a
                 href={s.href}
-                className="group block h-full bg-navy/40 border border-gold/20 rounded-xl p-6 hover:border-gold/60 hover:bg-navy/60 hover:shadow-brass transition-all"
+                className="group block h-full bg-navy/40 border border-gold/20 rounded-xl p-6 hover:border-gold/60 hover:bg-navy/60 hover:shadow-brass transition-all lift-hover"
               >
                 <div className="flex items-baseline justify-between mb-3">
                   <h3 className="font-display text-xl text-cream font-semibold">{s.title}</h3>
