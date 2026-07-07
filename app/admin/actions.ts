@@ -38,20 +38,34 @@ export async function assignDriver(
     const drv = (joined.drivers as unknown as { name?: string } | null)?.name;
     const veh = (joined.vehicles as unknown as { cpnc_number?: string } | null)
       ?.cpnc_number;
-    ntfyPush({
-      title: `Assigned → ${drv ?? "driver"}`,
+    // Timestamp of the assignment itself (Central Time, which is New
+    // Orleans local). Distinct from the customer's chosen pickup time.
+    const assignedAt = new Date().toLocaleString("en-US", {
+      timeZone: "America/Chicago",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    await ntfyPush({
+      title: `Assigned → ${drv ?? "driver"}${veh ? " · " + veh : ""}`,
       body: [
         `${joined.trip_id}`,
+        `Driver: ${drv ?? "—"}`,
+        veh ? `Vehicle: ${veh}` : "",
+        `Assigned at: ${assignedAt} CT`,
+        ``,
         `${joined.customer_name} · ${joined.customer_phone}`,
         `↑ ${joined.pickup_address}`,
         `↓ ${joined.dropoff_address}`,
-        `${joined.trip_date} ${joined.trip_time} · $${joined.rate ?? "?"}`,
-        veh ? `Vehicle: ${veh}` : "",
+        `Pickup: ${joined.trip_date} ${joined.trip_time}`,
+        `Fare: $${joined.rate ?? "?"}`,
       ]
         .filter(Boolean)
         .join("\n"),
       tags: "car,white_check_mark",
-    }).catch(() => {});
+    });
   }
 
   revalidatePath("/admin");
@@ -80,52 +94,65 @@ export async function markCompleted(bookingId: string, paymentMethod: string) {
     .eq("id", bookingId)
     .single();
 
-  if (booking?.customer_email) {
-    sendReceipt({
-      to: booking.customer_email,
-      customerName: booking.customer_name,
-      tripId: booking.trip_id,
-      pickup: booking.pickup_address,
-      dropoff: booking.dropoff_address,
-      tripDate: booking.trip_date,
-      tripTime: booking.trip_time,
-      rate: booking.rate,
-      paymentMethod: paymentMethod || null,
-      completedAt,
-      passengers: booking.passengers,
-      serviceType: booking.service_type,
-    }).catch(() => {});
-  }
+  // Await ntfy + receipt in parallel so Vercel doesn't drop them the
+  // way it drops fire-and-forget promises in route handlers.
+  const methodLabel = (() => {
+    switch ((paymentMethod || "").toLowerCase()) {
+      case "square":
+      case "card":
+        return "Card (Square)";
+      case "cash":
+        return "Cash";
+      case "invoice":
+        return "Invoice";
+      case "third_party":
+        return "Third-party";
+      default:
+        return paymentMethod || "—";
+    }
+  })();
 
-  // Completion push so dispatch/drivers see the trip closed out.
-  if (booking) {
-    const methodLabel = (() => {
-      switch ((paymentMethod || "").toLowerCase()) {
-        case "square":
-        case "card":
-          return "Card (Square)";
-        case "cash":
-          return "Cash";
-        case "invoice":
-          return "Invoice";
-        case "third_party":
-          return "Third-party";
-        default:
-          return paymentMethod || "—";
-      }
-    })();
-    ntfyPush({
-      title: `Completed · $${booking.rate ?? "?"} · ${methodLabel}`,
-      body: [
-        `${booking.trip_id}`,
-        `${booking.customer_name}`,
-        `↓ ${booking.dropoff_address}`,
-        `Paid: ${methodLabel}`,
-      ].join("\n"),
-      tags: "moneybag,checkered_flag",
-      priority: "default",
-    }).catch(() => {});
-  }
+  const completedAtLocal = new Date().toLocaleString("en-US", {
+    timeZone: "America/Chicago",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  await Promise.allSettled([
+    booking?.customer_email
+      ? sendReceipt({
+          to: booking.customer_email,
+          customerName: booking.customer_name,
+          tripId: booking.trip_id,
+          pickup: booking.pickup_address,
+          dropoff: booking.dropoff_address,
+          tripDate: booking.trip_date,
+          tripTime: booking.trip_time,
+          rate: booking.rate,
+          paymentMethod: paymentMethod || null,
+          completedAt,
+          passengers: booking.passengers,
+          serviceType: booking.service_type,
+        })
+      : Promise.resolve(),
+    booking
+      ? ntfyPush({
+          title: `Completed · $${booking.rate ?? "?"} · ${methodLabel}`,
+          body: [
+            `${booking.trip_id}`,
+            `${booking.customer_name}`,
+            `↓ ${booking.dropoff_address}`,
+            `Paid: ${methodLabel}`,
+            `Closed at: ${completedAtLocal} CT`,
+          ].join("\n"),
+          tags: "moneybag,checkered_flag",
+          priority: "default",
+        })
+      : Promise.resolve(),
+  ]);
 
   revalidatePath("/admin");
 }
