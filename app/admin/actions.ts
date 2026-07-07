@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { isAuthed } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendReceipt } from "@/lib/email";
+import { ntfyPush } from "@/lib/ntfy";
 
 function guard() {
   if (!isAuthed()) throw new Error("unauthorized");
@@ -22,6 +23,37 @@ export async function assignDriver(
   if (vehicleId) update.vehicle_id = vehicleId;
   const { error } = await sb.from("bookings").update(update).eq("id", bookingId);
   if (error) throw new Error(error.message);
+
+  // Fire an assignment push so the driver (and everyone on the shared
+  // dispatch topic) knows the trip is on their plate.
+  const { data: joined } = await sb
+    .from("bookings")
+    .select(
+      "trip_id, customer_name, customer_phone, pickup_address, dropoff_address, trip_date, trip_time, rate, drivers(name), vehicles(cpnc_number)"
+    )
+    .eq("id", bookingId)
+    .single();
+
+  if (joined) {
+    const drv = (joined.drivers as unknown as { name?: string } | null)?.name;
+    const veh = (joined.vehicles as unknown as { cpnc_number?: string } | null)
+      ?.cpnc_number;
+    ntfyPush({
+      title: `Assigned → ${drv ?? "driver"}`,
+      body: [
+        `${joined.trip_id}`,
+        `${joined.customer_name} · ${joined.customer_phone}`,
+        `↑ ${joined.pickup_address}`,
+        `↓ ${joined.dropoff_address}`,
+        `${joined.trip_date} ${joined.trip_time} · $${joined.rate ?? "?"}`,
+        veh ? `Vehicle: ${veh}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      tags: "car,white_check_mark",
+    }).catch(() => {});
+  }
+
   revalidatePath("/admin");
 }
 
@@ -62,6 +94,36 @@ export async function markCompleted(bookingId: string, paymentMethod: string) {
       completedAt,
       passengers: booking.passengers,
       serviceType: booking.service_type,
+    }).catch(() => {});
+  }
+
+  // Completion push so dispatch/drivers see the trip closed out.
+  if (booking) {
+    const methodLabel = (() => {
+      switch ((paymentMethod || "").toLowerCase()) {
+        case "square":
+        case "card":
+          return "Card (Square)";
+        case "cash":
+          return "Cash";
+        case "invoice":
+          return "Invoice";
+        case "third_party":
+          return "Third-party";
+        default:
+          return paymentMethod || "—";
+      }
+    })();
+    ntfyPush({
+      title: `Completed · $${booking.rate ?? "?"} · ${methodLabel}`,
+      body: [
+        `${booking.trip_id}`,
+        `${booking.customer_name}`,
+        `↓ ${booking.dropoff_address}`,
+        `Paid: ${methodLabel}`,
+      ].join("\n"),
+      tags: "moneybag,checkered_flag",
+      priority: "default",
     }).catch(() => {});
   }
 

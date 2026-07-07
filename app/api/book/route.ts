@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendBookingConfirmation } from "@/lib/email";
+import { ntfyPush } from "@/lib/ntfy";
 
 export async function POST(req: NextRequest) {
   try {
@@ -100,26 +101,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Fire-and-forget ntfy push so dispatch gets an instant phone ping.
-    // Accept either NTFY_URL or NTFY_TOPIC_URL for the topic URL.
-    const ntfyUrl = process.env.NTFY_URL || process.env.NTFY_TOPIC_URL;
-    if (ntfyUrl) {
-      const body = [
+    ntfyPush({
+      title: "New Sky Livery booking",
+      body: [
         `${tripId}`,
         `${name} · ${phone}`,
-        `${pickup} → ${dropoff}`,
+        `↑ ${pickup}`,
+        `↓ ${dropoff}`,
         `${tripDate} ${tripTime} · $${rate ?? "?"}`,
-      ].join("\n");
-      fetch(ntfyUrl, {
-        method: "POST",
-        headers: {
-          Title: "New Sky Livery booking",
-          Priority: "high",
-          Tags: "oncoming_automobile,sparkles",
-        },
-        body,
-      }).catch(() => {});
-    }
+      ].join("\n"),
+      tags: "oncoming_automobile,sparkles",
+    }).catch(() => {});
 
     // Fire-and-forget confirmation email to the customer if they gave one.
     if (email) {
