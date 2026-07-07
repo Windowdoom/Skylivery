@@ -194,6 +194,9 @@ export default function AdminDashboard({
         </Column>
       </section>
 
+      {/* Weekly driver payouts */}
+      <PayoutPanel bookings={bookings} drivers={drivers} />
+
       {/* Driver leaderboard + monthly history */}
       <section className="max-w-7xl mx-auto px-6 pb-16 grid lg:grid-cols-2 gap-6">
         <div className="bg-navy/50 border border-gold/20 rounded-2xl p-5">
@@ -476,5 +479,159 @@ function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
         {b.payment_method ?? "—"}
       </div>
     </div>
+  );
+}
+
+function getWeekRange(): { start: Date; end: Date; label: string } {
+  const now = new Date();
+  const day = now.getDay();
+  const start = new Date(now);
+  start.setDate(now.getDate() - day);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return { start, end, label: `${fmt(start)} – ${fmt(end)}` };
+}
+
+type PayoutLine = {
+  driverId: string;
+  name: string;
+  phone: string;
+  trips: number;
+  gross: number;
+  percent: number;
+  payout: number;
+};
+
+function PayoutPanel({
+  bookings,
+  drivers,
+}: {
+  bookings: Booking[];
+  drivers: Driver[];
+}) {
+  const { label, start, end } = useMemo(() => getWeekRange(), []);
+
+  const lines = useMemo(() => {
+    const map = new Map<string, { trips: number; gross: number }>();
+    for (const b of bookings) {
+      if (b.status !== "completed" || !b.assigned_driver || !b.completed_at)
+        continue;
+      const completedAt = new Date(b.completed_at);
+      if (completedAt < start || completedAt > end) continue;
+      const existing = map.get(b.assigned_driver) ?? { trips: 0, gross: 0 };
+      existing.trips += 1;
+      existing.gross += b.rate ?? 0;
+      map.set(b.assigned_driver, existing);
+    }
+    const result: PayoutLine[] = [];
+    for (const [driverId, { trips, gross }] of map) {
+      const drv = drivers.find((d) => d.id === driverId);
+      const percent = drv?.payout_percent ?? 92;
+      result.push({
+        driverId,
+        name: drv?.name ?? "Unknown",
+        phone: drv?.phone ?? "",
+        trips,
+        gross,
+        percent,
+        payout: Math.round(gross * (percent / 100) * 100) / 100,
+      });
+    }
+    result.sort((a, b) => b.gross - a.gross);
+    return result;
+  }, [bookings, drivers, start, end]);
+
+  const totalPayout = lines.reduce((s, l) => s + l.payout, 0);
+  const totalGross = lines.reduce((s, l) => s + l.gross, 0);
+
+  return (
+    <section className="max-w-7xl mx-auto px-6 pb-8">
+      <div className="bg-navy/50 border border-gold/20 rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-cream font-display text-lg">
+              Weekly driver payouts
+            </h2>
+            <p className="text-gold text-[10px] tracking-[0.2em] uppercase mt-0.5">
+              {label}
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-gold text-[10px] tracking-[0.2em] uppercase">
+              Total Zelle
+            </div>
+            <div className="font-display text-2xl text-cream">
+              {money(totalPayout)}
+            </div>
+          </div>
+        </div>
+
+        {lines.length === 0 ? (
+          <div className="text-cream/50 text-sm py-4 text-center">
+            No completed trips this week.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-gold text-[10px] tracking-[0.2em] uppercase text-left">
+                  <th className="pb-2">Driver</th>
+                  <th className="pb-2">Zelle</th>
+                  <th className="pb-2 text-right">Trips</th>
+                  <th className="pb-2 text-right">Gross</th>
+                  <th className="pb-2 text-right">Split</th>
+                  <th className="pb-2 text-right">Payout</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lines.map((l) => (
+                  <tr key={l.driverId} className="border-t border-gold/10">
+                    <td className="py-3 text-cream font-medium">{l.name}</td>
+                    <td className="py-3 text-cream/70">
+                      {l.phone ? (
+                        <a href={`tel:${l.phone}`} className="hover:text-gold">
+                          {l.phone}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="py-3 text-right text-cream">{l.trips}</td>
+                    <td className="py-3 text-right text-cream/80">
+                      {money(l.gross)}
+                    </td>
+                    <td className="py-3 text-right text-cream/60">
+                      {l.percent}%
+                    </td>
+                    <td className="py-3 text-right text-gold font-semibold">
+                      {money(l.payout)}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="border-t border-gold/30">
+                  <td className="py-3 text-cream/60 font-medium" colSpan={2}>
+                    Totals
+                  </td>
+                  <td className="py-3 text-right text-cream">
+                    {lines.reduce((s, l) => s + l.trips, 0)}
+                  </td>
+                  <td className="py-3 text-right text-cream/80">
+                    {money(totalGross)}
+                  </td>
+                  <td />
+                  <td className="py-3 text-right text-gold font-bold">
+                    {money(totalPayout)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
