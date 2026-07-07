@@ -7,7 +7,9 @@ import {
   HOURLY_MIN_WEEKEND,
 } from "@/lib/zones";
 
-async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
+async function geocode(
+  address: string
+): Promise<{ lat: number; lng: number; formatted: string } | null> {
   const key = process.env.GOOGLE_MAPS_API_KEY;
   if (!key) return null;
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
@@ -16,10 +18,41 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
   const res = await fetch(url);
   const data = await res.json();
   if (data.status === "OK" && data.results?.length > 0) {
-    const { lat, lng } = data.results[0].geometry.location;
-    return { lat, lng };
+    const r = data.results[0];
+    return {
+      lat: r.geometry.location.lat,
+      lng: r.geometry.location.lng,
+      formatted: r.formatted_address || address,
+    };
   }
   return null;
+}
+
+async function distanceMatrix(
+  origin: { lat: number; lng: number },
+  dest: { lat: number; lng: number }
+): Promise<{ miles: number; minutes: number } | null> {
+  const key = process.env.GOOGLE_MAPS_API_KEY;
+  if (!key) return null;
+  const url =
+    `https://maps.googleapis.com/maps/api/distancematrix/json?` +
+    `origins=${origin.lat},${origin.lng}` +
+    `&destinations=${dest.lat},${dest.lng}` +
+    `&units=imperial&key=${key}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const el = data.rows?.[0]?.elements?.[0];
+    if (data.status !== "OK" || el?.status !== "OK") return null;
+    const meters = el.distance.value;
+    const seconds = el.duration.value;
+    return {
+      miles: meters / 1609.344,
+      minutes: seconds / 60,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -47,48 +80,76 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const [pickupCoords, dropoffCoords] = await Promise.all([geocode(pickup), geocode(dropoff)]);
+    const [pickupGeo, dropoffGeo] = await Promise.all([
+      geocode(pickup),
+      geocode(dropoff),
+    ]);
 
-    if (!pickupCoords || !dropoffCoords) {
+    if (!pickupGeo || !dropoffGeo) {
       return NextResponse.json(
-        { error: "Could not locate one or both addresses. Please check and try again." },
+        {
+          error:
+            "Could not locate one or both addresses. Please check and try again.",
+        },
         { status: 400 }
       );
     }
 
-    const { rate, isAirport, surcharge } = calculateRate(
-      pickupCoords.lat,
-      pickupCoords.lng,
-      dropoffCoords.lat,
-      dropoffCoords.lng,
-      pickup,
-      dropoff
+    // Actual driving distance + duration from Google. Fall back to
+    // haversine + 15% buffer if the Distance Matrix call fails so we
+    // never leave the customer without a quote.
+    const dm = await distanceMatrix(pickupGeo, dropoffGeo);
+    const drivingMiles =
+      dm?.miles ??
+      distanceMiles(pickupGeo, dropoffGeo) * 1.15;
+    const drivingMinutes = dm?.minutes ?? (drivingMiles / 45) * 60;
+
+    const result = calculateRate(
+      pickupGeo.lat,
+      pickupGeo.lng,
+      dropoffGeo.lat,
+      dropoffGeo.lng,
+      drivingMiles,
+      drivingMinutes,
+      pickupGeo.formatted,
+      dropoffGeo.formatted
     );
 
-    const distance = Math.round(
-      distanceMiles(pickupCoords, dropoffCoords) * 10
-    ) / 10;
+    if (result.kind === "phone") {
+      return NextResponse.json({
+        rateType: "phone",
+        note: "Please call dispatch to arrange this trip.",
+        phone: "(504) 479-0454",
+        reason: result.reason,
+        distanceMiles: Math.round(drivingMiles * 10) / 10,
+      });
+    }
+
+    const { rate, isAirport, breakdown } = result;
 
     let note: string;
-    if (isAirport && surcharge > 0) {
-      note = `$${rate} all-inclusive MSY transfer · gratuity included · extended-area destination`;
+    if (isAirport && breakdown.perMileTotal > 0) {
+      note = `$${rate} all-inclusive MSY transfer, gratuity included`;
     } else if (isAirport) {
-      note = `$${rate} flat-rate MSY transfer · gratuity included`;
+      note = `$${rate} flat-rate MSY transfer, gratuity included`;
     } else {
-      note = `$${rate} flat rate · gratuity included · no surge`;
+      note = `$${rate} flat rate, gratuity included, no surge`;
     }
 
     return NextResponse.json({
       rate,
       rateType: isAirport ? "airport" : "flat",
       note,
-      pickupLat: pickupCoords.lat,
-      pickupLng: pickupCoords.lng,
-      dropoffLat: dropoffCoords.lat,
-      dropoffLng: dropoffCoords.lng,
-      distanceMiles: distance,
+      pickupLat: pickupGeo.lat,
+      pickupLng: pickupGeo.lng,
+      dropoffLat: dropoffGeo.lat,
+      dropoffLng: dropoffGeo.lng,
+      distanceMiles: Math.round(drivingMiles * 10) / 10,
     });
   } catch {
-    return NextResponse.json({ error: "Something went wrong. Please call to book." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong. Please call to book." },
+      { status: 500 }
+    );
   }
 }

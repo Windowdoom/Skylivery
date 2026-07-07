@@ -13,7 +13,7 @@ type Quote = {
   dropoffLng?: number;
   distanceMiles?: number;
 };
-type Step = "form" | "quote" | "details" | "confirmed";
+type Step = "form" | "quote" | "details" | "confirmed" | "phone";
 
 export type BookingContext = {
   label: string;         // shown to the customer, e.g. "Wedding & Events"
@@ -69,7 +69,9 @@ export default function BookingForm({
         body: JSON.stringify({ pickup, dropoff, serviceType, date }),
       });
       const data = await res.json();
-      if (!res.ok || !data.rate) {
+      if (data?.rateType === "phone") {
+        setStep("phone");
+      } else if (!res.ok || !data.rate) {
         setError(data.error || "Could not calculate a rate. Call us to book.");
       } else {
         setQuote({
@@ -313,6 +315,35 @@ export default function BookingForm({
           </button>
           <button onClick={() => setStep("quote")} className="w-full py-2 text-cream/60 text-sm hover:text-gold transition-colors">
             Back
+          </button>
+        </div>
+      )}
+
+      {step === "phone" && (
+        <div className="text-center py-4">
+          <div className="w-16 h-16 rounded-full border border-gold/60 flex items-center justify-center mx-auto mb-4">
+            <FleurIcon className="w-6 h-8 text-gold" />
+          </div>
+          <h3 className="text-cream font-display text-2xl font-semibold mb-2">
+            This one is a phone call.
+          </h3>
+          <p className="text-cream/70 text-sm mb-5 max-w-sm mx-auto leading-relaxed">
+            For trips this long, dispatch handles the quote personally so we can plan the driver, timing, and any overnight arrangement for your route.
+          </p>
+          <a
+            href="tel:+15044790454"
+            className="inline-block bg-gold text-navy px-6 py-3 rounded-md text-base font-bold tracking-wide hover:bg-cream transition-colors"
+          >
+            Call (504) 479-0454
+          </a>
+          <p className="text-cream/50 text-xs mt-4">
+            24 hours, 7 days, every day of the year.
+          </p>
+          <button
+            onClick={() => setStep("form")}
+            className="mt-4 text-gold/70 text-xs hover:text-gold"
+          >
+            ← Back to form
           </button>
         </div>
       )}

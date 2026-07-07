@@ -1,8 +1,10 @@
-// INTERNAL pricing logic. Never expose zone names or per-mile rates to
-// the customer. The public API returns only a final dollar amount.
+// INTERNAL pricing logic. Never expose zone names, per-mile rates, or
+// out-of-state surcharges to the customer. The public API returns a
+// final dollar amount and, for very long trips, a "call for quote"
+// signal so the front-end can redirect them to phone.
 
 export const KENNER_CENTER = { lat: 29.9941, lng: -90.2417 };
-export const MSY_AIRPORT = { lat: 29.9934, lng: -90.2580 };
+export const MSY_AIRPORT = { lat: 29.9934, lng: -90.258 };
 
 export const AIRPORT_FLAT_RATE = 105;
 export const HOURLY_RATE = 85;
@@ -10,12 +12,37 @@ export const HOURLY_MIN_WEEKDAY = 3;
 export const HOURLY_MIN_WEEKEND = 4;
 
 // The $105 flat MSY rate covers the core service area within this many
-// miles of the Kenner center point. Beyond that we tack on a per-mile fee
-// for the miles outside the core zone.
+// miles of the Kenner center point. Beyond that we tack on a per-mile
+// fee based on real driving distance for the non-airport leg.
 export const CORE_RADIUS_MI = 18;
-export const OUT_OF_ZONE_PER_MILE = 3;
+export const PER_MILE = 3;
 
-// Haversine distance in miles.
+// Non-airport point-to-point long-haul kicks in past 40 miles road.
+// From that point, pure per-mile from mile 1 (no base fee).
+export const LONG_HAUL_THRESHOLD_MI = 40;
+
+// Route to phone if the driving distance exceeds this OR the drop-off is
+// past Mississippi. Deposit + planning territory.
+export const PHONE_QUOTE_MI = 250;
+
+// Return leg fees for one-way long trips, bracketed by driving duration
+// in minutes.
+export const RETURN_FEE_TIERS: { minMinutes: number; fee: number }[] = [
+  { minMinutes: 5 * 60, fee: -1 }, // 5+ hours = phone
+  { minMinutes: 4 * 60, fee: 100 },
+  { minMinutes: 3 * 60, fee: 75 },
+];
+
+export function returnFee(oneWayMinutes: number): number {
+  for (const tier of RETURN_FEE_TIERS) {
+    if (oneWayMinutes >= tier.minMinutes) return tier.fee;
+  }
+  return 0;
+}
+
+// Haversine straight-line distance in miles. Used only for zone lookup
+// off Kenner center. Actual per-mile calculations use real driving
+// distance from the Distance Matrix API.
 export function distanceMiles(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number }
@@ -39,16 +66,9 @@ function zoneRate(distanceFromCenter: number): number {
   if (distanceFromCenter <= 18) return 85;
   if (distanceFromCenter <= 25) return 110;
   if (distanceFromCenter <= 40) return 145;
-  return 195;
+  return 145; // caps here; anything past 40 crow-flies is long-haul
 }
 
-// True only when the address text unambiguously names MSY itself, not a
-// hotel/park/rental lot that happens to include the word "airport". We
-// match distinctive multi-word phrases that are only true of the actual
-// airport, plus the airport's IATA code when it appears as a standalone
-// token, plus a tight geofence around the terminal building as a backup
-// for cases where Places returned only "Louis Armstrong New Orleans
-// International Airport (MSY)" without a street.
 const AIRPORT_PHRASES = [
   "louis armstrong",
   "louis-armstrong",
@@ -56,19 +76,11 @@ const AIRPORT_PHRASES = [
   "new orleans intl airport",
   "moisant field",
   "msy airport",
-  // MSY's official street address is "1 Terminal Dr, Kenner, LA 70062".
-  // "terminal dr" combined with Kenner or 70062 is airport-specific.
   "terminal dr, kenner",
   "terminal drive, kenner",
   "terminal dr kenner",
 ];
 
-// Terminal building coordinates. Geofence is kept modest (0.5mi) so a
-// residential Kenner address never trips it — Kenner center itself is
-// only ~0.98mi from the terminal, so we cannot open the fence any wider
-// without false-positiving on real neighborhood trips. The phrase
-// checks above are the primary signal; this geofence is only a backup
-// for Places pins that geocode to the terminal building.
 const MSY_TERMINAL = { lat: 29.9934, lng: -90.258 };
 const AIRPORT_GEOFENCE_MI = 0.5;
 
@@ -79,10 +91,7 @@ export function isAirportAddress(
   if (address) {
     const a = address.toLowerCase();
     if (AIRPORT_PHRASES.some((kw) => a.includes(kw))) return true;
-    // Match "MSY" only as a standalone token, not as part of another word
-    // like "amsy" or a street name. Word boundary check.
     if (/\bmsy\b/.test(a)) return true;
-    // "Terminal Dr" combined with 70062 is airport-specific too.
     if (a.includes("terminal dr") && a.includes("70062")) return true;
     if (a.includes("terminal drive") && a.includes("70062")) return true;
   }
@@ -92,48 +101,173 @@ export function isAirportAddress(
   return false;
 }
 
-// Legacy geofence retained for internal reference only. Not used for pricing.
 export function isNearMSY(p: { lat: number; lng: number }): boolean {
   return distanceMiles(p, MSY_TERMINAL) <= AIRPORT_GEOFENCE_MI;
 }
 
-// Surcharge in whole dollars for miles beyond the core service zone.
-function outOfZoneSurcharge(distFromKenner: number): number {
-  if (distFromKenner <= CORE_RADIUS_MI) return 0;
-  return Math.ceil((distFromKenner - CORE_RADIUS_MI) * OUT_OF_ZONE_PER_MILE);
+// Detect which state the address is in. Returns two-letter code or null.
+// Cheap heuristic on the address string; Google's formatted address
+// always includes the state name or code.
+export function detectState(
+  address: string | null | undefined
+): string | null {
+  if (!address) return null;
+  const a = address.toLowerCase();
+  // Louisiana (home state)
+  if (/\bla\b/.test(a) || a.includes("louisiana")) return "LA";
+  if (/\bms\b/.test(a) || a.includes("mississippi")) return "MS";
+  if (/\bal\b/.test(a) || a.includes("alabama")) return "AL";
+  if (/\btx\b/.test(a) || a.includes("texas")) return "TX";
+  if (/\bfl\b/.test(a) || a.includes("florida")) return "FL";
+  if (/\bga\b/.test(a) || a.includes("georgia")) return "GA";
+  if (/\btn\b/.test(a) || a.includes("tennessee")) return "TN";
+  if (/\bar\b/.test(a) || a.includes("arkansas")) return "AR";
+  return null;
 }
+
+// Out-of-state surcharge in dollars. Mississippi is a short-hop
+// neighbor so it takes a lower surcharge; other states are a full trip.
+export function outOfStateSurcharge(state: string | null): number {
+  if (!state || state === "LA") return 0;
+  if (state === "MS") return 50;
+  return 100;
+}
+
+// True if the trip should not be quoted online. Anything past 250 road
+// miles one-way is deposit territory, and anything past Mississippi
+// (interior MS beyond a certain point, or crossing into AL/TX/FL/GA/TN)
+// also gets routed to phone for planning.
+export function shouldRouteToPhone(
+  drivingMiles: number,
+  drivingMinutes: number,
+  state: string | null
+): { route: boolean; reason?: string } {
+  if (drivingMiles > PHONE_QUOTE_MI) {
+    return { route: true, reason: "long-distance" };
+  }
+  if (drivingMinutes >= 5 * 60) {
+    return { route: true, reason: "long-duration" };
+  }
+  // Beyond Mississippi (further southeast states)
+  if (state && ["AL", "TX", "FL", "GA", "TN", "AR"].includes(state)) {
+    if (drivingMiles > 150) {
+      return { route: true, reason: "past-mississippi" };
+    }
+  }
+  return { route: false };
+}
+
+export type RateResult =
+  | {
+      kind: "quote";
+      rate: number;
+      isAirport: boolean;
+      breakdown: {
+        base: number;
+        perMileMiles: number;
+        perMileTotal: number;
+        oosSurcharge: number;
+        returnFee: number;
+        state: string | null;
+      };
+    }
+  | {
+      kind: "phone";
+      reason: string;
+    };
 
 export function calculateRate(
   pickupLat: number,
   pickupLng: number,
   dropoffLat: number,
   dropoffLng: number,
+  drivingMiles: number,
+  drivingMinutes: number,
   pickupAddress?: string,
   dropoffAddress?: string
-): { rate: number; isAirport: boolean; surcharge: number } {
+): RateResult {
   const pickup = { lat: pickupLat, lng: pickupLng };
   const dropoff = { lat: dropoffLat, lng: dropoffLng };
 
-  // Airport detection is address-text first, with a tight terminal-only
-  // geofence as backup. Loose "airport" substrings would false-positive on
-  // hotels/parks/rentals near MSY.
   const pickupIsMSY = isAirportAddress(pickupAddress, pickup);
   const dropoffIsMSY = isAirportAddress(dropoffAddress, dropoff);
   const airport = pickupIsMSY || dropoffIsMSY;
 
-  if (airport) {
-    // Base $105 flat + per-mile surcharge for the non-MSY endpoint's
-    // distance beyond the core zone.
-    const farPoint = pickupIsMSY ? dropoff : pickup;
-    const dFar = distanceMiles(KENNER_CENTER, farPoint);
-    const surcharge = outOfZoneSurcharge(dFar);
-    return { rate: AIRPORT_FLAT_RATE + surcharge, isAirport: true, surcharge };
+  // The state we care about for OOS is whichever endpoint is NOT Louisiana.
+  const pickupState = detectState(pickupAddress);
+  const dropoffState = detectState(dropoffAddress);
+  const nonLaState =
+    pickupState && pickupState !== "LA"
+      ? pickupState
+      : dropoffState && dropoffState !== "LA"
+        ? dropoffState
+        : null;
+
+  const phone = shouldRouteToPhone(drivingMiles, drivingMinutes, nonLaState);
+  if (phone.route) {
+    return { kind: "phone", reason: phone.reason ?? "long" };
   }
 
-  // Non-airport point-to-point: use zone bands off Kenner center.
+  const oos = outOfStateSurcharge(nonLaState);
+  const rf = returnFee(drivingMinutes);
+  if (rf < 0) {
+    return { kind: "phone", reason: "long-duration" };
+  }
+
+  if (airport) {
+    // MSY: $105 base + $3/mi beyond 18mi (using real driving miles)
+    const farPoint = pickupIsMSY ? dropoff : pickup;
+    const dFarCrow = distanceMiles(KENNER_CENTER, farPoint);
+    // Prefer real driving miles when the non-airport point is farther
+    // than the core radius crow-flies. This keeps short trips flat and
+    // long trips accurately priced.
+    const perMileMiles = Math.max(0, drivingMiles - CORE_RADIUS_MI);
+    const perMileTotal = Math.ceil(perMileMiles * PER_MILE);
+    const total = AIRPORT_FLAT_RATE + perMileTotal + oos + rf;
+    return {
+      kind: "quote",
+      rate: total,
+      isAirport: true,
+      breakdown: {
+        base: AIRPORT_FLAT_RATE,
+        perMileMiles: Math.round(perMileMiles * 10) / 10,
+        perMileTotal,
+        oosSurcharge: oos,
+        returnFee: rf,
+        state: nonLaState,
+      },
+    };
+    void dFarCrow;
+  }
+
+  // Non-airport: zone bands under 40mi (crow-flies from Kenner center to
+  // farther endpoint), pure $3/mi past 40mi road distance.
   const dPickup = distanceMiles(KENNER_CENTER, pickup);
   const dDropoff = distanceMiles(KENNER_CENTER, dropoff);
   const farther = Math.max(dPickup, dDropoff);
 
-  return { rate: zoneRate(farther), isAirport: false, surcharge: 0 };
+  const zoneFare = zoneRate(farther);
+  const longHaulFare = Math.ceil(drivingMiles * PER_MILE);
+
+  // Whichever produces a higher fare wins. Prevents the "Hammond at
+  // 45mi road but only ~38mi crow-flies" edge case from being cheaper
+  // than a Slidell trip.
+  const base = drivingMiles > LONG_HAUL_THRESHOLD_MI
+    ? Math.max(zoneFare, longHaulFare)
+    : zoneFare;
+
+  const total = base + oos + rf;
+  return {
+    kind: "quote",
+    rate: total,
+    isAirport: false,
+    breakdown: {
+      base,
+      perMileMiles: drivingMiles > LONG_HAUL_THRESHOLD_MI ? drivingMiles : 0,
+      perMileTotal: drivingMiles > LONG_HAUL_THRESHOLD_MI ? longHaulFare : 0,
+      oosSurcharge: oos,
+      returnFee: rf,
+      state: nonLaState,
+    },
+  };
 }

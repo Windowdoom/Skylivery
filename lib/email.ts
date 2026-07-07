@@ -207,7 +207,7 @@ export async function sendBookingConfirmation(b: {
   `;
 
   const html = shell(
-    `Your Sky Livery ride is confirmed — ${b.tripId}`,
+    `Your Sky Livery ride is confirmed · ${b.tripId}`,
     `Booking ${b.tripId} confirmed. Pickup ${fmtDate(b.tripDate)} at ${fmtTime(b.tripTime)}. Fare ${money(b.rate)}.`,
     inner
   );
@@ -216,7 +216,7 @@ export async function sendBookingConfirmation(b: {
     await t.sendMail({
       from: fromField(),
       to: b.to,
-      subject: `Sky Livery — booking confirmed (${b.tripId})`,
+      subject: `Sky Livery: booking confirmed (${b.tripId})`,
       html,
       replyTo: process.env.GMAIL_USER,
     });
@@ -302,8 +302,8 @@ export async function sendReceipt(b: {
   `;
 
   const html = shell(
-    `Sky Livery receipt — ${b.tripId}`,
-    `Receipt for ${b.tripId} — ${money(b.rate)} paid via ${methodLabel}.`,
+    `Sky Livery receipt · ${b.tripId}`,
+    `Receipt for ${b.tripId}. ${money(b.rate)} paid via ${methodLabel}.`,
     inner
   );
 
@@ -311,7 +311,7 @@ export async function sendReceipt(b: {
     await t.sendMail({
       from: fromField(),
       to: b.to,
-      subject: `Sky Livery — receipt (${b.tripId})`,
+      subject: `Sky Livery: receipt (${b.tripId})`,
       html,
       replyTo: process.env.GMAIL_USER,
     });
