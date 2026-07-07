@@ -1,33 +1,30 @@
 import FadeIn from "./FadeIn";
 
-const benefits = [
-  { title: "All-inclusive pricing", desc: "Gratuity, tolls, and fees included in your flat rate" },
-  { title: "No surge, ever", desc: "Same price Mardi Gras, Jazz Fest, Saints game day" },
-  { title: "Flight tracking", desc: "We monitor your flight and adjust pickup time automatically" },
-  { title: "Professional chauffeur", desc: "Licensed, background-checked, uniformed drivers" },
-  { title: "Door-to-door", desc: "Meet and greet at MSY arrivals or your exact address" },
-  { title: "24/7 availability", desc: "Early morning pickups, late night returns, we never close" },
+const items = [
+  { title: "All-inclusive pricing", desc: "The price you see is the price you pay." },
+  { title: "No surge, ever", desc: "Same rate 365 days a year." },
+  { title: "Flight tracking", desc: "We watch your flight and adjust." },
+  { title: "Professional chauffeur", desc: "Vetted, licensed, dressed for business." },
+  { title: "Door-to-door", desc: "Meet & greet, luggage, curbside." },
+  { title: "24/7 availability", desc: "Anytime, any day, real humans." },
 ];
 
 export default function WhySection() {
   return (
-    <section className="bg-off-white py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+    <section className="py-20 border-y border-silver/10 bg-dark">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <FadeIn>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-navy text-center mb-3">
-            Why Sky Livery
+          <p className="text-[10px] tracking-[0.3em] uppercase text-silver mb-3">Why Sky Livery</p>
+          <h2 className="font-display text-3xl sm:text-4xl text-white font-semibold mb-12 max-w-2xl">
+            Everything you&apos;d expect from a premium car service. Nothing you wouldn&apos;t.
           </h2>
-          <p className="text-silver text-sm text-center mb-10 max-w-lg mx-auto">
-            We built this service around what passengers actually care about.
-          </p>
         </FadeIn>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {benefits.map((b, i) => (
-            <FadeIn key={i} delay={i * 0.06}>
-              <div className="bg-white rounded-xl p-5 border border-silver/[0.1] hover:border-navy/10 hover:shadow-sm transition-all">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 mb-3" />
-                <h3 className="text-navy font-semibold text-sm mb-1">{b.title}</h3>
-                <p className="text-silver text-xs leading-relaxed">{b.desc}</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
+          {items.map((it, i) => (
+            <FadeIn key={it.title} delay={i * 0.05}>
+              <div className="border-l border-silver/25 pl-4">
+                <h3 className="text-white font-semibold text-sm sm:text-base">{it.title}</h3>
+                <p className="text-silver text-sm mt-1 leading-relaxed">{it.desc}</p>
               </div>
             </FadeIn>
           ))}

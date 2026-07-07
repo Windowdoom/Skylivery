@@ -1,42 +1,30 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
-import BookingForm from "@/components/BookingForm";
-import TrustBar from "@/components/TrustBar";
-import CTA from "@/components/CTA";
-import Footer from "@/components/Footer";
-import FadeIn from "@/components/FadeIn";
+import LandingPage from "@/components/LandingPage";
 
 export const metadata: Metadata = {
-  title: "MSY Airport Car Service New Orleans | Sky Livery LLC",
-  description: "Luxury SUV airport transfer service to and from Louis Armstrong New Orleans International Airport. Flat rate $105, gratuity included, no surge. Flight tracking and meet and greet.",
-  keywords: "MSY airport car service, New Orleans airport transfer, airport limo New Orleans, MSY to French Quarter, airport SUV service Kenner",
+  title: "MSY Airport Transfer | $105 Flat Rate | Sky Livery LLC",
+  description:
+    "Flat $105 SUV transfer from Louis Armstrong International (MSY) to New Orleans. Flight tracked, meet & greet, gratuity included, no surge. Book online or call.",
 };
 
 export default function Page() {
   return (
-    <main>
-      <Navbar />
-      <section className="bg-gradient-to-br from-dark via-navy to-navy-light pt-28 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <FadeIn>
-              <p className="text-silver text-xs tracking-[0.2em] uppercase font-semibold mb-3">Sky Livery LLC</p>
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
-                MSY airport<br />SUV transfer
-              </h1>
-              <div className="text-silver text-sm leading-relaxed space-y-4 max-w-lg">
-                <p>Flat-rate luxury SUV service to and from Louis Armstrong New Orleans International Airport. Your chauffeur tracks your flight in real time, meets you at arrivals with a name sign, handles your luggage, and drives you directly to your destination.</p><p>\$105 flat rate to the French Quarter, CBD, Garden District, or anywhere in Greater New Orleans. Gratuity included. No surge pricing during Mardi Gras, Jazz Fest, or any event. 30-minute complimentary wait time on all arrivals.</p><p>Whether you are arriving for business, a convention at the Morial Center, or a weekend in the French Quarter, Sky Livery gets you there in comfort.</p>
-              </div>
-            </FadeIn>
-          </div>
-          <FadeIn delay={0.1}>
-            <BookingForm />
-          </FadeIn>
-        </div>
-      </section>
-      <TrustBar />
-      <CTA />
-      <Footer />
-    </main>
+    <LandingPage
+      eyebrow="MSY Airport Transfer"
+      h1="Louis Armstrong to your door, $105 flat."
+      intro="One flat rate to and from MSY. We watch your flight, meet you at baggage claim, handle the bags. No surge on holidays, no meter, no surprises."
+      highlights={[
+        { title: "$105 flat rate", body: "Any address in New Orleans metro. All-in, gratuity included." },
+        { title: "Flight tracking", body: "Delayed? We already know. Your driver adjusts automatically." },
+        { title: "Meet & greet", body: "Chauffeur at baggage claim with a Sky Livery sign." },
+        { title: "6 passengers, 6 bags", body: "Full-size luxury SUV — plenty of room for a family or crew." },
+      ]}
+      faqs={[
+        { q: "What is the MSY flat rate?", a: "$105 for a luxury SUV to or from any New Orleans metro address. Gratuity included." },
+        { q: "Do you charge extra during festivals?", a: "No. Same rate during Mardi Gras, Jazz Fest, Sugar Bowl, and every day of the year." },
+        { q: "How early should I book?", a: "The sooner the better, but same-day and 24/7 requests are welcome — we&apos;re dispatch around the clock." },
+        { q: "Do you track my flight?", a: "Yes. We monitor arrivals and adjust pickup automatically for delays or early arrivals." },
+      ]}
+    />
   );
 }

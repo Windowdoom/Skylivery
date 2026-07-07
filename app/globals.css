@@ -2,30 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  scroll-behavior: smooth;
+:root {
+  --navy: #0D1B2A;
+  --silver: #A8B2BD;
+  --offwhite: #F7F8FA;
+}
+
+html, body {
+  background: var(--navy);
+  color: white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
-  font-family: "Inter", system-ui, sans-serif;
-  color: #0D1B2A;
-  background: #ffffff;
+*:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 ::selection {
-  background: #0D1B2A;
-  color: #ffffff;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  background: rgba(255, 255, 255, 0.15);
 }

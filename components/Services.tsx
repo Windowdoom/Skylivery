@@ -1,29 +1,55 @@
 import FadeIn from "./FadeIn";
 
 const services = [
-  { title: "Airport transfers", desc: "MSY and Lakefront Airport. Flight tracking, meet and greet at arrivals, 30-minute complimentary wait.", link: "/airport-transfer-msy" },
-  { title: "Corporate travel", desc: "Executive transportation for meetings, conferences, conventions, and client entertainment.", link: "/corporate-transportation-new-orleans" },
-  { title: "Weddings and events", desc: "Arrive in style on your day. Coordinated timing with your planner, pristine vehicle, professional chauffeur.", link: "/wedding-limo-new-orleans" },
-  { title: "Mardi Gras and festivals", desc: "Same flat rate during Mardi Gras, Jazz Fest, Essence, and every event. Zero surge.", link: "/mardi-gras-transportation" },
-  { title: "Night out", desc: "Skip the parking, skip the DUI risk. Door-to-door luxury for dinner, Bourbon Street, or wherever the night goes.", link: "#book" },
+  {
+    title: "Airport Transfers",
+    desc: "Flat-rate MSY pickup or drop-off. Flight tracked. Meet & greet at baggage claim.",
+    href: "/airport-transfer-msy",
+  },
+  {
+    title: "Corporate Travel",
+    desc: "Executive rides, roadshows, client entertainment. Discreet, on time, invoiced.",
+    href: "/corporate-transportation-new-orleans",
+  },
+  {
+    title: "Weddings & Events",
+    desc: "Wedding party transport, rehearsals, receptions. Chauffeur in black tie on request.",
+    href: "/wedding-limo-new-orleans",
+  },
+  {
+    title: "Night Out",
+    desc: "Dinner in the Quarter, jazz on Frenchmen, home before you notice.",
+    href: "/french-quarter-car-service",
+  },
+  {
+    title: "Hourly Charter",
+    desc: "$85/hr, 3-hour minimum weekdays, 4-hour weekends. Your driver, your itinerary.",
+    href: "/#book",
+  },
 ];
 
 export default function Services() {
   return (
-    <section id="services" className="bg-navy py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+    <section id="services" className="py-24 bg-dark border-y border-silver/10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <FadeIn>
-          <p className="text-silver text-xs tracking-[0.2em] uppercase font-semibold text-center mb-2">What we do</p>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-white text-center mb-10">
-            Every occasion, one standard
+          <p className="text-[10px] tracking-[0.3em] uppercase text-silver mb-3">Services</p>
+          <h2 className="font-display text-3xl sm:text-4xl text-white font-semibold mb-12 max-w-2xl">
+            One SUV. Every occasion that matters.
           </h2>
         </FadeIn>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {services.map((s, i) => (
-            <FadeIn key={i} delay={i * 0.06}>
-              <a href={s.link} className="block bg-white/[0.04] border border-silver/[0.1] rounded-xl p-5 hover:bg-white/[0.06] hover:border-silver/20 transition-all group">
-                <h3 className="text-white font-semibold text-sm mb-2 group-hover:text-chrome transition-colors">{s.title}</h3>
-                <p className="text-silver/70 text-xs leading-relaxed">{s.desc}</p>
+            <FadeIn key={s.title} delay={i * 0.05}>
+              <a
+                href={s.href}
+                className="group block h-full bg-white/[0.02] border border-silver/[0.12] rounded-xl p-6 hover:border-white/25 hover:bg-white/[0.04] transition-all"
+              >
+                <h3 className="font-display text-xl text-white font-semibold mb-2">{s.title}</h3>
+                <p className="text-silver text-sm leading-relaxed mb-4">{s.desc}</p>
+                <span className="text-white text-xs font-semibold tracking-widest uppercase group-hover:underline">
+                  Book now →
+                </span>
               </a>
             </FadeIn>
           ))}

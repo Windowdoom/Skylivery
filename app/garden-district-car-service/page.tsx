@@ -1,42 +1,30 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
-import BookingForm from "@/components/BookingForm";
-import TrustBar from "@/components/TrustBar";
-import CTA from "@/components/CTA";
-import Footer from "@/components/Footer";
-import FadeIn from "@/components/FadeIn";
+import LandingPage from "@/components/LandingPage";
 
 export const metadata: Metadata = {
-  title: "Garden District and Uptown Car Service | Sky Livery LLC",
-  description: "Luxury SUV service to the Garden District, Uptown, Magazine Street, and St. Charles Avenue. Flat rates, no surge.",
-  keywords: "Garden District car service, Uptown New Orleans limo, Magazine Street transportation, St Charles Avenue car service, Audubon Park limo",
+  title: "Garden District & Uptown Car Service | Sky Livery LLC",
+  description:
+    "Luxury SUV service in the Garden District and Uptown. Restaurant reservations, hotel transfers, weddings. Flat-rate pricing, no surge, gratuity included.",
 };
 
 export default function Page() {
   return (
-    <main>
-      <Navbar />
-      <section className="bg-gradient-to-br from-dark via-navy to-navy-light pt-28 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <FadeIn>
-              <p className="text-silver text-xs tracking-[0.2em] uppercase font-semibold mb-3">Sky Livery LLC</p>
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
-                Garden District<br />and Uptown
-              </h1>
-              <div className="text-silver text-sm leading-relaxed space-y-4 max-w-lg">
-                <p>The Garden District and Uptown are where New Orleans shows its most elegant side. Oak-lined St. Charles Avenue, the historic mansions along Prytania Street, Magazine Street shopping, Audubon Park, Tulane and Loyola campuses.</p><p>Sky Livery provides flat-rate luxury SUV service throughout Uptown and the Garden District. Airport transfers, event transportation, dinner runs, and hourly charters. Your chauffeur knows the neighborhood and handles the logistics so you can enjoy the ride.</p>
-              </div>
-            </FadeIn>
-          </div>
-          <FadeIn delay={0.1}>
-            <BookingForm />
-          </FadeIn>
-        </div>
-      </section>
-      <TrustBar />
-      <CTA />
-      <Footer />
-    </main>
+    <LandingPage
+      eyebrow="Garden District & Uptown"
+      h1="St. Charles to Magazine, curbside."
+      intro="From Commander&apos;s Palace to the streetcar, from the Pontchartrain to a home on Prytania — Sky Livery gets you there in the black SUV you&apos;d expect."
+      highlights={[
+        { title: "Restaurant reservations", body: "Commander&apos;s, Emeril&apos;s, Coquette, Superior, Clancy&apos;s — dropped at the door." },
+        { title: "Wedding-friendly", body: "Getting-ready to ceremony to reception, one driver, all night." },
+        { title: "Historic-home tours", body: "Book by the hour with a chauffeur who knows Prytania and 1st." },
+        { title: "Flat-rate certainty", body: "Same rate to Uptown from anywhere in the metro." },
+      ]}
+      faqs={[
+        { q: "Do you know the Garden District streets?", a: "Yes. We know the one-ways, the streetcar timing, and the driveways that fit an SUV." },
+        { q: "Can we book by the hour for a wedding?", a: "Yes — hourly charter is $85/hr with a 3-hour weekday, 4-hour weekend minimum." },
+        { q: "Do you drop at the Pontchartrain and Columns hotels?", a: "Yes, and at every historic hotel Uptown." },
+        { q: "Any Mardi Gras parade-day surge?", a: "No. Same rate 365 days a year." },
+      ]}
+    />
   );
 }

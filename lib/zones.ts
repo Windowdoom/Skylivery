@@ -1,85 +1,57 @@
-// INTERNAL PRICING LOGIC - Never exposed to the customer
-// Customer sees a flat rate. They never see "Zone 3" or any zone reference.
+// INTERNAL pricing logic — never expose zone names to the customer.
 
-const KENNER_CENTER = { lat: 29.9841, lng: -90.2417 };
+export const KENNER_CENTER = { lat: 29.9941, lng: -90.2417 };
+export const MSY_AIRPORT = { lat: 29.9934, lng: -90.2580 };
 
-export const ZONE_RATES = [
-  { maxMiles: 5, rate: 35 },
-  { maxMiles: 12, rate: 55 },
-  { maxMiles: 18, rate: 85 },
-  { maxMiles: 25, rate: 110 },
-  { maxMiles: 40, rate: 145 },
-  { maxMiles: Infinity, rate: 195 },
-];
-
-export const AIRPORT_RATE = 105;
+export const AIRPORT_FLAT_RATE = 105;
 export const HOURLY_RATE = 85;
 export const HOURLY_MIN_WEEKDAY = 3;
 export const HOURLY_MIN_WEEKEND = 4;
 
-// City minimums per 162-841
-export const MIN_SUV = 25;
-export const MIN_AIRPORT_SUV = 90;
-
-// MSY airport coordinates
-const MSY = { lat: 29.9934, lng: -90.2580 };
-const LAKEFRONT = { lat: 30.0424, lng: -90.0283 };
-
-function haversineDistance(
-  lat1: number, lng1: number,
-  lat2: number, lng2: number
-): number {
-  const R = 3959; // Earth radius in miles
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+// Haversine distance in miles
+export function distanceMiles(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 3958.8;
+  const toRad = (v: number) => (v * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-function isNearAirport(lat: number, lng: number): boolean {
-  const distToMSY = haversineDistance(lat, lng, MSY.lat, MSY.lng);
-  const distToLakefront = haversineDistance(lat, lng, LAKEFRONT.lat, LAKEFRONT.lng);
-  return distToMSY < 2 || distToLakefront < 2;
+// Zone bands, keyed off distance from Kenner center to the farther endpoint.
+function zoneRate(distanceFromCenter: number): number {
+  if (distanceFromCenter <= 5) return 35;
+  if (distanceFromCenter <= 12) return 55;
+  if (distanceFromCenter <= 18) return 85;
+  if (distanceFromCenter <= 25) return 110;
+  if (distanceFromCenter <= 40) return 145;
+  return 195;
+}
+
+// Is a coordinate near MSY (roughly within 1.5 mi)?
+export function isNearMSY(p: { lat: number; lng: number }): boolean {
+  return distanceMiles(p, MSY_AIRPORT) <= 1.5;
 }
 
 export function calculateRate(
-  pickupLat: number, pickupLng: number,
-  dropoffLat: number, dropoffLng: number
+  pickupLat: number,
+  pickupLng: number,
+  dropoffLat: number,
+  dropoffLng: number
 ): { rate: number; isAirport: boolean } {
-  const pickupIsAirport = isNearAirport(pickupLat, pickupLng);
-  const dropoffIsAirport = isNearAirport(dropoffLat, dropoffLng);
+  const pickup = { lat: pickupLat, lng: pickupLng };
+  const dropoff = { lat: dropoffLat, lng: dropoffLng };
 
-  if (pickupIsAirport || dropoffIsAirport) {
-    return { rate: Math.max(AIRPORT_RATE, MIN_AIRPORT_SUV), isAirport: true };
+  const airport = isNearMSY(pickup) || isNearMSY(dropoff);
+  if (airport) {
+    return { rate: AIRPORT_FLAT_RATE, isAirport: true };
   }
 
-  // Calculate distance from Kenner center to the farther point
-  const distPickup = haversineDistance(
-    KENNER_CENTER.lat, KENNER_CENTER.lng, pickupLat, pickupLng
-  );
-  const distDropoff = haversineDistance(
-    KENNER_CENTER.lat, KENNER_CENTER.lng, dropoffLat, dropoffLng
-  );
-  const maxDist = Math.max(distPickup, distDropoff);
+  const dPickup = distanceMiles(KENNER_CENTER, pickup);
+  const dDropoff = distanceMiles(KENNER_CENTER, dropoff);
+  const farther = Math.max(dPickup, dDropoff);
 
-  // Cross-zone surcharge: if pickup and dropoff span multiple zones
-  const pickupZone = ZONE_RATES.findIndex(z => distPickup <= z.maxMiles);
-  const dropoffZone = ZONE_RATES.findIndex(z => distDropoff <= z.maxMiles);
-  const zonesCrossed = Math.abs(dropoffZone - pickupZone);
-  const surcharge = zonesCrossed > 1 ? (zonesCrossed - 1) * 15 : 0;
-
-  const baseRate = ZONE_RATES.find(z => maxDist <= z.maxMiles)?.rate || 195;
-  const totalRate = Math.max(baseRate + surcharge, MIN_SUV);
-
-  return { rate: totalRate, isAirport: false };
-}
-
-export function generateTripId(): string {
-  const year = new Date().getFullYear();
-  const rand = Math.floor(10000 + Math.random() * 90000);
-  return `SL-${year}-${rand}`;
+  return { rate: zoneRate(farther), isAirport: false };
 }

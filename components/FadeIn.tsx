@@ -1,33 +1,27 @@
 "use client";
-import { useRef, useEffect, useState, ReactNode } from "react";
+import { motion } from "framer-motion";
+import { ReactNode } from "react";
 
-export default function FadeIn({ children, delay = 0, className = "" }: {
-  children: ReactNode; delay?: number; className?: string;
+export default function FadeIn({
+  children,
+  delay = 0,
+  y = 20,
+  className = "",
+}: {
+  children: ReactNode;
+  delay?: number;
+  y?: number;
+  className?: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) setVisible(true); },
-      { threshold: 0.12 }
-    );
-    obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-
   return (
-    <div
-      ref={ref}
+    <motion.div
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
       className={className}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(20px)",
-        transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
-      }}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

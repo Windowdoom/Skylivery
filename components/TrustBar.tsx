@@ -1,16 +1,23 @@
-const signals = ["CPNC licensed", "$1M insured", "No surge pricing", "Gratuity included", "162-841 compliant"];
+const items = [
+  "CPNC Licensed",
+  "$1M Insured",
+  "No Surge Pricing",
+  "Gratuity Included",
+  "Sec. 162-841 Compliant",
+];
 
 export default function TrustBar() {
   return (
-    <div className="bg-white py-5 px-4 border-y border-off-white">
-      <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-x-8 gap-y-2">
-        {signals.map((s, i) => (
-          <div key={i} className="flex items-center gap-2 text-xs text-silver font-medium">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            {s}
+    <section className="border-y border-silver/15 bg-dark">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-wrap justify-center gap-x-8 gap-y-3">
+        {items.map((it, i) => (
+          <div key={it} className="flex items-center gap-3 text-silver text-xs uppercase tracking-[0.2em]">
+            <span className="text-white">✓</span>
+            {it}
+            {i < items.length - 1 && <span className="hidden sm:inline w-1 h-1 rounded-full bg-silver/30 ml-5" />}
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

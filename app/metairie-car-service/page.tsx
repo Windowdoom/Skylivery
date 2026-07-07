@@ -1,42 +1,30 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
-import BookingForm from "@/components/BookingForm";
-import TrustBar from "@/components/TrustBar";
-import CTA from "@/components/CTA";
-import Footer from "@/components/Footer";
-import FadeIn from "@/components/FadeIn";
+import LandingPage from "@/components/LandingPage";
 
 export const metadata: Metadata = {
-  title: "Metairie and Kenner Car Service | Sky Livery LLC",
-  description: "Luxury SUV service in Metairie, Kenner, and Jefferson Parish. Airport transfers, corporate travel, events. Flat rates, no surge.",
-  keywords: "Metairie car service, Kenner limo service, Jefferson Parish transportation, Metairie airport transfer, Veterans Blvd car service",
+  title: "Metairie Car Service | Luxury SUV | Sky Livery LLC",
+  description:
+    "Metairie luxury SUV service. Airport transfers, corporate rides, night out. Flat-rate pricing, gratuity included, no surge. Book online or call.",
 };
 
 export default function Page() {
   return (
-    <main>
-      <Navbar />
-      <section className="bg-gradient-to-br from-dark via-navy to-navy-light pt-28 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <FadeIn>
-              <p className="text-silver text-xs tracking-[0.2em] uppercase font-semibold mb-3">Sky Livery LLC</p>
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
-                Metairie and Kenner<br />car service
-              </h1>
-              <div className="text-silver text-sm leading-relaxed space-y-4 max-w-lg">
-                <p>Sky Livery is based in Kenner and serves all of Jefferson Parish including Metairie, Harahan, River Ridge, and Bridge City. We know the Veterans Boulevard corridor, the Causeway approach, and every shortcut between Lakeside Mall and the airport.</p><p>Whether you need an airport run from your Metairie home, executive transportation to a meeting downtown, or a ride to the French Quarter for dinner, our flat-rate pricing keeps it simple. No meter, no surge, gratuity included.</p>
-              </div>
-            </FadeIn>
-          </div>
-          <FadeIn delay={0.1}>
-            <BookingForm />
-          </FadeIn>
-        </div>
-      </section>
-      <TrustBar />
-      <CTA />
-      <Footer />
-    </main>
+    <LandingPage
+      eyebrow="Metairie Car Service"
+      h1="Metairie, in the seat you deserve."
+      intro="From Lakeside to Lakeway, Elmwood to Old Metairie — Sky Livery is minutes away. We&apos;re based in Kenner, so we&apos;re your neighbor."
+      highlights={[
+        { title: "Minutes away", body: "Based in Kenner. Fastest pickup in the parish." },
+        { title: "Airport-adjacent", body: "MSY runs at $105 flat, day or night." },
+        { title: "Corporate accounts", body: "Recurring rides, monthly invoices, no meter." },
+        { title: "Six-passenger SUV", body: "Family, colleagues, luggage, done." },
+      ]}
+      faqs={[
+        { q: "Do you serve all of Metairie?", a: "Yes — Old Metairie, Lakeway, Fat City, Bucktown, Elmwood, all of it." },
+        { q: "How long is a pickup wait?", a: "We aim for under 20 minutes with advance notice. Same-day is welcome." },
+        { q: "Do you handle corporate accounts?", a: "Yes. Monthly invoicing, dedicated point of contact, priority dispatch." },
+        { q: "Is gratuity extra?", a: "No. Every fare includes gratuity." },
+      ]}
+    />
   );
 }

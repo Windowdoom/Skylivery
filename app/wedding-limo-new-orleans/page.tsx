@@ -1,42 +1,30 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
-import BookingForm from "@/components/BookingForm";
-import TrustBar from "@/components/TrustBar";
-import CTA from "@/components/CTA";
-import Footer from "@/components/Footer";
-import FadeIn from "@/components/FadeIn";
+import LandingPage from "@/components/LandingPage";
 
 export const metadata: Metadata = {
-  title: "Wedding Limo Service New Orleans | Sky Livery LLC",
-  description: "Luxury SUV wedding transportation in New Orleans. Flat rates, professional chauffeur, coordinated timing. Arrive in style on your day.",
-  keywords: "wedding limo New Orleans, wedding car service, New Orleans wedding transportation, luxury SUV wedding, bridal car service New Orleans",
+  title: "Wedding Limo & SUV Service New Orleans | Sky Livery LLC",
+  description:
+    "Wedding-day luxury SUV service in New Orleans. Getting ready, ceremony, reception, sendoff. Flat-rate pricing, no surge, chauffeur in black tie on request.",
 };
 
 export default function Page() {
   return (
-    <main>
-      <Navbar />
-      <section className="bg-gradient-to-br from-dark via-navy to-navy-light pt-28 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <FadeIn>
-              <p className="text-silver text-xs tracking-[0.2em] uppercase font-semibold mb-3">Sky Livery LLC</p>
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
-                Wedding day<br />transportation
-              </h1>
-              <div className="text-silver text-sm leading-relaxed space-y-4 max-w-lg">
-                <p>Your wedding day has a hundred moving parts. Transportation should not be one of them. Sky Livery provides luxury SUV service for weddings across Greater New Orleans, from ceremony to reception and everything between.</p><p>We coordinate timing with your wedding planner, stage the vehicle at the venue, and ensure the bride, groom, and wedding party arrive exactly when and where they need to be. Oak Alley Plantation, The Roosevelt, Race and Religious, Commander Palace, or any venue in the city.</p><p>Flat-rate pricing. No hourly surprises. No surge. Gratuity included. One less thing to worry about on the biggest day.</p>
-              </div>
-            </FadeIn>
-          </div>
-          <FadeIn delay={0.1}>
-            <BookingForm />
-          </FadeIn>
-        </div>
-      </section>
-      <TrustBar />
-      <CTA />
-      <Footer />
-    </main>
+    <LandingPage
+      eyebrow="Weddings & Events"
+      h1="Your wedding day, on time to the minute."
+      intro="Sky Livery handles the getting-ready run, the ceremony arrival, the reception drop, and the late-night sendoff. One chauffeur, one black SUV, one calm day."
+      highlights={[
+        { title: "Full-day charter", body: "Book by the hour. One driver assigned to your wedding party." },
+        { title: "Black-tie chauffeur", body: "Suit and tie standard. Black tie on request." },
+        { title: "Six passengers", body: "Bride, groom, parents, wedding-planner — all fit comfortably." },
+        { title: "Backup plan", body: "Weather, timing changes, hotel switches — we adjust in real time." },
+      ]}
+      faqs={[
+        { q: "How does hourly wedding charter work?", a: "$85/hr, 3-hour weekday or 4-hour weekend minimum, one dedicated chauffeur and SUV for the full block." },
+        { q: "Can you coordinate multiple pickups?", a: "Yes — brides room to church to reception to hotel is standard." },
+        { q: "Do you decorate the vehicle?", a: "Light ribbon or Just Married sign on request. We keep it tasteful." },
+        { q: "Do you serve Windsor Court, Ritz, and Roosevelt wedding parties?", a: "Yes, and every property in the Quarter, CBD, and Garden District." },
+      ]}
+    />
   );
 }

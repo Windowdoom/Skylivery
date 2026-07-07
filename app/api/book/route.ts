@@ -26,7 +26,10 @@ export async function POST(req: NextRequest) {
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!url || !anonKey) {
-      return NextResponse.json({ error: "Booking service not configured" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Booking service is not configured yet. Please call to book." },
+        { status: 500 }
+      );
     }
 
     const supabase = createClient(url, anonKey);

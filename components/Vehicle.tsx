@@ -1,34 +1,42 @@
 import FadeIn from "./FadeIn";
 
+const specs = [
+  ["6", "Passengers"],
+  ["6", "Bags"],
+  ["Leather", "Interior"],
+  ["Climate", "Dual-zone"],
+  ["USB-C", "Charging"],
+  ["Water", "Complimentary"],
+];
+
 export default function Vehicle() {
   return (
-    <section id="vehicle" className="bg-white py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+    <section id="vehicle" className="py-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
         <FadeIn>
-          <p className="text-navy-light text-xs tracking-[0.2em] uppercase font-semibold text-center mb-2">The vehicle</p>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-navy text-center mb-10">Luxury SUV</h2>
+          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-silver/15 bg-gradient-to-br from-white/[0.04] to-white/[0.01] flex items-center justify-center">
+            <img src="/logo.png" alt="Sky Livery LLC luxury SUV" className="w-2/3 max-w-sm opacity-90" />
+            <div className="absolute bottom-4 left-4 text-[10px] tracking-[0.3em] uppercase text-silver">
+              Chevrolet Suburban · Black
+            </div>
+          </div>
         </FadeIn>
         <FadeIn delay={0.1}>
-          <div className="bg-off-white rounded-2xl p-8 sm:p-10 border border-silver/[0.08]">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-              {[
-                { label: "Passengers", value: "Up to 6" },
-                { label: "Luggage", value: "6 bags" },
-                { label: "Interior", value: "Leather, climate controlled" },
-                { label: "Amenities", value: "Charging, water, Wi-Fi" },
-              ].map((s, i) => (
-                <div key={i} className="bg-white rounded-lg p-4">
-                  <p className="text-silver text-[10px] uppercase tracking-wider">{s.label}</p>
-                  <p className="text-navy font-semibold text-sm mt-1">{s.value}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-silver text-sm leading-relaxed mb-6">
-              Full-size luxury SUV. Professional chauffeur, spotless interior, on time every time. Whether it is an airport pickup at MSY, a ride to the French Quarter, or an hourly charter for a wedding or corporate event, the vehicle and the service match the destination.
-            </p>
-            <a href="#book" className="inline-block bg-navy text-white px-7 py-3 rounded-lg text-sm font-bold hover:bg-navy-light transition-colors">
-              Book your ride
-            </a>
+          <p className="text-[10px] tracking-[0.3em] uppercase text-silver mb-3">The Vehicle</p>
+          <h2 className="font-display text-3xl sm:text-4xl text-white font-semibold mb-4">
+            One vehicle. Fully outfitted.
+          </h2>
+          <p className="text-silver text-base leading-relaxed mb-8 max-w-lg">
+            A full-size luxury SUV built for six adults and six bags. Detailed daily, staged discreetly, and
+            driven by a professional chauffeur.
+          </p>
+          <div className="grid grid-cols-3 gap-4">
+            {specs.map(([v, l]) => (
+              <div key={l} className="border-t border-silver/20 pt-3">
+                <div className="text-white font-semibold text-lg">{v}</div>
+                <div className="text-silver text-xs uppercase tracking-widest mt-1">{l}</div>
+              </div>
+            ))}
           </div>
         </FadeIn>
       </div>
