@@ -1,6 +1,12 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
-import { assignDriver, markCompleted, cancelBooking } from "@/app/admin/actions";
+import {
+  assignDriver,
+  markCompleted,
+  cancelBooking,
+  deleteBooking,
+  clearTestBookings,
+} from "@/app/admin/actions";
 
 export type Booking = {
   id: string;
@@ -95,17 +101,33 @@ export default function AdminDashboard({
   monthly: MonthlyRow[];
   volume: DriverVolumeRow[];
 }) {
-  const [pending, assigned, completed] = useMemo(() => {
+  const [pending, assigned, completed, cancelled] = useMemo(() => {
     const p: Booking[] = [];
     const a: Booking[] = [];
     const c: Booking[] = [];
+    const x: Booking[] = [];
     for (const b of bookings) {
       if (b.status === "pending") p.push(b);
       else if (b.status === "assigned" || b.status === "in_progress") a.push(b);
       else if (b.status === "completed") c.push(b);
+      else if (b.status === "cancelled") x.push(b);
     }
-    return [p, a, c];
+    return [p, a, c, x];
   }, [bookings]);
+
+  const [clearing, startClear] = useTransition();
+  function onClearTests() {
+    if (
+      !confirm(
+        "Delete all bookings whose customer name looks like test data (test, demo, asdf, qwerty) or uses a throwaway phone? This cannot be undone."
+      )
+    )
+      return;
+    startClear(async () => {
+      const res = await clearTestBookings();
+      alert(`Removed ${res.deleted} test booking${res.deleted === 1 ? "" : "s"}.`);
+    });
+  }
 
   // Filter to the actual current calendar month, not just the newest row.
   const currentMonthKey = new Date().toISOString().slice(0, 7); // "2026-07"
@@ -146,6 +168,13 @@ export default function AdminDashboard({
             >
               Year CSV
             </a>
+            <button
+              onClick={onClearTests}
+              disabled={clearing}
+              className="text-xs text-red-300/80 border border-red-500/30 rounded-md px-3 py-1.5 hover:border-red-400 hover:text-red-300 disabled:opacity-50"
+            >
+              {clearing ? "Clearing…" : "Clear test bookings"}
+            </button>
             <form action="/api/admin/logout" method="post" className="ml-3">
               <button className="text-xs text-cream/70 hover:text-gold">Sign out</button>
             </form>
@@ -193,6 +222,27 @@ export default function AdminDashboard({
           )}
         </Column>
       </section>
+
+      {/* Cancelled section (collapsible) */}
+      {cancelled.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 pb-6">
+          <details className="bg-navy/40 border border-red-500/20 rounded-2xl">
+            <summary className="cursor-pointer list-none px-5 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
+                <h2 className="text-cream font-display text-lg">Cancelled</h2>
+                <span className="text-red-300/70 text-xs">{cancelled.length}</span>
+              </div>
+              <span className="text-cream/50 text-xs">click to expand</span>
+            </summary>
+            <div className="px-5 pb-5 pt-2 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {cancelled.map((b) => (
+                <CancelledCard key={b.id} b={b} />
+              ))}
+            </div>
+          </details>
+        </section>
+      )}
 
       {/* Weekly driver payouts */}
       <PayoutPanel bookings={bookings} drivers={drivers} />
@@ -407,12 +457,25 @@ function PendingCard({
       >
         {pending ? "Assigning…" : "Send"}
       </button>
-      <button
-        onClick={decline}
-        className="mt-2 w-full text-cream/50 hover:text-red-400 text-xs"
-      >
-        Cancel booking
-      </button>
+      <div className="mt-2 flex items-center justify-between text-xs">
+        <button
+          onClick={decline}
+          className="text-cream/50 hover:text-red-400"
+        >
+          Cancel booking
+        </button>
+        <button
+          onClick={() => {
+            if (!confirm(`Permanently delete ${b.trip_id}? Use only for test data.`)) return;
+            start(async () => {
+              await deleteBooking(b.id);
+            });
+          }}
+          className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   );
 }
@@ -471,12 +534,61 @@ function AssignedCard({
 }
 
 function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
+  const [pending, start] = useTransition();
+  function onDelete() {
+    if (
+      !confirm(
+        `Permanently delete ${b.trip_id}? Only do this for test data — real trips should stay for tax records.`
+      )
+    )
+      return;
+    start(async () => {
+      await deleteBooking(b.id);
+    });
+  }
   return (
     <div className="bg-navy/30 border border-cream/10 rounded-xl p-4 opacity-90">
       <BookingCore b={b} />
-      <div className="mt-3 text-xs text-cream/60">
-        Driver: {driverName(drivers, b.assigned_driver)} · Paid via{" "}
-        {b.payment_method ?? "—"}
+      <div className="mt-3 text-xs text-cream/60 flex items-center justify-between">
+        <span>
+          Driver: {driverName(drivers, b.assigned_driver)} · Paid via{" "}
+          {b.payment_method ?? "—"}
+        </span>
+        <button
+          onClick={onDelete}
+          disabled={pending}
+          className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em] ml-2"
+          title="Delete (permanent)"
+        >
+          {pending ? "…" : "Delete"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CancelledCard({ b }: { b: Booking }) {
+  const [pending, start] = useTransition();
+  function onDelete() {
+    if (!confirm(`Permanently delete ${b.trip_id}?`)) return;
+    start(async () => {
+      await deleteBooking(b.id);
+    });
+  }
+  return (
+    <div className="bg-navy/30 border border-red-500/15 rounded-xl p-4 opacity-75">
+      <BookingCore b={b} />
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-red-300/70 text-[10px] uppercase tracking-[0.2em]">
+          Cancelled
+        </span>
+        <button
+          onClick={onDelete}
+          disabled={pending}
+          className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
+        >
+          {pending ? "…" : "Delete"}
+        </button>
       </div>
     </div>
   );

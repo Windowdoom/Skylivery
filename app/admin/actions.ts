@@ -78,3 +78,44 @@ export async function cancelBooking(bookingId: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin");
 }
+
+// Permanently remove a single booking. Use for test bookings that never
+// happened; real cancellations should stay in the record via
+// cancelBooking so trip_log analytics remain honest.
+export async function deleteBooking(bookingId: string) {
+  guard();
+  const sb = supabaseAdmin();
+  const { error } = await sb.from("bookings").delete().eq("id", bookingId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin");
+}
+
+// Bulk-clear obvious test bookings. Matches anything whose customer name
+// looks like a test entry ("test", "demo", "asdf", etc.) OR whose phone
+// is one of the well-known throwaway numbers. Real customer data is
+// never touched.
+export async function clearTestBookings(): Promise<{ deleted: number }> {
+  guard();
+  const sb = supabaseAdmin();
+  const { data: matches, error: findErr } = await sb
+    .from("bookings")
+    .select("id, customer_name, customer_phone")
+    .or(
+      [
+        "customer_name.ilike.%test%",
+        "customer_name.ilike.%demo%",
+        "customer_name.ilike.%asdf%",
+        "customer_name.ilike.%qwerty%",
+        "customer_phone.eq.5551234567",
+        "customer_phone.eq.1234567890",
+        "customer_phone.eq.0000000000",
+      ].join(",")
+    );
+  if (findErr) throw new Error(findErr.message);
+  const ids = (matches ?? []).map((m) => m.id);
+  if (ids.length === 0) return { deleted: 0 };
+  const { error: delErr } = await sb.from("bookings").delete().in("id", ids);
+  if (delErr) throw new Error(delErr.message);
+  revalidatePath("/admin");
+  return { deleted: ids.length };
+}
