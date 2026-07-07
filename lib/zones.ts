@@ -42,9 +42,32 @@ function zoneRate(distanceFromCenter: number): number {
   return 195;
 }
 
-// Roughly within 1.5 mi of MSY.
+// True only when the address is unambiguously MSY airport, judged by the
+// text the customer entered. We do NOT use a geofence because MSY sits
+// inside Kenner, so a radius around MSY coordinates would incorrectly
+// flag ordinary Kenner addresses (residential, Metairie-bound, etc.) as
+// airport trips. Requiring an airport keyword in the address is the only
+// reliable signal.
+const AIRPORT_KEYWORDS = [
+  "msy",
+  "airport",
+  "louis armstrong",
+  "louis-armstrong",
+  "new orleans international",
+  "moisant",
+  "terminal",
+  "kenner ave", // MSY's main access road
+];
+
+export function isAirportAddress(address: string | null | undefined): boolean {
+  if (!address) return false;
+  const a = address.toLowerCase();
+  return AIRPORT_KEYWORDS.some((kw) => a.includes(kw));
+}
+
+// Legacy geofence retained for internal reference only. Not used for pricing.
 export function isNearMSY(p: { lat: number; lng: number }): boolean {
-  return distanceMiles(p, MSY_AIRPORT) <= 1.5;
+  return distanceMiles(p, MSY_AIRPORT) <= 0.4;
 }
 
 // Surcharge in whole dollars for miles beyond the core service zone.
@@ -57,13 +80,17 @@ export function calculateRate(
   pickupLat: number,
   pickupLng: number,
   dropoffLat: number,
-  dropoffLng: number
+  dropoffLng: number,
+  pickupAddress?: string,
+  dropoffAddress?: string
 ): { rate: number; isAirport: boolean; surcharge: number } {
   const pickup = { lat: pickupLat, lng: pickupLng };
   const dropoff = { lat: dropoffLat, lng: dropoffLng };
 
-  const pickupIsMSY = isNearMSY(pickup);
-  const dropoffIsMSY = isNearMSY(dropoff);
+  // Airport detection is purely address-text based. MSY is inside Kenner,
+  // so a lat/lng radius would false-positive on ordinary Kenner trips.
+  const pickupIsMSY = isAirportAddress(pickupAddress);
+  const dropoffIsMSY = isAirportAddress(dropoffAddress);
   const airport = pickupIsMSY || dropoffIsMSY;
 
   if (airport) {

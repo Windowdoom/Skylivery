@@ -60,7 +60,9 @@ export async function POST(req: NextRequest) {
       pickupCoords.lat,
       pickupCoords.lng,
       dropoffCoords.lat,
-      dropoffCoords.lng
+      dropoffCoords.lng,
+      pickup,
+      dropoff
     );
 
     const distance = Math.round(
