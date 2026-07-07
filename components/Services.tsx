@@ -50,7 +50,7 @@ export default function Services() {
         <FadeIn delay={0.05}>
           <p className="text-[10px] tracking-[0.3em] uppercase text-gold text-center mb-3">Services</p>
           <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold text-center max-w-2xl mx-auto mb-14">
-            Luxury SUV service. <span className="italic text-gold">For every occasion.</span>
+            Luxury SUV service for every occasion.
           </h2>
         </FadeIn>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

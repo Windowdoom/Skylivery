@@ -23,8 +23,7 @@ export default function WhySection() {
             Why Sky Livery
           </p>
           <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold text-center max-w-2xl mx-auto mb-14">
-            Everything you expect from a premium car service.
-            <span className="italic text-gold"> None of what you don&apos;t.</span>
+            What a premium car service should be.
           </h2>
         </FadeIn>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">

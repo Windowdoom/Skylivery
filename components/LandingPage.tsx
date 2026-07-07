@@ -1,5 +1,5 @@
 import Navbar from "./Navbar";
-import BookingForm from "./BookingForm";
+import BookingForm, { BookingContext } from "./BookingForm";
 import TrustBar from "./TrustBar";
 import CTA from "./CTA";
 import Footer from "./Footer";
@@ -12,11 +12,27 @@ type Props = {
   intro: string;
   highlights: { title: string; body: string }[];
   faqs: { q: string; a: string }[];
+  bookingContext?: BookingContext;
+  schema?: object;
 };
 
-export default function LandingPage({ eyebrow, h1, intro, highlights, faqs }: Props) {
+export default function LandingPage({
+  eyebrow,
+  h1,
+  intro,
+  highlights,
+  faqs,
+  bookingContext,
+  schema,
+}: Props) {
   return (
     <>
+      {schema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      )}
       <Navbar />
       <main>
         <section className="relative pt-28 pb-16 bg-nola-radial overflow-hidden">
@@ -69,7 +85,7 @@ export default function LandingPage({ eyebrow, h1, intro, highlights, faqs }: Pr
             </div>
             <div className="lg:col-span-2">
               <FadeIn delay={0.15} y={30}>
-                <BookingForm />
+                <BookingForm context={bookingContext} />
               </FadeIn>
             </div>
           </div>
@@ -85,7 +101,7 @@ export default function LandingPage({ eyebrow, h1, intro, highlights, faqs }: Pr
                 Common Questions
               </p>
               <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold text-center mb-12">
-                Answered <span className="italic text-gold">upfront.</span>
+                Answered upfront.
               </h2>
             </FadeIn>
             <div className="space-y-6">

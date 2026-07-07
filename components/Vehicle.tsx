@@ -32,7 +32,7 @@ export default function Vehicle() {
         <FadeIn delay={0.1}>
           <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-3">The Vehicle</p>
           <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold mb-4">
-            Luxury SUV. <span className="italic text-gold">Ready when you are.</span>
+            Luxury SUV. Ready when you are.
           </h2>
           <p className="text-cream/70 text-base leading-relaxed mb-8 max-w-lg">
             Our fleet is full-size luxury SUVs. Room for six adults and six bags, detailed daily,

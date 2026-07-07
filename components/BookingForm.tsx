@@ -6,12 +6,24 @@ import AddressAutocomplete from "./AddressAutocomplete";
 type Quote = { rate: number; note: string; rateType?: string };
 type Step = "form" | "quote" | "details" | "confirmed";
 
-export default function BookingForm({ compact = false }: { compact?: boolean }) {
+export type BookingContext = {
+  label: string;         // shown to the customer, e.g. "Wedding & Events"
+  subtitle?: string;     // small right-side tag, e.g. "Full-day charter"
+  serviceType: string;   // stored in bookings.service_type
+};
+
+export default function BookingForm({
+  compact = false,
+  context,
+}: {
+  compact?: boolean;
+  context?: BookingContext;
+}) {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [serviceType, setServiceType] = useState("transfer");
+  const [serviceType, setServiceType] = useState(context?.serviceType ?? "transfer");
   const [passengers, setPassengers] = useState("1");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -132,27 +144,45 @@ export default function BookingForm({ compact = false }: { compact?: boolean }) 
 
       {(step === "form" || step === "quote") && (
         <>
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {(
-              [
-                ["transfer", "Transfer"],
-                ["hourly", "Hourly"],
-                ["airport", "Airport"],
-              ] as const
-            ).map(([val, label]) => (
-              <button
-                key={val}
-                onClick={() => setServiceType(val)}
-                className={`py-2.5 rounded-lg text-sm font-medium transition-all border ${
-                  serviceType === val
-                    ? "bg-gold/15 border-gold text-cream"
-                    : "bg-transparent border-gold/20 text-cream/60 hover:border-gold/50"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          {context ? (
+            <div className="mb-4 flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-gold/45 bg-gold/[0.08]">
+              <div>
+                <div className="text-[10px] tracking-[0.25em] uppercase text-gold">
+                  Booking
+                </div>
+                <div className="text-cream text-sm font-semibold mt-0.5">
+                  {context.label}
+                </div>
+              </div>
+              {context.subtitle && (
+                <span className="text-cream/70 text-xs text-right">
+                  {context.subtitle}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {(
+                [
+                  ["transfer", "Transfer"],
+                  ["hourly", "Hourly"],
+                  ["airport", "Airport"],
+                ] as const
+              ).map(([val, label]) => (
+                <button
+                  key={val}
+                  onClick={() => setServiceType(val)}
+                  className={`py-2.5 rounded-lg text-sm font-medium transition-all border ${
+                    serviceType === val
+                      ? "bg-gold/15 border-gold text-cream"
+                      : "bg-transparent border-gold/20 text-cream/60 hover:border-gold/50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-3 mb-4">
             <AddressAutocomplete

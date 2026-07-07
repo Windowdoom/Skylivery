@@ -1,10 +1,28 @@
 import type { Metadata } from "next";
 import LandingPage from "@/components/LandingPage";
 
+const url = "https://skylivery.llc/metairie-car-service";
+
 export const metadata: Metadata = {
   title: "Metairie Car Service | Luxury SUV | Sky Livery LLC",
   description:
-    "Metairie luxury SUV service. Airport transfers, corporate rides, night out. Flat-rate pricing, gratuity included, no surge. Book online or call.",
+    "Metairie luxury SUV service. Airport transfers, corporate rides, night out. Flat-rate pricing, gratuity included, no surge.",
+  alternates: { canonical: url },
+  openGraph: {
+    title: "Metairie Car Service | Sky Livery LLC",
+    description: "Luxury SUV in Metairie. Flat-rate, gratuity included.",
+    url,
+    type: "website",
+  },
+};
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  serviceType: "Car service",
+  provider: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://skylivery.llc" },
+  areaServed: { "@type": "City", name: "Metairie" },
+  url,
 };
 
 export default function Page() {
@@ -13,6 +31,12 @@ export default function Page() {
       eyebrow="Metairie Car Service"
       h1="Metairie, in the seat you deserve."
       intro="From Lakeside to Lakeway, Elmwood to Old Metairie, Sky Livery is minutes away. We&apos;re based in Kenner, so we&apos;re your neighbor."
+      bookingContext={{
+        label: "Metairie Ride",
+        subtitle: "Point to point",
+        serviceType: "transfer",
+      }}
+      schema={schema}
       highlights={[
         { title: "Minutes away", body: "Based in Kenner. Fastest pickup in the parish." },
         { title: "Airport-adjacent", body: "MSY runs at $105 flat, day or night." },

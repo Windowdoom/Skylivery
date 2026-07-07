@@ -17,7 +17,7 @@ export default function Areas() {
         <FadeIn delay={0.05}>
           <p className="text-[10px] tracking-[0.3em] uppercase text-gold text-center mb-3">Where We Ride</p>
           <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold text-center max-w-2xl mx-auto mb-4">
-            Greater New Orleans, <span className="italic text-gold">gate to gate.</span>
+            Greater New Orleans, gate to gate.
           </h2>
           <p className="text-cream/65 max-w-xl mx-auto text-center mb-12">
             Based in Kenner, minutes from MSY. We serve every neighborhood on both sides of the lake.
