@@ -21,7 +21,7 @@ export default function Footer() {
               <div className="text-cream font-display text-lg tracking-[0.14em]">Sky Livery</div>
               <div className="text-gold text-[9px] tracking-[0.35em] mt-0.5 flex items-center gap-1">
                 <FleurIcon className="w-2 h-2.5" />
-                KENNER · LOUISIANA
+                NEW ORLEANS · LOUISIANA
               </div>
             </div>
           </div>
@@ -53,7 +53,7 @@ export default function Footer() {
           <ul className="space-y-2 text-cream/75 text-sm">
             <li><a href="tel:+15044790454" className="hover:text-gold">(504) 479-0454</a></li>
             <li><a href="mailto:skyliveryllc@gmail.com" className="hover:text-gold">skyliveryllc@gmail.com</a></li>
-            <li>Kenner, LA 70062</li>
+            <li>New Orleans, LA</li>
             <li>24/7 dispatch</li>
           </ul>
         </div>

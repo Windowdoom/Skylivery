@@ -20,7 +20,7 @@ export default function Areas() {
             Greater New Orleans, gate to gate.
           </h2>
           <p className="text-cream/65 max-w-xl mx-auto text-center mb-12">
-            Based in Kenner, minutes from MSY. We serve every neighborhood on both sides of the lake.
+            Based in New Orleans, minutes from MSY. We serve every neighborhood on both sides of the lake.
           </p>
         </FadeIn>
         <FadeIn delay={0.1}>

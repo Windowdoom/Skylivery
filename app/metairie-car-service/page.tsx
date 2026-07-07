@@ -30,7 +30,7 @@ export default function Page() {
     <LandingPage
       eyebrow="Metairie Car Service"
       h1="Metairie, in the seat you deserve."
-      intro="From Lakeside to Lakeway, Elmwood to Old Metairie, Sky Livery is minutes away. We&apos;re based in Kenner, so we&apos;re your neighbor."
+      intro="From Lakeside to Lakeway, Elmwood to Old Metairie, Sky Livery is minutes away. We&apos;re based in New Orleans, so we&apos;re your neighbor."
       bookingContext={{
         label: "Metairie Ride",
         subtitle: "Point to point",
@@ -38,7 +38,7 @@ export default function Page() {
       }}
       schema={schema}
       highlights={[
-        { title: "Minutes away", body: "Based in Kenner. Fastest pickup in the parish." },
+        { title: "Minutes away", body: "Based in New Orleans. Fastest pickup in the parish." },
         { title: "Airport-adjacent", body: "MSY runs at $105 flat, day or night." },
         { title: "Corporate accounts", body: "Recurring rides, monthly invoices, no meter." },
         { title: "Six-passenger SUV", body: "Family, colleagues, luggage, done." },

@@ -51,7 +51,7 @@ export default function Vehicle() {
           <p className="text-cream/70 text-base leading-relaxed mb-8 max-w-lg">
             Our fleet is full-size luxury SUVs. Room for up to seven passengers and six bags,
             detailed daily, staged discreetly. Every ride goes out with a professional chauffeur
-            who knows every block from Kenner to the Bywater.
+            who knows every block from the Quarter to the Bywater.
           </p>
           <div className="grid grid-cols-3 gap-4 stag">
             {specs.map(([v, l]) => (

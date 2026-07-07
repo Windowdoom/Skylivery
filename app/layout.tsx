@@ -51,12 +51,11 @@ const businessSchema = {
     "Flat-rate luxury SUV service in New Orleans. Airport transfers, corporate travel, weddings, events. No surge pricing. Licensed and insured, 45+ years chauffeur experience.",
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Kenner",
+    addressLocality: "New Orleans",
     addressRegion: "LA",
-    postalCode: "70062",
     addressCountry: "US",
   },
-  geo: { "@type": "GeoCoordinates", latitude: 29.9941, longitude: -90.2417 },
+  geo: { "@type": "GeoCoordinates", latitude: 29.9511, longitude: -90.0715 },
   areaServed: [
     { "@type": "City", name: "Kenner" },
     { "@type": "City", name: "New Orleans" },

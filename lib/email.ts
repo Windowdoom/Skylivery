@@ -90,7 +90,7 @@ function shell(title: string, previewText: string, inner: string): string {
                 </div>
                 <div style="font-family:Arial,sans-serif;font-size:11px;color:#F5EBD3;opacity:0.75;">
                   Sky Livery LLC · (504) 479-0454 · 24/7 dispatch<br/>
-                  Kenner, LA 70062 · Licensed &amp; Insured · 45+ Years Chauffeur Experience
+                  New Orleans, LA · Licensed &amp; Insured · 45+ Years Chauffeur Experience
                 </div>
               </td>
             </tr>
