@@ -42,32 +42,46 @@ function zoneRate(distanceFromCenter: number): number {
   return 195;
 }
 
-// True only when the address is unambiguously MSY airport, judged by the
-// text the customer entered. We do NOT use a geofence because MSY sits
-// inside Kenner, so a radius around MSY coordinates would incorrectly
-// flag ordinary Kenner addresses (residential, Metairie-bound, etc.) as
-// airport trips. Requiring an airport keyword in the address is the only
-// reliable signal.
-const AIRPORT_KEYWORDS = [
-  "msy",
-  "airport",
+// True only when the address text unambiguously names MSY itself, not a
+// hotel/park/rental lot that happens to include the word "airport". We
+// match distinctive multi-word phrases that are only true of the actual
+// airport, plus the airport's IATA code when it appears as a standalone
+// token, plus a tight geofence around the terminal building as a backup
+// for cases where Places returned only "Louis Armstrong New Orleans
+// International Airport (MSY)" without a street.
+const AIRPORT_PHRASES = [
   "louis armstrong",
   "louis-armstrong",
-  "new orleans international",
-  "moisant",
-  "terminal",
-  "kenner ave", // MSY's main access road
+  "new orleans international airport",
+  "new orleans intl airport",
+  "moisant field",
+  "msy airport",
 ];
 
-export function isAirportAddress(address: string | null | undefined): boolean {
-  if (!address) return false;
-  const a = address.toLowerCase();
-  return AIRPORT_KEYWORDS.some((kw) => a.includes(kw));
+// Actual terminal building coordinates.
+const MSY_TERMINAL = { lat: 29.9911, lng: -90.2592 };
+const AIRPORT_GEOFENCE_MI = 0.25;
+
+export function isAirportAddress(
+  address: string | null | undefined,
+  coords?: { lat: number; lng: number }
+): boolean {
+  if (address) {
+    const a = address.toLowerCase();
+    if (AIRPORT_PHRASES.some((kw) => a.includes(kw))) return true;
+    // Match "MSY" only as a standalone token, not as part of another word
+    // like "amsy" or a street name. Word boundary check.
+    if (/\bmsy\b/.test(a)) return true;
+  }
+  if (coords && distanceMiles(coords, MSY_TERMINAL) <= AIRPORT_GEOFENCE_MI) {
+    return true;
+  }
+  return false;
 }
 
 // Legacy geofence retained for internal reference only. Not used for pricing.
 export function isNearMSY(p: { lat: number; lng: number }): boolean {
-  return distanceMiles(p, MSY_AIRPORT) <= 0.4;
+  return distanceMiles(p, MSY_TERMINAL) <= AIRPORT_GEOFENCE_MI;
 }
 
 // Surcharge in whole dollars for miles beyond the core service zone.
@@ -87,10 +101,11 @@ export function calculateRate(
   const pickup = { lat: pickupLat, lng: pickupLng };
   const dropoff = { lat: dropoffLat, lng: dropoffLng };
 
-  // Airport detection is purely address-text based. MSY is inside Kenner,
-  // so a lat/lng radius would false-positive on ordinary Kenner trips.
-  const pickupIsMSY = isAirportAddress(pickupAddress);
-  const dropoffIsMSY = isAirportAddress(dropoffAddress);
+  // Airport detection is address-text first, with a tight terminal-only
+  // geofence as backup. Loose "airport" substrings would false-positive on
+  // hotels/parks/rentals near MSY.
+  const pickupIsMSY = isAirportAddress(pickupAddress, pickup);
+  const dropoffIsMSY = isAirportAddress(dropoffAddress, dropoff);
   const airport = pickupIsMSY || dropoffIsMSY;
 
   if (airport) {
