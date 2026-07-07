@@ -311,24 +311,23 @@ export default function BookingForm({
             <p className="text-gold text-[10px] font-semibold tracking-[0.2em] uppercase mb-2 mt-1">
               How would you like to pay?
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {[
-                { v: "online", l: "Online link", h: "We text a Square link before pickup" },
-                { v: "in-vehicle", l: "In vehicle", h: "Card or cash with the driver" },
-                { v: "invoice", l: "Invoice", h: "Emailed after the ride" },
+                { v: "online", l: "Pay before pickup", h: "We text you a secure Square link" },
+                { v: "in-vehicle", l: "Pay in the car", h: "Card tap or cash with the driver" },
               ].map((opt) => (
                 <button
                   key={opt.v}
                   type="button"
                   onClick={() => setPaymentIntent(opt.v)}
-                  className={`text-left rounded-md border p-2.5 transition ${
+                  className={`text-left rounded-md border p-3 transition ${
                     paymentIntent === opt.v
                       ? "border-gold bg-gold/[0.10] text-cream"
                       : "border-gold/25 bg-navy/40 text-cream/70 hover:border-gold/50"
                   }`}
                 >
-                  <div className="text-xs font-semibold">{opt.l}</div>
-                  <div className="text-[10px] text-cream/50 mt-0.5 leading-tight">{opt.h}</div>
+                  <div className="text-sm font-semibold">{opt.l}</div>
+                  <div className="text-[11px] text-cream/50 mt-1 leading-tight">{opt.h}</div>
                 </button>
               ))}
             </div>

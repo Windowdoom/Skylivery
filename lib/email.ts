@@ -177,19 +177,13 @@ export async function sendBookingConfirmation(b: {
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
           <tr>
             <td style="padding:12px 14px;background:#EFE3C4;border:1px solid #8C7A46;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
-              <strong>1. Online (card).</strong> Use the secure Square payment link we will text you before pickup.
+              <strong>Pay before pickup.</strong> If you chose this at booking, we will text you a secure Square payment link. Tap it and pay in about ten seconds.
             </td>
           </tr>
           <tr><td style="height:8px;"></td></tr>
           <tr>
             <td style="padding:12px 14px;background:#EFE3C4;border:1px solid #8C7A46;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
-              <strong>2. In-vehicle (card).</strong> Every driver carries a Square reader. Tap or insert on drop-off.
-            </td>
-          </tr>
-          <tr><td style="height:8px;"></td></tr>
-          <tr>
-            <td style="padding:12px 14px;background:#EFE3C4;border:1px solid #8C7A46;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
-              <strong>3. Cash.</strong> Accepted as well. Please have exact fare if possible.
+              <strong>Pay in the car.</strong> Your driver carries a Square reader. Tap or insert your card on drop-off, or pay with cash.
             </td>
           </tr>
         </table>

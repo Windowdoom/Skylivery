@@ -802,9 +802,9 @@ function NewBookingModal({
             onChange={(e) => setPaymentIntent(e.target.value)}
             className={input}
           >
-            <option value="in-vehicle" className="bg-navy">Pay in vehicle</option>
-            <option value="online" className="bg-navy">Online link (Square)</option>
-            <option value="invoice" className="bg-navy">Invoice</option>
+            <option value="in-vehicle" className="bg-navy">Pay in the car</option>
+            <option value="online" className="bg-navy">Pay before (Square link)</option>
+            <option value="invoice" className="bg-navy">Invoice (corporate only)</option>
           </select>
         </div>
 
