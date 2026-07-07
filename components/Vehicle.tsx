@@ -1,4 +1,5 @@
 import FadeIn from "./FadeIn";
+import { FleurIcon } from "./Fleur";
 
 const specs = [
   ["6", "Passengers"],
@@ -11,30 +12,37 @@ const specs = [
 
 export default function Vehicle() {
   return (
-    <section id="vehicle" className="py-24">
+    <section id="vehicle" className="py-24 bg-dark border-y border-gold/15">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
         <FadeIn>
-          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-silver/15 bg-gradient-to-br from-white/[0.04] to-white/[0.01] flex items-center justify-center">
-            <img src="/logo.png" alt="Sky Livery LLC luxury SUV" className="w-2/3 max-w-sm opacity-90" />
-            <div className="absolute bottom-4 left-4 text-[10px] tracking-[0.3em] uppercase text-silver">
-              Chevrolet Suburban · Black
+          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-gold/30 bg-gradient-to-br from-navy via-navy to-dark flex items-center justify-center shadow-brass">
+            {/* wrought-iron scroll frame */}
+            <svg viewBox="0 0 400 300" className="absolute inset-0 w-full h-full text-gold/10">
+              <path d="M20 20 L40 40 M380 20 L360 40 M20 280 L40 260 M380 280 L360 260" stroke="currentColor" strokeWidth="2" />
+              <path d="M200 40 Q 180 60 200 80 Q 220 60 200 40 Z" fill="currentColor" />
+              <path d="M200 220 Q 180 240 200 260 Q 220 240 200 220 Z" fill="currentColor" />
+            </svg>
+            <img src="/logo.png" alt="Sky Livery LLC luxury SUV" className="w-2/3 max-w-sm relative z-10 drop-shadow-2xl" />
+            <div className="absolute bottom-4 left-4 flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase text-gold">
+              <FleurIcon className="w-2.5 h-3" />
+              Chevrolet Suburban · Onyx Black
             </div>
           </div>
         </FadeIn>
         <FadeIn delay={0.1}>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-silver mb-3">The Vehicle</p>
-          <h2 className="font-display text-3xl sm:text-4xl text-white font-semibold mb-4">
-            One vehicle. Fully outfitted.
+          <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-3">The Vehicle</p>
+          <h2 className="font-display text-3xl sm:text-4xl text-cream font-semibold mb-4">
+            One vehicle. <span className="italic text-gold">Fully outfitted.</span>
           </h2>
-          <p className="text-silver text-base leading-relaxed mb-8 max-w-lg">
-            A full-size luxury SUV built for six adults and six bags. Detailed daily, staged discreetly, and
-            driven by a professional chauffeur.
+          <p className="text-cream/70 text-base leading-relaxed mb-8 max-w-lg">
+            A full-size luxury SUV built for six adults and six bags. Detailed daily, staged discreetly,
+            and driven by a professional chauffeur who knows every block from Kenner to the Bywater.
           </p>
           <div className="grid grid-cols-3 gap-4">
             {specs.map(([v, l]) => (
-              <div key={l} className="border-t border-silver/20 pt-3">
-                <div className="text-white font-semibold text-lg">{v}</div>
-                <div className="text-silver text-xs uppercase tracking-widest mt-1">{l}</div>
+              <div key={l} className="border-t border-gold/40 pt-3">
+                <div className="text-cream font-semibold text-lg">{v}</div>
+                <div className="text-gold/80 text-xs uppercase tracking-[0.2em] mt-1">{l}</div>
               </div>
             ))}
           </div>

@@ -120,7 +120,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       </head>
-      <body className="font-sans bg-navy text-white">{children}</body>
+      <body className="font-sans bg-navy text-cream">{children}</body>
     </html>
   );
 }

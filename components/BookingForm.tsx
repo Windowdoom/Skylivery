@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
+import { FleurIcon } from "./Fleur";
 
 type Quote = { rate: number; note: string; rateType?: string };
 type Step = "form" | "quote" | "details" | "confirmed";
 
-export default function BookingForm() {
+export default function BookingForm({ compact = false }: { compact?: boolean }) {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [date, setDate] = useState("");
@@ -88,16 +89,29 @@ export default function BookingForm() {
     setError(null);
   }
 
+  const input =
+    "w-full px-4 py-3 bg-navy/60 border border-gold/25 rounded-lg text-cream text-sm placeholder:text-cream/40 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/40 transition";
+
   return (
     <div
       id="book"
-      className="bg-white/[0.035] border border-silver/[0.14] rounded-2xl p-6 sm:p-7 backdrop-blur-2xl shadow-2xl shadow-black/40"
+      className={`relative bg-navy/70 border border-gold/30 rounded-2xl ${
+        compact ? "p-6" : "p-6 sm:p-8"
+      } backdrop-blur-2xl shadow-brass`}
     >
-      <div className="flex items-baseline justify-between mb-1">
-        <h2 className="text-white font-display text-xl sm:text-2xl font-semibold">Book your ride</h2>
-        <span className="text-silver text-[10px] tracking-[0.25em] uppercase">Flat rate</span>
+      {/* Decorative corner flourishes */}
+      <FleurIcon className="absolute top-3 left-3 w-3 h-4 text-gold/50" />
+      <FleurIcon className="absolute top-3 right-3 w-3 h-4 text-gold/50" />
+
+      <div className="text-center mb-1">
+        <span className="text-[10px] tracking-[0.3em] uppercase text-gold">Reservations</span>
       </div>
-      <p className="text-silver text-sm mb-5">Gratuity included. No surge, ever.</p>
+      <h2 className="text-cream font-display text-2xl font-semibold text-center mb-1">
+        Book your ride
+      </h2>
+      <p className="text-cream/60 text-xs text-center mb-6">
+        Flat rate · gratuity included · no surge
+      </p>
 
       {(step === "form" || step === "quote") && (
         <>
@@ -114,8 +128,8 @@ export default function BookingForm() {
                 onClick={() => setServiceType(val)}
                 className={`py-2.5 rounded-lg text-sm font-medium transition-all border ${
                   serviceType === val
-                    ? "bg-white/10 border-white/30 text-white"
-                    : "bg-transparent border-silver/[0.12] text-silver hover:border-silver/25"
+                    ? "bg-gold/15 border-gold text-cream"
+                    : "bg-transparent border-gold/20 text-cream/60 hover:border-gold/50"
                 }`}
               >
                 {label}
@@ -125,21 +139,21 @@ export default function BookingForm() {
 
           <div className="space-y-3 mb-4">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-silver/70 text-xs">●</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold text-xs">●</span>
               <input
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
                 placeholder="Pickup address"
-                className="w-full pl-7 pr-4 py-3 bg-white/[0.04] border border-silver/[0.14] rounded-lg text-white text-sm placeholder:text-silver/50 focus:border-white/40 focus:outline-none"
+                className={input + " pl-7"}
               />
             </div>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-silver/70 text-xs">◉</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold text-xs">◉</span>
               <input
                 value={dropoff}
                 onChange={(e) => setDropoff(e.target.value)}
                 placeholder="Dropoff address"
-                className="w-full pl-7 pr-4 py-3 bg-white/[0.04] border border-silver/[0.14] rounded-lg text-white text-sm placeholder:text-silver/50 focus:border-white/40 focus:outline-none"
+                className={input + " pl-7"}
               />
             </div>
           </div>
@@ -149,37 +163,37 @@ export default function BookingForm() {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="py-2.5 px-3 bg-white/[0.04] border border-silver/[0.14] rounded-lg text-white text-sm focus:outline-none [color-scheme:dark]"
+              className={input + " [color-scheme:dark]"}
             />
             <input
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="py-2.5 px-3 bg-white/[0.04] border border-silver/[0.14] rounded-lg text-white text-sm focus:outline-none [color-scheme:dark]"
+              className={input + " [color-scheme:dark]"}
             />
             <select
               value={passengers}
               onChange={(e) => setPassengers(e.target.value)}
-              className="py-2.5 px-3 bg-white/[0.04] border border-silver/[0.14] rounded-lg text-white text-sm focus:outline-none appearance-none"
+              className={input + " appearance-none"}
             >
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <option key={n} value={n} className="bg-navy">
-                  {n} {n === 1 ? "passenger" : "passengers"}
+                  {n} {n === 1 ? "pax" : "pax"}
                 </option>
               ))}
             </select>
           </div>
 
           {quote && step === "quote" && (
-            <div className="bg-emerald-500/[0.07] border border-emerald-500/25 rounded-xl p-4 mb-4">
-              <p className="text-emerald-400 text-[10px] font-semibold tracking-[0.2em] uppercase mb-1">
+            <div className="bg-gold/[0.08] border border-gold/40 rounded-xl p-4 mb-4">
+              <p className="text-gold text-[10px] font-semibold tracking-[0.2em] uppercase mb-1">
                 Your flat rate
               </p>
               <div className="flex items-baseline gap-2">
-                <span className="text-white text-3xl font-bold">${quote.rate}</span>
-                <span className="text-silver text-sm">all-inclusive</span>
+                <span className="text-cream font-display text-4xl font-semibold">${quote.rate}</span>
+                <span className="text-cream/70 text-sm">all-inclusive</span>
               </div>
-              <p className="text-silver/70 text-xs mt-1">{quote.note}</p>
+              <p className="text-cream/60 text-xs mt-1">{quote.note}</p>
             </div>
           )}
 
@@ -189,14 +203,14 @@ export default function BookingForm() {
             <button
               onClick={getQuote}
               disabled={!pickup || !dropoff || loading}
-              className="w-full py-3.5 bg-white text-navy rounded-lg text-base font-bold hover:scale-[1.01] hover:shadow-lg hover:shadow-white/10 transition-all disabled:opacity-50 disabled:hover:scale-100"
+              className="w-full py-3.5 bg-gold text-navy rounded-lg text-base font-bold tracking-wide hover:bg-cream hover:shadow-brass transition-all disabled:opacity-50 disabled:hover:shadow-none"
             >
-              {loading ? "Calculating…" : "Get my rate"}
+              {loading ? "Calculating…" : "Get my flat rate"}
             </button>
           ) : (
             <button
               onClick={() => setStep("details")}
-              className="w-full py-3.5 bg-white text-navy rounded-lg text-base font-bold hover:scale-[1.01] transition-all"
+              className="w-full py-3.5 bg-gold text-navy rounded-lg text-base font-bold tracking-wide hover:bg-cream transition-all"
             >
               Book this ride
             </button>
@@ -206,72 +220,52 @@ export default function BookingForm() {
 
       {step === "details" && (
         <div className="space-y-3">
-          <div className="bg-emerald-500/[0.07] border border-emerald-500/25 rounded-xl p-3 mb-2">
-            <p className="text-white text-sm">
-              <span className="font-bold">${quote?.rate}</span>{" "}
-              <span className="text-silver">flat rate, gratuity included</span>
+          <div className="bg-gold/[0.08] border border-gold/40 rounded-xl p-3 mb-2">
+            <p className="text-cream text-sm">
+              <span className="font-bold text-gold">${quote?.rate}</span>{" "}
+              <span className="text-cream/70">flat rate, gratuity included</span>
             </p>
           </div>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Full name"
-            className="w-full px-4 py-3 bg-white/[0.04] border border-silver/[0.14] rounded-lg text-white text-sm placeholder:text-silver/50 focus:border-white/40 focus:outline-none"
-          />
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone number"
-            type="tel"
-            className="w-full px-4 py-3 bg-white/[0.04] border border-silver/[0.14] rounded-lg text-white text-sm placeholder:text-silver/50 focus:border-white/40 focus:outline-none"
-          />
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email address"
-            type="email"
-            className="w-full px-4 py-3 bg-white/[0.04] border border-silver/[0.14] rounded-lg text-white text-sm placeholder:text-silver/50 focus:border-white/40 focus:outline-none"
-          />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className={input} />
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className={input} />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" type="email" className={input} />
           {error && <p className="text-red-400 text-xs">{error}</p>}
           <button
             onClick={confirmBooking}
             disabled={submitting}
-            className="w-full py-3.5 bg-white text-navy rounded-lg text-base font-bold hover:scale-[1.01] transition-transform disabled:opacity-50"
+            className="w-full py-3.5 bg-gold text-navy rounded-lg text-base font-bold tracking-wide hover:bg-cream transition-all disabled:opacity-50"
           >
             {submitting ? "Booking…" : "Confirm booking"}
           </button>
-          <button
-            onClick={() => setStep("quote")}
-            className="w-full py-2 text-silver text-sm hover:text-white transition-colors"
-          >
+          <button onClick={() => setStep("quote")} className="w-full py-2 text-cream/60 text-sm hover:text-gold transition-colors">
             Back
           </button>
         </div>
       )}
 
       {step === "confirmed" && (
-        <div className="text-center py-6">
-          <div className="w-14 h-14 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
-            <span className="text-emerald-400 text-2xl">✓</span>
+        <div className="text-center py-4">
+          <div className="w-16 h-16 rounded-full border border-gold/60 flex items-center justify-center mx-auto mb-4">
+            <FleurIcon className="w-6 h-8 text-gold" />
           </div>
-          <h3 className="text-white font-display text-xl font-semibold mb-2">Booking received</h3>
-          <p className="text-silver text-sm mb-4">
+          <h3 className="text-cream font-display text-2xl font-semibold mb-2">Merci — booking received.</h3>
+          <p className="text-cream/70 text-sm mb-4">
             We&apos;ll text {phone} shortly to confirm your ride.
             <br />
             Flat rate ${quote?.rate}, gratuity included.
           </p>
-          <button onClick={resetAll} className="text-white text-sm font-semibold hover:underline">
+          <button onClick={resetAll} className="text-gold text-sm font-semibold hover:underline">
             Book another ride
           </button>
         </div>
       )}
 
-      <p className="text-center text-silver/60 text-xs mt-4">
+      <p className="text-center text-cream/50 text-xs mt-5">
         Or call{" "}
-        <a href="tel:+15040000000" className="text-white font-semibold hover:underline">
+        <a href="tel:+15040000000" className="text-gold font-semibold hover:underline">
           (504) 000-0000
         </a>{" "}
-        · 24/7
+        · 24/7 dispatch
       </p>
     </div>
   );

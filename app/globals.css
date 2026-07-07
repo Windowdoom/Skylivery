@@ -3,24 +3,41 @@
 @tailwind utilities;
 
 :root {
-  --navy: #0D1B2A;
-  --silver: #A8B2BD;
-  --offwhite: #F7F8FA;
+  --navy: #0A1628;
+  --dark: #060D1A;
+  --cream: #F2E9D2;
+  --gold: #C9A961;
 }
 
 html, body {
   background: var(--navy);
-  color: white;
+  color: var(--cream);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 *:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.6);
-  outline-offset: 2px;
+  outline: 2px solid rgba(201, 169, 97, 0.7);
+  outline-offset: 3px;
   border-radius: 4px;
 }
 
 ::selection {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(201, 169, 97, 0.25);
+  color: #F2E9D2;
+}
+
+/* Subtle brass rule used as section divider */
+.brass-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 169, 97, 0.5), transparent);
+}
+
+/* Slow gold shimmer for accents */
+@keyframes brassShimmer {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+.brass-shimmer {
+  animation: brassShimmer 4s ease-in-out infinite;
 }
