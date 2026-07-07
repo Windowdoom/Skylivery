@@ -56,11 +56,21 @@ const AIRPORT_PHRASES = [
   "new orleans intl airport",
   "moisant field",
   "msy airport",
+  // MSY's official street address is "1 Terminal Dr, Kenner, LA 70062".
+  // "terminal dr" combined with Kenner or 70062 is airport-specific.
+  "terminal dr, kenner",
+  "terminal drive, kenner",
+  "terminal dr kenner",
 ];
 
-// Actual terminal building coordinates.
-const MSY_TERMINAL = { lat: 29.9911, lng: -90.2592 };
-const AIRPORT_GEOFENCE_MI = 0.25;
+// Terminal building coordinates. Geofence is kept modest (0.5mi) so a
+// residential Kenner address never trips it — Kenner center itself is
+// only ~0.98mi from the terminal, so we cannot open the fence any wider
+// without false-positiving on real neighborhood trips. The phrase
+// checks above are the primary signal; this geofence is only a backup
+// for Places pins that geocode to the terminal building.
+const MSY_TERMINAL = { lat: 29.9934, lng: -90.258 };
+const AIRPORT_GEOFENCE_MI = 0.5;
 
 export function isAirportAddress(
   address: string | null | undefined,
@@ -72,6 +82,9 @@ export function isAirportAddress(
     // Match "MSY" only as a standalone token, not as part of another word
     // like "amsy" or a street name. Word boundary check.
     if (/\bmsy\b/.test(a)) return true;
+    // "Terminal Dr" combined with 70062 is airport-specific too.
+    if (a.includes("terminal dr") && a.includes("70062")) return true;
+    if (a.includes("terminal drive") && a.includes("70062")) return true;
   }
   if (coords && distanceMiles(coords, MSY_TERMINAL) <= AIRPORT_GEOFENCE_MI) {
     return true;
