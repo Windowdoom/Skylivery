@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { FleurIcon } from "./Fleur";
 
 const year = new Date().getFullYear();
@@ -8,7 +9,14 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-4 gap-10">
         <div className="md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
-            <img src="/logo-emblem.png" alt="Sky Livery LLC" className="h-11 w-11 object-contain" />
+            <Image
+              src="/logo-emblem.png"
+              alt="Sky Livery LLC"
+              width={88}
+              height={88}
+              quality={95}
+              className="h-11 w-11 object-contain"
+            />
             <div>
               <div className="text-cream font-display text-lg tracking-[0.14em]">Sky Livery</div>
               <div className="text-gold text-[9px] tracking-[0.35em] mt-0.5 flex items-center gap-1">
