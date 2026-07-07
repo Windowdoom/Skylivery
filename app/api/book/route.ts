@@ -101,33 +101,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    ntfyPush({
-      title: "New Sky Livery booking",
-      body: [
-        `${tripId}`,
-        `${name} · ${phone}`,
-        `↑ ${pickup}`,
-        `↓ ${dropoff}`,
-        `${tripDate} ${tripTime} · $${rate ?? "?"}`,
-      ].join("\n"),
-      tags: "oncoming_automobile,sparkles",
-    }).catch(() => {});
-
-    // Fire-and-forget confirmation email to the customer if they gave one.
-    if (email) {
-      sendBookingConfirmation({
-        to: email,
-        customerName: name,
-        tripId,
-        pickup,
-        dropoff,
-        tripDate,
-        tripTime,
-        rate: rate ?? null,
-        passengers: Number(passengers) || 1,
-        serviceType: serviceType || "transfer",
-      }).catch(() => {});
-    }
+    // Await both side-effects before returning. Fire-and-forget doesn't
+    // work on Vercel serverless — the runtime terminates the function as
+    // soon as the response is sent and kills pending promises. Running
+    // them in parallel keeps the user-facing delay to the slower of the
+    // two (~1–2s for Gmail SMTP handshake).
+    await Promise.allSettled([
+      ntfyPush({
+        title: "New Sky Livery booking",
+        body: [
+          `${tripId}`,
+          `${name} · ${phone}`,
+          `↑ ${pickup}`,
+          `↓ ${dropoff}`,
+          `${tripDate} ${tripTime} · $${rate ?? "?"}`,
+        ].join("\n"),
+        tags: "oncoming_automobile,sparkles",
+      }),
+      email
+        ? sendBookingConfirmation({
+            to: email,
+            customerName: name,
+            tripId,
+            pickup,
+            dropoff,
+            tripDate,
+            tripTime,
+            rate: rate ?? null,
+            passengers: Number(passengers) || 1,
+            serviceType: serviceType || "transfer",
+          })
+        : Promise.resolve(),
+    ]);
 
     return NextResponse.json({ ok: true, tripId });
   } catch (e) {
