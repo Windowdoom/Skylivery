@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { calculateRate, HOURLY_RATE, HOURLY_MIN_WEEKDAY, HOURLY_MIN_WEEKEND } from "@/lib/zones";
+import {
+  calculateRate,
+  distanceMiles,
+  HOURLY_RATE,
+  HOURLY_MIN_WEEKDAY,
+  HOURLY_MIN_WEEKEND,
+} from "@/lib/zones";
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
   const key = process.env.GOOGLE_MAPS_API_KEY;
@@ -57,6 +63,10 @@ export async function POST(req: NextRequest) {
       dropoffCoords.lng
     );
 
+    const distance = Math.round(
+      distanceMiles(pickupCoords, dropoffCoords) * 10
+    ) / 10;
+
     let note: string;
     if (isAirport && surcharge > 0) {
       note = `$${rate} all-inclusive MSY transfer · gratuity included · extended-area destination`;
@@ -70,6 +80,11 @@ export async function POST(req: NextRequest) {
       rate,
       rateType: isAirport ? "airport" : "flat",
       note,
+      pickupLat: pickupCoords.lat,
+      pickupLng: pickupCoords.lng,
+      dropoffLat: dropoffCoords.lat,
+      dropoffLng: dropoffCoords.lng,
+      distanceMiles: distance,
     });
   } catch {
     return NextResponse.json({ error: "Something went wrong. Please call to book." }, { status: 500 });

@@ -3,7 +3,16 @@ import { useEffect, useState } from "react";
 import { FleurIcon } from "./Fleur";
 import AddressAutocomplete from "./AddressAutocomplete";
 
-type Quote = { rate: number; note: string; rateType?: string };
+type Quote = {
+  rate: number;
+  note: string;
+  rateType?: string;
+  pickupLat?: number;
+  pickupLng?: number;
+  dropoffLat?: number;
+  dropoffLng?: number;
+  distanceMiles?: number;
+};
 type Step = "form" | "quote" | "details" | "confirmed";
 
 export type BookingContext = {
@@ -63,7 +72,16 @@ export default function BookingForm({
       if (!res.ok || !data.rate) {
         setError(data.error || "Could not calculate a rate. Call us to book.");
       } else {
-        setQuote({ rate: data.rate, note: data.note, rateType: data.rateType });
+        setQuote({
+          rate: data.rate,
+          note: data.note,
+          rateType: data.rateType,
+          pickupLat: data.pickupLat,
+          pickupLng: data.pickupLng,
+          dropoffLat: data.dropoffLat,
+          dropoffLng: data.dropoffLng,
+          distanceMiles: data.distanceMiles,
+        });
         setStep("quote");
       }
     } catch {
@@ -95,6 +113,11 @@ export default function BookingForm({
           passengers,
           rate: quote?.rate ?? null,
           rateType: quote?.rateType ?? null,
+          pickupLat: quote?.pickupLat ?? null,
+          pickupLng: quote?.pickupLng ?? null,
+          dropoffLat: quote?.dropoffLat ?? null,
+          dropoffLng: quote?.dropoffLng ?? null,
+          distanceMiles: quote?.distanceMiles ?? null,
         }),
       });
       const data = await res.json();

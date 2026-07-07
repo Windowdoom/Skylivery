@@ -16,6 +16,12 @@ export async function POST(req: NextRequest) {
       passengers,
       rate,
       rateType,
+      pickupLat,
+      pickupLng,
+      dropoffLat,
+      dropoffLng,
+      distanceMiles,
+      internalZone,
     } = body;
 
     if (!name || !phone || !pickup || !dropoff) {
@@ -58,63 +64,39 @@ export async function POST(req: NextRequest) {
     ).join("");
     const tripId = `SL-${year}-${suffix}`;
 
-    // Sensible defaults for every column that might be NOT NULL in the
-    // original schema so we're not chasing errors one by one.
-    const todayISO = new Date().toISOString().slice(0, 10);
-    const tripDate = date || todayISO;
-    const tripTime = time || "12:00";
-    const nowISO = new Date().toISOString();
+    // NOT NULL defaults: pickup date/time default to now so a quick booking
+    // without explicit time still lands cleanly.
+    const now = new Date();
+    const tripDate = date || now.toISOString().slice(0, 10);
+    const tripTime = time || now.toTimeString().slice(0, 5);
 
+    // Row matches the bookings table schema exactly.
     const row = {
       trip_id: tripId,
-
-      // Original-schema customer fields
       customer_name: name,
       customer_phone: phone,
       customer_email: email || null,
-
-      // Original-schema trip fields
-      trip_date: tripDate,
-      trip_time: tripTime,
-      pickup_location: pickup,
-      dropoff_location: dropoff,
-      pickup_datetime: `${tripDate}T${tripTime}:00`,
-
-      // Our added columns (from the earlier ALTER TABLE)
-      name,
-      phone,
-      email: email || null,
       pickup_address: pickup,
       dropoff_address: dropoff,
-      pickup_date: tripDate,
-      pickup_time: tripTime,
+      pickup_lat: pickupLat ?? null,
+      pickup_lng: pickupLng ?? null,
+      dropoff_lat: dropoffLat ?? null,
+      dropoff_lng: dropoffLng ?? null,
+      trip_date: tripDate,
+      trip_time: tripTime,
       service_type: serviceType || "transfer",
       passengers: Number(passengers) || 1,
-      quoted_rate: rate ?? null,
-      rate_type: rateType ?? null,
+      internal_zone: internalZone ?? null,
+      rate: rate ?? 0,
+      is_airport: rateType === "airport",
+      distance_miles: distanceMiles ?? null,
       status: "pending",
-      created_at: nowISO,
     };
 
     const { error } = await supabase.from("bookings").insert(row);
 
     if (error) {
-      // If Postgres says a specific column doesn't exist, strip it and retry
-      // once. This lets us stay compatible with whichever columns the actual
-      // schema has without hardcoding the exact set here.
-      const match = /column '([^']+)' of '/i.exec(error.message);
-      if (match) {
-        const bad = match[1];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const trimmed: any = { ...row };
-        delete trimmed[bad];
-        const retry = await supabase.from("bookings").insert(trimmed);
-        if (retry.error) {
-          return NextResponse.json({ error: retry.error.message }, { status: 500 });
-        }
-      } else {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, tripId });
