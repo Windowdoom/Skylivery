@@ -38,9 +38,9 @@ const businessSchema = {
   logo: "https://skylivery.llc/logo.png",
   image: "https://skylivery.llc/logo.png",
   telephone: "(504) 479-0454",
-  email: "info@skylivery.llc",
+  email: "skyliveryllc@gmail.com",
   description:
-    "Flat-rate luxury SUV service in New Orleans. Airport transfers, corporate travel, weddings, events. No surge pricing. CPNC licensed under Sec. 162-841.",
+    "Flat-rate luxury SUV service in New Orleans. Airport transfers, corporate travel, weddings, events. No surge pricing. Licensed and insured, 45+ years chauffeur experience.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Kenner",

@@ -44,7 +44,7 @@ export default function Footer() {
           <div className="text-gold text-xs uppercase tracking-[0.25em] mb-4">Contact</div>
           <ul className="space-y-2 text-cream/75 text-sm">
             <li><a href="tel:+15044790454" className="hover:text-gold">(504) 479-0454</a></li>
-            <li><a href="mailto:info@skylivery.llc" className="hover:text-gold">info@skylivery.llc</a></li>
+            <li><a href="mailto:skyliveryllc@gmail.com" className="hover:text-gold">skyliveryllc@gmail.com</a></li>
             <li>Kenner, LA 70062</li>
             <li>24/7 dispatch</li>
           </ul>
