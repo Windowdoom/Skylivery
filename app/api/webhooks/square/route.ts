@@ -54,18 +54,44 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get("x-square-hmacsha256-signature");
   const url = req.nextUrl.toString();
   const valid = verifyWebhookSignature(raw, sig, url);
-  if (!valid && process.env.SQUARE_WEBHOOK_SIGNATURE_KEY) {
-    return NextResponse.json({ error: "invalid signature" }, { status: 401 });
-  }
+  const sigConfigured = !!process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
 
-  let event: SquareEvent;
+  // Fire a diagnostic ntfy on every event so we can see whether Square is
+  // reaching us and what's inside. Once we've confirmed the pipeline
+  // works with real bookings, tighten this back to only the completed path.
+  let event: SquareEvent = {};
   try {
     event = JSON.parse(raw);
   } catch {
-    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+    // ignore parse error — we'll still fire diagnostic
+  }
+  const payment = event?.data?.object?.payment;
+  await ntfyPush({
+    title: `Square webhook: ${event?.type ?? "unknown"}`,
+    body: [
+      `Event ID: ${event?.event_id ?? "—"}`,
+      `Type: ${event?.type ?? "—"}`,
+      `Sig configured: ${sigConfigured ? "yes" : "NO"}`,
+      `Sig valid: ${valid ? "yes" : "NO"}`,
+      payment
+        ? [
+            ``,
+            `Payment ID: ${payment.id ?? "—"}`,
+            `Status: ${payment.status ?? "—"}`,
+            `Amount: ${payment.amount_money?.amount ?? "—"}`,
+            `Reference ID: ${payment.reference_id ?? "—"}`,
+            `Note: ${payment.note ?? "—"}`,
+          ].join("\n")
+        : "(no payment object in payload)",
+    ].join("\n"),
+    tags: "test_tube,square",
+    priority: "default",
+  }).catch(() => {});
+
+  if (!valid && sigConfigured) {
+    return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
-  const payment = event?.data?.object?.payment;
   if (!payment || payment.status !== "COMPLETED") {
     return NextResponse.json({ ok: true, ignored: true });
   }
