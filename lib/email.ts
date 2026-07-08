@@ -78,7 +78,7 @@ function shell(title: string, previewText: string, inner: string): string {
                   SKY LIVERY <span style="color:#8C7A46;font-size:18px;">LLC</span>
                 </div>
                 <div style="margin-top:8px;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.4em;color:#8C7A46;text-transform:uppercase;">
-                  Kenner &nbsp;·&nbsp; Louisiana
+                  New Orleans &nbsp;·&nbsp; Louisiana
                 </div>
               </td>
             </tr>
@@ -89,7 +89,7 @@ function shell(title: string, previewText: string, inner: string): string {
                   Arrive like you own the city.
                 </div>
                 <div style="font-family:Arial,sans-serif;font-size:11px;color:#F5EBD3;opacity:0.75;">
-                  Sky Livery LLC · (504) 479-0454 · 24/7 dispatch<br/>
+                  Sky Livery LLC · (504) 339-6861 · 24/7 dispatch<br/>
                   New Orleans, LA · Licensed &amp; Insured · 45+ Years Chauffeur Experience
                 </div>
               </td>
@@ -289,7 +289,7 @@ export async function sendReceipt(b: {
       <td style="padding:0 36px 26px 36px;">
         <div style="font-family:Arial,sans-serif;font-size:12px;color:#0A1628;opacity:0.75;line-height:1.6;">
           Loved the ride? Book us again anytime at
-          <a href="https://skylivery1.vercel.app/book" style="color:#8C7A46;text-decoration:none;font-weight:600;">skylivery1.vercel.app/book</a>
+          <a href="https://www.skyliverynola.com/book" style="color:#8C7A46;text-decoration:none;font-weight:600;">skyliverynola.com/book</a>
           or call <a href="tel:+15043396861" style="color:#8C7A46;text-decoration:none;font-weight:600;">(504) 339-6861</a> or <a href="tel:+15044790454" style="color:#8C7A46;text-decoration:none;font-weight:600;">(504) 479-0454</a>.
         </div>
       </td>

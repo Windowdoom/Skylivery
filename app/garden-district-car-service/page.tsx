@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import LandingPage from "@/components/LandingPage";
 
-const url = "https://skylivery.llc/garden-district-car-service";
+const url = "https://www.skyliverynola.com/garden-district-car-service";
 
 export const metadata: Metadata = {
   title: "Garden District & Uptown Car Service | Sky Livery LLC",
@@ -20,7 +20,7 @@ const schema = {
   "@context": "https://schema.org",
   "@type": "Service",
   serviceType: "Car service",
-  provider: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://skylivery.llc" },
+  provider: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://www.skyliverynola.com" },
   areaServed: { "@type": "Place", name: "Garden District, New Orleans" },
   url,
 };

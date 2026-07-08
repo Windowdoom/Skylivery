@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import LandingPage from "@/components/LandingPage";
 
-const url = "https://skylivery.llc/mardi-gras-transportation";
+const url = "https://www.skyliverynola.com/mardi-gras-transportation";
 
 export const metadata: Metadata = {
   title: "Mardi Gras Transportation | Luxury SUV | Sky Livery LLC",
@@ -23,7 +23,7 @@ const schema = {
   location: { "@type": "Place", name: "New Orleans, Louisiana" },
   description:
     "Sky Livery provides luxury SUV transportation throughout the Mardi Gras and Carnival season in Greater New Orleans.",
-  organizer: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://skylivery.llc" },
+  organizer: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://www.skyliverynola.com" },
   url,
 };
 

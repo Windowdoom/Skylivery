@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import LandingPage from "@/components/LandingPage";
 
-const url = "https://skylivery.llc/airport-transfer-msy";
+const url = "https://www.skyliverynola.com/airport-transfer-msy";
 
 export const metadata: Metadata = {
   title: "MSY Airport Transfer | $105 Flat Rate | Sky Livery LLC",
   description:
-    "Flat $105 SUV transfer from Louis Armstrong International (MSY) to New Orleans. Flight tracked, meet & greet, gratuity included, no surge. Book online or call.",
+    "Flat $105 SUV transfer from Louis Armstrong International (MSY) to New Orleans. Flight tracked, meet & greet, 30 minutes of free wait time, gratuity included, no surge. Book online or call.",
   alternates: { canonical: url },
   openGraph: {
     title: "MSY Airport Transfer | Sky Livery LLC",
@@ -20,7 +20,7 @@ const schema = {
   "@context": "https://schema.org",
   "@type": "Service",
   serviceType: "Airport transfer",
-  provider: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://skylivery.llc" },
+  provider: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://www.skyliverynola.com" },
   areaServed: { "@type": "City", name: "New Orleans" },
   offers: {
     "@type": "Offer",
@@ -46,6 +46,7 @@ export default function Page() {
       highlights={[
         { title: "$105 flat rate", body: "Any address in the New Orleans metro. All-in, gratuity included." },
         { title: "Flight tracking", body: "Delayed? We already know. Your driver adjusts automatically." },
+        { title: "30 minutes of free wait", body: "Baggage claim, customs, a slow gate. First 30 minutes past pickup are on us." },
         { title: "Meet & greet", body: "Chauffeur at baggage claim with a Sky Livery sign." },
         { title: "Up to 7 passengers, 6 bags", body: "Full-size luxury SUV. Plenty of room for a family or crew." },
       ]}
@@ -54,6 +55,7 @@ export default function Page() {
         { q: "Do you charge extra during festivals?", a: "No. Same rate during Mardi Gras, Jazz Fest, Sugar Bowl, and every day of the year." },
         { q: "How early should I book?", a: "The sooner the better, but same-day and 24/7 requests are welcome. We dispatch around the clock." },
         { q: "Do you track my flight?", a: "Yes. We monitor arrivals and adjust pickup automatically for delays or early arrivals." },
+        { q: "What if my flight is late and I need extra time at baggage claim?", a: "You get 30 minutes of free wait time at MSY, on top of the delay window we already build in from flight tracking. After 30 minutes it is $1 per minute, billed by dispatch." },
       ]}
     />
   );

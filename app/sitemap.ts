@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://skylivery.llc";
+const BASE = "https://www.skyliverynola.com";
 
 const paths = [
   "",

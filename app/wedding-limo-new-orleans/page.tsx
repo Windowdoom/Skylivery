@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import LandingPage from "@/components/LandingPage";
 
-const url = "https://skylivery.llc/wedding-limo-new-orleans";
+const url = "https://www.skyliverynola.com/wedding-limo-new-orleans";
 
 export const metadata: Metadata = {
   title: "Wedding Limo & SUV Service New Orleans | Sky Livery LLC",
@@ -20,7 +20,7 @@ const schema = {
   "@context": "https://schema.org",
   "@type": "Service",
   serviceType: "Wedding transportation",
-  provider: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://skylivery.llc" },
+  provider: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://www.skyliverynola.com" },
   areaServed: { "@type": "City", name: "New Orleans" },
   offers: {
     "@type": "Offer",

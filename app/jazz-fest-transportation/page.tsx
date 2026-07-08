@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import LandingPage from "@/components/LandingPage";
 
-const url = "https://skylivery.llc/jazz-fest-transportation";
+const url = "https://www.skyliverynola.com/jazz-fest-transportation";
 
 export const metadata: Metadata = {
   title: "Jazz Fest Transportation | Luxury SUV | Sky Livery LLC",
@@ -27,7 +27,7 @@ const schema = {
   },
   description:
     "Sky Livery provides luxury SUV transportation to and from the Fair Grounds during Jazz Fest weekends.",
-  organizer: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://skylivery.llc" },
+  organizer: { "@type": "LimousineService", name: "Sky Livery LLC", url: "https://www.skyliverynola.com" },
   url,
 };
 

@@ -6,10 +6,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair", display: "swap" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://skylivery.llc"),
+  metadataBase: new URL("https://www.skyliverynola.com"),
   title: "Sky Livery LLC | Luxury SUV Service New Orleans | Airport Transfers from $105",
   description:
-    "Flat-rate luxury SUV service in New Orleans. MSY airport transfers, corporate travel, weddings, events. No surge pricing. CPNC licensed. Gratuity included. Book online or call (504) 479-0454.",
+    "Flat-rate luxury SUV service in New Orleans. MSY airport transfers, corporate travel, weddings, events. No surge pricing. Licensed and insured. Gratuity included. Book online or call (504) 339-6861.",
   keywords:
     "New Orleans car service, luxury SUV New Orleans, airport transfer MSY, limo service New Orleans, CPNC licensed, no surge pricing, French Quarter car service, Kenner limo, Metairie car service",
   openGraph: {
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Sky Livery LLC",
-    url: "https://skylivery.llc",
+    url: "https://www.skyliverynola.com",
     images: ["/logo-full.png"],
   },
   twitter: {
@@ -42,10 +42,10 @@ const businessSchema = {
   "@context": "https://schema.org",
   "@type": "LimousineService",
   name: "Sky Livery LLC",
-  url: "https://skylivery.llc",
-  logo: "https://skylivery.llc/logo-full.png",
-  image: "https://skylivery.llc/logo-full.png",
-  telephone: "(504) 479-0454",
+  url: "https://www.skyliverynola.com",
+  logo: "https://www.skyliverynola.com/logo-full.png",
+  image: "https://www.skyliverynola.com/logo-full.png",
+  telephone: "(504) 339-6861",
   email: "skyliveryllc@gmail.com",
   description:
     "Flat-rate luxury SUV service in New Orleans. Airport transfers, corporate travel, weddings, events. No surge pricing. Licensed and insured, 45+ years chauffeur experience.",

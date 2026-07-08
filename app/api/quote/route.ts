@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         rateType: "phone",
         note: "Please call dispatch to arrange this trip.",
-        phone: "(504) 479-0454",
+        phone: "(504) 339-6861",
         reason: result.reason,
         distanceMiles: Math.round(drivingMiles * 10) / 10,
       });
