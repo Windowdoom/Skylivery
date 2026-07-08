@@ -95,6 +95,9 @@ export async function assignDriver(
           `Fare: $${joined.rate ?? "?"}`,
           `Pay: ${intentLabel}`,
           `Paid: ${joined.paid ? "YES" : "NO"}`,
+          !joined.paid && joined.payment_intent === "in-vehicle"
+            ? `⚠ COLLECT $${joined.rate ?? "?"} · REF ${joined.trip_id}`
+            : "",
         ]
           .filter(Boolean)
           .join("\n"),

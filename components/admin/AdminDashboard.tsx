@@ -30,6 +30,7 @@ export type Booking = {
   assigned_driver: string | null;
   payment_method: string | null;
   payment_intent: string | null;
+  payment_link: string | null;
   paid: boolean | null;
   flight_number: string | null;
   assigned_at: string | null;
@@ -502,6 +503,7 @@ function PendingCard({
       >
         {pending ? "Assigning…" : "Send"}
       </button>
+      <TextCustomerButton b={b} />
       <div className="mt-2 flex items-center justify-between text-xs">
         <button
           onClick={decline}
@@ -578,6 +580,7 @@ function AssignedCard({
           {pending ? "…" : "Complete"}
         </button>
       </div>
+      <TextCustomerButton b={b} />
     </div>
   );
 }
@@ -648,6 +651,34 @@ function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function TextCustomerButton({ b }: { b: Booking }) {
+  const phone = (b.customer_phone || "").replace(/[^\d+]/g, "");
+  if (!phone) return null;
+  const msg = (() => {
+    const parts = [
+      `Sky Livery: your ride is confirmed. Ref ${b.trip_id}. Fare $${b.rate}.`,
+    ];
+    if (b.payment_intent === "online" && b.payment_link) {
+      parts.push(`Pay here: ${b.payment_link}`);
+    } else if (b.payment_intent === "online") {
+      parts.push(`We will send your Square link shortly.`);
+    } else {
+      parts.push(`Pay in the car on drop-off. Ref ${b.trip_id}.`);
+    }
+    parts.push(`Call (504) 339-6861 to change anything.`);
+    return parts.join(" ");
+  })();
+  const href = `sms:${phone}?&body=${encodeURIComponent(msg)}`;
+  return (
+    <a
+      href={href}
+      className="mt-2 block text-center text-xs text-cream/70 border border-gold/30 rounded-md px-3 py-1.5 hover:border-gold hover:text-gold"
+    >
+      Text customer
+    </a>
   );
 }
 

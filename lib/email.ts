@@ -157,6 +157,8 @@ export async function sendBookingConfirmation(b: {
   passengers?: number | null;
   serviceType?: string | null;
   flightNumber?: string | null;
+  paymentIntent?: string | null;
+  paymentLink?: string | null;
 }): Promise<void> {
   const t = getTransporter();
   if (!t) return; // silently skip if not configured
@@ -176,20 +178,42 @@ export async function sendBookingConfirmation(b: {
     ${tripBlock(b)}
     <tr>
       <td style="padding:0 36px 22px 36px;">
-        <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:0.3em;color:#8C7A46;text-transform:uppercase;margin-bottom:8px;">How to pay</div>
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-          <tr>
-            <td style="padding:12px 14px;background:#EFE3C4;border:1px solid #8C7A46;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
-              <strong>Pay before pickup.</strong> If you chose this at booking, we will text you a secure Square payment link. Tap it and pay in about ten seconds.
-            </td>
-          </tr>
-          <tr><td style="height:8px;"></td></tr>
-          <tr>
-            <td style="padding:12px 14px;background:#EFE3C4;border:1px solid #8C7A46;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
-              <strong>Pay in the car.</strong> Your driver carries a Square reader. Tap or insert your card on drop-off, or pay with cash.
-            </td>
-          </tr>
-        </table>
+        ${(() => {
+          if (b.paymentIntent === "online" && b.paymentLink) {
+            return `
+              <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:0.3em;color:#8C7A46;text-transform:uppercase;margin-bottom:8px;">Pay now</div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:16px 18px;background:#0A1628;border-left:3px solid #C9A961;font-family:Arial,sans-serif;font-size:13px;color:#F5EBD3;line-height:1.5;">
+                    <strong style="color:#C9A961;">Secure payment link ready.</strong> Reference <strong>${b.tripId}</strong> is already filled in. One tap, done. Square will email you a branded receipt automatically.
+                    <div style="margin-top:14px;">
+                      <a href="${b.paymentLink}" style="display:inline-block;padding:12px 24px;background:#C9A961;color:#0A1628;text-decoration:none;font-weight:700;letter-spacing:0.05em;border-radius:6px;font-size:14px;">Pay ${money(b.rate)} now →</a>
+                    </div>
+                  </td>
+                </tr>
+              </table>`;
+          }
+          if (b.paymentIntent === "online") {
+            return `
+              <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:0.3em;color:#8C7A46;text-transform:uppercase;margin-bottom:8px;">Payment</div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:12px 14px;background:#EFE3C4;border:1px solid #8C7A46;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
+                    <strong>Pay before pickup.</strong> Dispatch will text or email you a secure Square link shortly. Reference ${b.tripId}.
+                  </td>
+                </tr>
+              </table>`;
+          }
+          return `
+              <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:0.3em;color:#8C7A46;text-transform:uppercase;margin-bottom:8px;">Payment</div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:12px 14px;background:#EFE3C4;border:1px solid #8C7A46;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
+                    <strong>Pay in the car.</strong> Your driver carries a Square reader. Tap or insert on drop-off, or pay with cash. Please have reference <strong>${b.tripId}</strong> ready so the driver can log payment against your trip.
+                  </td>
+                </tr>
+              </table>`;
+        })()}
       </td>
     </tr>
     <tr>

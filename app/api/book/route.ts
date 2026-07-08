@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendBookingConfirmation } from "@/lib/email";
 import { ntfyPush } from "@/lib/ntfy";
+import { createCheckoutLink, squareConfigured } from "@/lib/square";
 
 export async function POST(req: NextRequest) {
   try {
@@ -106,6 +107,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // If the customer chose "pay before" AND Square is configured, mint a
+    // Checkout link now so the confirmation email can include a real pay
+    // button. The link auto-populates the trip reference and prompts
+    // Square to send its branded receipt straight to the customer.
+    let paymentLink: string | null = null;
+    if (paymentIntent === "online" && rate && squareConfigured()) {
+      const link = await createCheckoutLink({
+        tripId,
+        amountCents: Math.round(Number(rate) * 100),
+        customerName: name,
+        customerEmail: email || null,
+        pickup,
+        dropoff,
+      });
+      if (link) {
+        paymentLink = link.url;
+        // Best-effort store on the row so admin can resend if needed
+        await supabase
+          .from("bookings")
+          .update({ payment_link: link.url, payment_link_id: link.id })
+          .eq("trip_id", tripId)
+          .then(
+            () => undefined,
+            () => undefined
+          );
+      }
+    }
+
     // Await both side-effects before returning. Fire-and-forget doesn't
     // work on Vercel serverless — the runtime terminates the function as
     // soon as the response is sent and kills pending promises. Running
@@ -113,7 +142,9 @@ export async function POST(req: NextRequest) {
     // two (~1–2s for Gmail SMTP handshake).
     const intentLabel =
       paymentIntent === "online"
-        ? "Online link (Square)"
+        ? paymentLink
+          ? "Online link (Square) — sent"
+          : "Online link (pending manual send)"
         : paymentIntent === "invoice"
           ? "Invoice"
           : "In-vehicle (card or cash)";
@@ -153,6 +184,8 @@ export async function POST(req: NextRequest) {
             passengers: Number(passengers) || 1,
             serviceType: serviceType || "transfer",
             flightNumber: flightNumber || null,
+            paymentIntent: paymentIntent || "in-vehicle",
+            paymentLink,
           })
         : Promise.resolve(),
     ]);
