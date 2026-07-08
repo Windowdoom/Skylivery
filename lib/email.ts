@@ -111,6 +111,7 @@ function tripBlock(b: {
   rate: number | null | undefined;
   passengers?: number | null;
   serviceType?: string | null;
+  flightNumber?: string | null;
 }): string {
   return `
     <tr>
@@ -129,6 +130,7 @@ function tripBlock(b: {
               <div><strong style="color:#8C7A46;">When:</strong> ${fmtDate(b.tripDate)} at ${fmtTime(b.tripTime)}</div>
               ${b.serviceType ? `<div><strong style="color:#8C7A46;">Service:</strong> ${b.serviceType}</div>` : ""}
               ${b.passengers ? `<div><strong style="color:#8C7A46;">Passengers:</strong> ${b.passengers}</div>` : ""}
+              ${b.flightNumber ? `<div><strong style="color:#8C7A46;">Flight:</strong> ${b.flightNumber}</div>` : ""}
               <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #8C7A46;">
                 <strong style="color:#8C7A46;">Fare:</strong>
                 <span style="font-family:Georgia,serif;font-size:20px;color:#0A1628;font-weight:600;margin-left:8px;">${money(b.rate)}</span>
@@ -154,6 +156,7 @@ export async function sendBookingConfirmation(b: {
   rate: number | null | undefined;
   passengers?: number | null;
   serviceType?: string | null;
+  flightNumber?: string | null;
 }): Promise<void> {
   const t = getTransporter();
   if (!t) return; // silently skip if not configured

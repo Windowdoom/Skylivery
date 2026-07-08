@@ -31,6 +31,7 @@ export type Booking = {
   payment_method: string | null;
   payment_intent: string | null;
   paid: boolean | null;
+  flight_number: string | null;
   assigned_at: string | null;
   completed_at: string | null;
 };
@@ -419,6 +420,11 @@ function BookingCore({ b }: { b: Booking }) {
         <div>↑ {b.pickup_address}</div>
         <div>↓ {b.dropoff_address}</div>
       </div>
+      {b.flight_number && (
+        <div className="mt-2 inline-flex items-center gap-1.5 border border-gold/40 rounded-md px-2 py-0.5 text-[10px] tracking-[0.15em] uppercase text-gold">
+          ✈ Flight {b.flight_number}
+        </div>
+      )}
       <div className="mt-2 text-cream/60 text-xs">
         {fmtDate(b.trip_date)} · {fmtTime(b.trip_time)}
         {b.is_airport ? " · MSY" : ""}
@@ -663,6 +669,7 @@ function NewBookingModal({
   const [passengers, setPassengers] = useState("1");
   const [paymentIntent, setPaymentIntent] = useState("in-vehicle");
   const [serviceType, setServiceType] = useState("transfer");
+  const [flightNumber, setFlightNumber] = useState("");
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   void drivers;
@@ -686,6 +693,7 @@ function NewBookingModal({
         serviceType,
         passengers: Number(passengers) || 1,
         paymentIntent,
+        flightNumber: flightNumber.trim() || undefined,
       });
       if (!res.ok) {
         setErr(res.error || "Could not save booking.");
@@ -806,6 +814,13 @@ function NewBookingModal({
             <option value="online" className="bg-navy">Pay before (Square link)</option>
             <option value="invoice" className="bg-navy">Invoice (corporate only)</option>
           </select>
+          <input
+            value={flightNumber}
+            onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
+            placeholder="Flight # (airport pickups, optional)"
+            className={input + " col-span-2"}
+            maxLength={12}
+          />
         </div>
 
         {err && <p className="text-red-400 text-xs mt-3">{err}</p>}

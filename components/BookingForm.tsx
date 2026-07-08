@@ -38,6 +38,7 @@ export default function BookingForm({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [paymentIntent, setPaymentIntent] = useState("in-vehicle");
+  const [flightNumber, setFlightNumber] = useState("");
   const [quote, setQuote] = useState<Quote | null>(null);
   const [step, setStep] = useState<Step>("form");
   const [loading, setLoading] = useState(false);
@@ -122,6 +123,7 @@ export default function BookingForm({
           dropoffLng: quote?.dropoffLng ?? null,
           distanceMiles: quote?.distanceMiles ?? null,
           paymentIntent,
+          flightNumber: flightNumber.trim() || null,
         }),
       });
       const data = await res.json();
@@ -307,6 +309,35 @@ export default function BookingForm({
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className={input} />
           <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className={input} />
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" type="email" className={input} />
+          {(() => {
+            // Show the flight-number field when the customer picked the
+            // Airport tab or when the pickup text mentions MSY / airport
+            // keywords. Field is always optional.
+            const pkLower = pickup.toLowerCase();
+            const isAirportish =
+              serviceType === "airport" ||
+              context?.serviceType === "airport" ||
+              pkLower.includes("msy") ||
+              pkLower.includes("airport") ||
+              pkLower.includes("louis armstrong") ||
+              pkLower.includes("terminal dr");
+            if (!isAirportish) return null;
+            return (
+              <div>
+                <p className="text-gold text-[10px] font-semibold tracking-[0.2em] uppercase mb-2 mt-1">
+                  Flight number <span className="text-cream/50 normal-case tracking-normal font-normal">(optional, helps us track your arrival)</span>
+                </p>
+                <input
+                  value={flightNumber}
+                  onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g. DL2481, AA1234"
+                  className={input}
+                  maxLength={12}
+                  autoComplete="off"
+                />
+              </div>
+            );
+          })()}
           <div>
             <p className="text-gold text-[10px] font-semibold tracking-[0.2em] uppercase mb-2 mt-1">
               How would you like to pay?

@@ -31,7 +31,7 @@ export async function assignDriver(
   const { data: joined } = await sb
     .from("bookings")
     .select(
-      "trip_id, customer_name, customer_phone, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, payment_intent, paid, drivers(name, phone), vehicles(cpnc_number)"
+      "trip_id, customer_name, customer_phone, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, payment_intent, paid, flight_number, drivers(name, phone), vehicles(cpnc_number)"
     )
     .eq("id", bookingId)
     .single();
@@ -75,6 +75,7 @@ export async function assignDriver(
         ``,
         `↑ ${joined.pickup_address}`,
         `↓ ${joined.dropoff_address}`,
+        joined.flight_number ? `Flight: ${joined.flight_number}` : "",
         `Pickup: ${joined.trip_date} ${joined.trip_time}`,
         `Fare: $${joined.rate ?? "?"}`,
         `Pay: ${intentLabel}`,
@@ -238,6 +239,7 @@ export async function createBookingManually(input: {
   isAirport?: boolean;
   distanceMiles?: number;
   paymentIntent?: string;
+  flightNumber?: string;
 }): Promise<{ ok: boolean; tripId?: string; error?: string }> {
   guard();
   const sb = supabaseAdmin();
@@ -265,6 +267,7 @@ export async function createBookingManually(input: {
     status: "pending",
     payment_intent: input.paymentIntent || "in-vehicle",
     paid: false,
+    flight_number: input.flightNumber || null,
   };
 
   const { error } = await sb.from("bookings").insert(row);
@@ -289,13 +292,16 @@ export async function createBookingManually(input: {
         ``,
         `↑ ${input.pickup}`,
         `↓ ${input.dropoff}`,
+        input.flightNumber ? `Flight: ${input.flightNumber}` : "",
         `Pickup: ${input.date} ${input.time}`,
         `Fare: $${input.rate}`,
         `Pay: ${intentLabel}`,
         `Paid: no`,
         ``,
         `Entered manually by dispatch.`,
-      ].join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n"),
       tags: "telephone_receiver,sparkles",
     }),
     input.email

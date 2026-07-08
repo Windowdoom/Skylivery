@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       distanceMiles,
       internalZone,
       paymentIntent,
+      flightNumber,
     } = body;
 
     if (!name || !phone || !pickup || !dropoff) {
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
       status: "pending",
       payment_intent: paymentIntent || "in-vehicle",
       paid: false,
+      flight_number: flightNumber || null,
     };
 
     const { error } = await supabase.from("bookings").insert(row);
@@ -128,11 +130,14 @@ export async function POST(req: NextRequest) {
           ``,
           `↑ ${pickup}`,
           `↓ ${dropoff}`,
+          flightNumber ? `Flight: ${flightNumber}` : "",
           `Pickup: ${tripDate} ${tripTime}`,
           `Fare: $${rate ?? "?"}`,
           `Pay: ${intentLabel}`,
           `Paid: no`,
-        ].join("\n"),
+        ]
+          .filter(Boolean)
+          .join("\n"),
         tags: "oncoming_automobile,sparkles",
       }),
       email
@@ -147,6 +152,7 @@ export async function POST(req: NextRequest) {
             rate: rate ?? null,
             passengers: Number(passengers) || 1,
             serviceType: serviceType || "transfer",
+            flightNumber: flightNumber || null,
           })
         : Promise.resolve(),
     ]);
