@@ -8,6 +8,9 @@ import {
   clearTestBookings,
   markPaid,
   createBookingManually,
+  createVehicle,
+  retireVehicle,
+  activateVehicle,
 } from "@/app/admin/actions";
 
 export type Booking = {
@@ -53,6 +56,8 @@ export type Vehicle = {
   make: string | null;
   model: string | null;
   color: string | null;
+  year: number | null;
+  plate: string | null;
   active: boolean;
 };
 
@@ -140,6 +145,7 @@ export default function AdminDashboard({
 
   const [clearing, startClear] = useTransition();
   const [showNewBooking, setShowNewBooking] = useState(false);
+  const [showVehicles, setShowVehicles] = useState(false);
   function onClearTests() {
     if (
       !confirm(
@@ -201,6 +207,12 @@ export default function AdminDashboard({
               className="text-xs text-navy bg-gold rounded-md px-3 py-1.5 font-bold hover:bg-cream"
             >
               + New booking
+            </button>
+            <button
+              onClick={() => setShowVehicles(true)}
+              className="text-xs text-cream/80 border border-gold/30 rounded-md px-3 py-1.5 hover:border-gold hover:text-gold"
+            >
+              Vehicles ({vehicles.length})
             </button>
             <button
               onClick={onClearTests}
@@ -357,6 +369,13 @@ export default function AdminDashboard({
         <NewBookingModal
           drivers={drivers}
           onClose={() => setShowNewBooking(false)}
+        />
+      )}
+
+      {showVehicles && (
+        <VehiclesModal
+          vehicles={vehicles}
+          onClose={() => setShowVehicles(false)}
         />
       )}
     </div>
@@ -872,6 +891,246 @@ function NewBookingModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+const MAKE_MODEL_PRESETS = [
+  { make: "Ford", model: "Expedition" },
+  { make: "Ford", model: "Expedition Max" },
+  { make: "Chevrolet", model: "Suburban" },
+  { make: "Chevrolet", model: "Tahoe" },
+  { make: "GMC", model: "Yukon" },
+  { make: "GMC", model: "Yukon XL" },
+  { make: "Cadillac", model: "Escalade" },
+  { make: "Cadillac", model: "Escalade ESV" },
+  { make: "Lincoln", model: "Navigator" },
+  { make: "Mercedes-Benz", model: "Sprinter" },
+];
+
+function VehiclesModal({
+  vehicles,
+  onClose,
+}: {
+  vehicles: Vehicle[];
+  onClose: () => void;
+}) {
+  const [cpnc, setCpnc] = useState("");
+  const [preset, setPreset] = useState("");
+  const [make, setMake] = useState("");
+  const [model, setModel] = useState("");
+  const [color, setColor] = useState("Onyx Black");
+  const [year, setYear] = useState("");
+  const [plate, setPlate] = useState("");
+  const [pending, start] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
+
+  function onPresetPick(v: string) {
+    setPreset(v);
+    if (!v) return;
+    const [m, ...rest] = v.split("|");
+    setMake(m);
+    setModel(rest.join("|"));
+  }
+
+  function submit() {
+    setErr(null);
+    if (!cpnc) {
+      setErr("CPNC number is required.");
+      return;
+    }
+    start(async () => {
+      const res = await createVehicle({
+        cpncNumber: cpnc,
+        make: make || undefined,
+        model: model || undefined,
+        color: color || undefined,
+        year: year ? Number(year) : undefined,
+        plate: plate || undefined,
+      });
+      if (!res.ok) {
+        setErr(res.error || "Could not add vehicle.");
+        return;
+      }
+      setCpnc("");
+      setPreset("");
+      setMake("");
+      setModel("");
+      setColor("Onyx Black");
+      setYear("");
+      setPlate("");
+    });
+  }
+
+  const input =
+    "w-full px-3 py-2 bg-navy/60 border border-gold/25 rounded-md text-cream text-sm placeholder:text-cream/40 focus:border-gold focus:outline-none";
+
+  const active = vehicles.filter((v) => v.active);
+  const retired = vehicles.filter((v) => !v.active);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-navy border border-gold/40 rounded-2xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-cream font-display text-xl">Fleet</h2>
+            <p className="text-gold text-[10px] tracking-[0.25em] uppercase">
+              Vehicles &amp; CPNC plates
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-cream/60 hover:text-gold text-xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="bg-navy/40 border border-gold/20 rounded-xl p-4 mb-6">
+          <p className="text-gold text-[10px] tracking-[0.25em] uppercase mb-3">
+            Add a vehicle
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              value={cpnc}
+              onChange={(e) => setCpnc(e.target.value.toUpperCase())}
+              placeholder="CPNC (e.g. LM 415)"
+              className={input}
+              maxLength={16}
+            />
+            <select
+              value={preset}
+              onChange={(e) => onPresetPick(e.target.value)}
+              className={input + " appearance-none"}
+            >
+              <option value="" className="bg-navy">
+                Pick make/model or type below
+              </option>
+              {MAKE_MODEL_PRESETS.map((p) => (
+                <option
+                  key={p.make + p.model}
+                  value={`${p.make}|${p.model}`}
+                  className="bg-navy"
+                >
+                  {p.make} {p.model}
+                </option>
+              ))}
+            </select>
+            <input
+              value={make}
+              onChange={(e) => setMake(e.target.value)}
+              placeholder="Make"
+              className={input}
+            />
+            <input
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder="Model"
+              className={input}
+            />
+            <input
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              placeholder="Color (e.g. Onyx Black)"
+              className={input}
+            />
+            <input
+              value={year}
+              onChange={(e) => setYear(e.target.value.replace(/\D/g, ""))}
+              placeholder="Year (optional)"
+              className={input}
+              maxLength={4}
+            />
+            <input
+              value={plate}
+              onChange={(e) => setPlate(e.target.value.toUpperCase())}
+              placeholder="License plate (optional)"
+              className={input + " col-span-2"}
+              maxLength={12}
+            />
+          </div>
+          {err && <p className="text-red-400 text-xs mt-3">{err}</p>}
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              onClick={submit}
+              disabled={pending || !cpnc}
+              className="bg-gold text-navy px-5 py-2 rounded-md text-sm font-bold hover:bg-cream disabled:opacity-50"
+            >
+              {pending ? "Adding…" : "Add vehicle"}
+            </button>
+          </div>
+        </div>
+
+        <p className="text-gold text-[10px] tracking-[0.25em] uppercase mb-2">
+          Active fleet ({active.length})
+        </p>
+        <div className="space-y-2 mb-6">
+          {active.length === 0 ? (
+            <p className="text-cream/50 text-sm py-2">No active vehicles yet.</p>
+          ) : (
+            active.map((v) => <VehicleRow key={v.id} v={v} />)
+          )}
+        </div>
+
+        {retired.length > 0 && (
+          <>
+            <p className="text-gold/60 text-[10px] tracking-[0.25em] uppercase mb-2">
+              Retired ({retired.length})
+            </p>
+            <div className="space-y-2">
+              {retired.map((v) => (
+                <VehicleRow key={v.id} v={v} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VehicleRow({ v }: { v: Vehicle }) {
+  const [pending, start] = useTransition();
+  const label = [v.color, v.year, v.make, v.model].filter(Boolean).join(" ");
+  return (
+    <div
+      className={`flex items-center justify-between gap-3 p-3 rounded-lg border ${
+        v.active ? "bg-navy/50 border-gold/20" : "bg-navy/20 border-cream/10 opacity-70"
+      }`}
+    >
+      <div className="min-w-0">
+        <div className="text-gold text-xs font-bold tracking-[0.15em]">
+          {v.cpnc_number}
+        </div>
+        <div className="text-cream text-sm truncate">{label || "—"}</div>
+        {v.plate && (
+          <div className="text-cream/50 text-[10px] uppercase tracking-[0.2em] mt-0.5">
+            Plate {v.plate}
+          </div>
+        )}
+      </div>
+      <button
+        onClick={() => {
+          start(async () => {
+            if (v.active) await retireVehicle(v.id);
+            else await activateVehicle(v.id);
+          });
+        }}
+        disabled={pending}
+        className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 rounded ${
+          v.active
+            ? "text-cream/60 hover:text-red-300 border border-cream/20"
+            : "text-green-300 hover:text-green-200 border border-green-500/30"
+        }`}
+      >
+        {pending ? "…" : v.active ? "Retire" : "Reactivate"}
+      </button>
     </div>
   );
 }

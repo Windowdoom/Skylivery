@@ -457,3 +457,70 @@ export async function clearTestBookings(): Promise<{
   revalidatePath("/admin");
   return { deleted: ids.length };
 }
+
+// -------- Vehicles --------
+
+export async function createVehicle(input: {
+  cpncNumber: string;
+  make?: string;
+  model?: string;
+  color?: string;
+  year?: number;
+  plate?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  guard();
+  if (!input.cpncNumber?.trim()) {
+    return { ok: false, error: "CPNC number is required." };
+  }
+  const sb = supabaseAdmin();
+  const { error } = await sb.from("vehicles").insert({
+    cpnc_number: input.cpncNumber.trim().toUpperCase(),
+    make: input.make?.trim() || null,
+    model: input.model?.trim() || null,
+    color: input.color?.trim() || null,
+    year: input.year || null,
+    plate: input.plate?.trim().toUpperCase() || null,
+    active: true,
+  });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function updateVehicle(
+  vehicleId: string,
+  patch: {
+    make?: string | null;
+    model?: string | null;
+    color?: string | null;
+    year?: number | null;
+    plate?: string | null;
+    active?: boolean;
+  }
+): Promise<{ ok: boolean; error?: string }> {
+  guard();
+  const sb = supabaseAdmin();
+  const clean: Record<string, unknown> = {};
+  if (patch.make !== undefined) clean.make = patch.make || null;
+  if (patch.model !== undefined) clean.model = patch.model || null;
+  if (patch.color !== undefined) clean.color = patch.color || null;
+  if (patch.year !== undefined) clean.year = patch.year || null;
+  if (patch.plate !== undefined)
+    clean.plate = patch.plate ? patch.plate.trim().toUpperCase() : null;
+  if (patch.active !== undefined) clean.active = patch.active;
+  const { error } = await sb
+    .from("vehicles")
+    .update(clean)
+    .eq("id", vehicleId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function retireVehicle(vehicleId: string) {
+  return updateVehicle(vehicleId, { active: false });
+}
+
+export async function activateVehicle(vehicleId: string) {
+  return updateVehicle(vehicleId, { active: true });
+}
