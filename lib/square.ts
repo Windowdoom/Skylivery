@@ -71,7 +71,10 @@ export async function createCheckoutLink(input: {
         locationId,
       },
       checkoutOptions: {
-        allowTipping: false,
+        // Base gratuity is already included in the fare, but Square's
+        // tip screen still gives the customer a chance to add extra if
+        // they had a great ride. They can always tap "No tip".
+        allowTipping: true,
         askForShippingAddress: false,
         redirectUrl: redirectUrl(input.tripId),
         merchantSupportEmail:
