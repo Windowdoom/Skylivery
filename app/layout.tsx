@@ -57,13 +57,86 @@ const businessSchema = {
   },
   geo: { "@type": "GeoCoordinates", latitude: 29.9511, longitude: -90.0715 },
   areaServed: [
-    { "@type": "City", name: "Kenner" },
     { "@type": "City", name: "New Orleans" },
+    { "@type": "City", name: "Kenner" },
     { "@type": "City", name: "Metairie" },
+    { "@type": "City", name: "Harahan" },
+    { "@type": "City", name: "Chalmette" },
+    { "@type": "City", name: "Gretna" },
+    { "@type": "City", name: "Marrero" },
     { "@type": "City", name: "Mandeville" },
     { "@type": "City", name: "Covington" },
+    { "@type": "City", name: "Madisonville" },
     { "@type": "City", name: "Slidell" },
+    { "@type": "City", name: "Hammond" },
   ],
+  serviceType: [
+    "Airport transfer",
+    "Corporate transportation",
+    "Wedding transportation",
+    "Event transportation",
+    "Hourly chauffeur service",
+    "Point to point transfer",
+  ],
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Sky Livery service catalog",
+    itemListElement: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "MSY Airport Transfer",
+          description:
+            "Flat-rate luxury SUV to or from Louis Armstrong New Orleans International. Flight tracked, meet-and-greet at baggage claim, 30 minutes of complimentary wait time, gratuity included.",
+        },
+        priceCurrency: "USD",
+        price: "105",
+        priceSpecification: {
+          "@type": "PriceSpecification",
+          priceCurrency: "USD",
+          minPrice: "105",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Hourly Chauffeur Charter",
+          description:
+            "Full-day and evening charter service with a dedicated professional chauffeur. Three-hour weekday, four-hour weekend minimum.",
+        },
+        priceCurrency: "USD",
+        price: "85",
+        priceSpecification: {
+          "@type": "PriceSpecification",
+          priceCurrency: "USD",
+          minPrice: "85",
+          referenceQuantity: {
+            "@type": "QuantitativeValue",
+            value: 1,
+            unitCode: "HUR",
+          },
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Point-to-Point Transfer",
+          description:
+            "Flat-rate transfers within Greater New Orleans. No surge pricing, gratuity included.",
+        },
+        priceCurrency: "USD",
+        price: "35",
+        priceSpecification: {
+          "@type": "PriceSpecification",
+          priceCurrency: "USD",
+          minPrice: "35",
+        },
+      },
+    ],
+  },
   priceRange: "$$",
   openingHoursSpecification: {
     "@type": "OpeningHoursSpecification",
@@ -71,8 +144,10 @@ const businessSchema = {
     opens: "00:00",
     closes: "23:59",
   },
-  paymentAccepted: "Cash, Credit Card",
+  paymentAccepted: "Cash, Credit Card, Apple Pay, Google Pay",
   currenciesAccepted: "USD",
+  slogan: "Arrive like you own the city.",
+  knowsLanguage: ["en", "fr"],
 };
 
 const faqSchema = {
