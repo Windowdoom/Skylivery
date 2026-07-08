@@ -1,5 +1,11 @@
 "use client";
-import { useMemo, useState, useTransition } from "react";
+import { createContext, useContext, useMemo, useState, useTransition } from "react";
+
+const RoleContext = createContext<{ isOwner: boolean; name: string }>({
+  isOwner: false,
+  name: "",
+});
+const useRole = () => useContext(RoleContext);
 import {
   assignDriver,
   markCompleted,
@@ -38,6 +44,8 @@ export type Booking = {
   flight_number: string | null;
   assigned_at: string | null;
   completed_at: string | null;
+  dispatched_by: string | null;
+  assigned_by: string | null;
 };
 
 export type Driver = {
@@ -116,19 +124,32 @@ function driverName(drivers: Driver[], id: string | null): string {
   return drivers.find((d) => d.id === id)?.name ?? "unknown";
 }
 
+export type Me = {
+  id: string;
+  name: string;
+  role: "owner" | "dispatcher";
+};
+
 export default function AdminDashboard({
   bookings,
   drivers,
   vehicles,
   monthly,
   volume,
+  me,
 }: {
   bookings: Booking[];
   drivers: Driver[];
   vehicles: Vehicle[];
   monthly: MonthlyRow[];
   volume: DriverVolumeRow[];
+  me: Me;
 }) {
+  const isOwner = me.role === "owner";
+  const roleValue = useMemo(
+    () => ({ isOwner, name: me.name }),
+    [isOwner, me.name]
+  );
   const [pending, assigned, completed, cancelled] = useMemo(() => {
     const p: Booking[] = [];
     const a: Booking[] = [];
@@ -170,7 +191,7 @@ export default function AdminDashboard({
   );
 
   return (
-    <div className="min-h-screen bg-navy text-cream">
+    <RoleContext.Provider value={roleValue}><div className="min-h-screen bg-navy text-cream">
       {/* Top bar */}
       <header className="border-b border-gold/25 bg-dark/80 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -180,7 +201,9 @@ export default function AdminDashboard({
               <div className="text-cream font-display text-lg tracking-[0.14em]">
                 Sky Livery Dispatch
               </div>
-              <div className="text-gold text-[9px] tracking-[0.35em]">CONTROL ROOM</div>
+              <div className="text-gold text-[9px] tracking-[0.35em]">
+                {isOwner ? "OWNER · CONTROL ROOM" : `SIGNED IN AS ${me.name.toUpperCase()}`}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -214,6 +237,7 @@ export default function AdminDashboard({
             >
               Vehicles ({vehicles.length})
             </button>
+            {isOwner && (
             <button
               onClick={onClearTests}
               disabled={clearing}
@@ -221,6 +245,7 @@ export default function AdminDashboard({
             >
               {clearing ? "Clearing…" : "Clear test bookings"}
             </button>
+            )}
             <form action="/api/admin/logout" method="post" className="ml-3">
               <button className="text-xs text-cream/70 hover:text-gold">Sign out</button>
             </form>
@@ -378,7 +403,7 @@ export default function AdminDashboard({
           onClose={() => setShowVehicles(false)}
         />
       )}
-    </div>
+    </div></RoleContext.Provider>
   );
 }
 
@@ -450,6 +475,12 @@ function BookingCore({ b }: { b: Booking }) {
         {b.is_airport ? " · MSY" : ""}
         {b.service_type ? ` · ${b.service_type}` : ""}
       </div>
+      {(b.dispatched_by || b.assigned_by) && (
+        <div className="mt-2 text-[9px] tracking-[0.2em] uppercase text-gold/50 space-x-2">
+          {b.dispatched_by && <span>Booked by {b.dispatched_by}</span>}
+          {b.assigned_by && <span>· Assigned by {b.assigned_by}</span>}
+        </div>
+      )}
     </div>
   );
 }
@@ -463,6 +494,7 @@ function PendingCard({
   drivers: Driver[];
   vehicles: Vehicle[];
 }) {
+  const { isOwner } = useRole();
   const [driverId, setDriverId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const [pending, start] = useTransition();
@@ -570,7 +602,7 @@ function PendingCard({
             </button>
           )}
         </div>
-        <button
+        {isOwner && <button
           onClick={() => {
             if (!confirm(`Permanently delete ${b.trip_id}? Use only for test data.`)) return;
             start(async () => {
@@ -581,7 +613,7 @@ function PendingCard({
           className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
         >
           Delete
-        </button>
+        </button>}
       </div>
     </div>
   );
@@ -645,6 +677,7 @@ function AssignedCard({
 }
 
 function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
+  const { isOwner } = useRole();
   const [pending, start] = useTransition();
   function onDelete() {
     if (
@@ -699,14 +732,16 @@ function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
               {pending ? "…" : "Mark paid"}
             </button>
           )}
-          <button
-            onClick={onDelete}
-            disabled={pending}
-            className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
-            title="Delete (permanent)"
-          >
-            Delete
-          </button>
+          {isOwner && (
+            <button
+              onClick={onDelete}
+              disabled={pending}
+              className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
+              title="Delete (permanent)"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -1176,6 +1211,7 @@ function VehicleRow({ v }: { v: Vehicle }) {
 }
 
 function CancelledCard({ b }: { b: Booking }) {
+  const { isOwner } = useRole();
   const [pending, start] = useTransition();
   function onDelete() {
     if (!confirm(`Permanently delete ${b.trip_id}?`)) return;
@@ -1191,13 +1227,15 @@ function CancelledCard({ b }: { b: Booking }) {
         <span className="text-red-300/70 text-[10px] uppercase tracking-[0.2em]">
           Cancelled
         </span>
-        <button
-          onClick={onDelete}
-          disabled={pending}
-          className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
-        >
-          {pending ? "…" : "Delete"}
-        </button>
+        {isOwner && (
+          <button
+            onClick={onDelete}
+            disabled={pending}
+            className="text-cream/40 hover:text-red-400 text-[10px] uppercase tracking-[0.2em]"
+          >
+            {pending ? "…" : "Delete"}
+          </button>
+        )}
       </div>
     </div>
   );

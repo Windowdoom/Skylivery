@@ -13,6 +13,7 @@ const paths = [
   "/corporate-transportation-new-orleans",
   "/mardi-gras-transportation",
   "/jazz-fest-transportation",
+  "/corporate",
   "/terms",
   "/privacy",
 ];

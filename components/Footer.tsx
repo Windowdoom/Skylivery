@@ -44,6 +44,7 @@ export default function Footer() {
             <li><a href="/corporate-transportation-new-orleans" className="hover:text-gold">Corporate</a></li>
             <li><a href="/wedding-limo-new-orleans" className="hover:text-gold">Weddings</a></li>
             <li><a href="/mardi-gras-transportation" className="hover:text-gold">Mardi Gras</a></li>
+            <li><a href="/corporate" className="hover:text-gold">Corporate accounts</a></li>
             <li><a href="/jazz-fest-transportation" className="hover:text-gold">Jazz Fest</a></li>
           </ul>
         </div>

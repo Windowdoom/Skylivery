@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { isAuthed } from "@/lib/adminAuth";
+import { currentDispatcher } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import AdminDashboard, {
   Booking,
@@ -13,7 +13,8 @@ export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false, follow: false } };
 
 export default async function AdminPage() {
-  if (!isAuthed()) redirect("/admin/login");
+  const dispatcher = currentDispatcher();
+  if (!dispatcher) redirect("/admin/login");
 
   let sb;
   try {
@@ -58,6 +59,7 @@ export default async function AdminPage() {
         vehicles={(vehiclesRes.data ?? []) as Vehicle[]}
         monthly={(monthlyRes.data ?? []) as MonthlyRow[]}
         volume={(volumeRes.data ?? []) as DriverVolumeRow[]}
+        me={dispatcher}
       />
     </>
   );

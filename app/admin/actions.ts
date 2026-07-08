@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { isAuthed } from "@/lib/adminAuth";
+import { currentDispatcher, requireAuth } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   sendReceipt,
@@ -11,7 +11,11 @@ import { ntfyPush } from "@/lib/ntfy";
 import { refundByTripId, createCheckoutLink, squareConfigured } from "@/lib/square";
 
 function guard() {
-  if (!isAuthed()) throw new Error("unauthorized");
+  return requireAuth();
+}
+
+function guardOwner() {
+  return requireAuth({ owner: true });
 }
 
 export async function assignDriver(
@@ -19,13 +23,14 @@ export async function assignDriver(
   driverId: string,
   vehicleId: string | null
 ) {
-  guard();
+  const dispatcher = guard();
   const sb = supabaseAdmin();
   const assignedAtIso = new Date().toISOString();
   const update: Record<string, unknown> = {
     assigned_driver: driverId,
     status: "assigned",
     assigned_at: assignedAtIso,
+    assigned_by: dispatcher.name,
   };
   if (vehicleId) update.vehicle_id = vehicleId;
   const { error } = await sb.from("bookings").update(update).eq("id", bookingId);
@@ -84,6 +89,7 @@ export async function assignDriver(
           veh ? `Vehicle: ${veh}` : "",
           vehDesc ? `Car: ${vehDesc}` : "",
           `Assigned at: ${assignedAt} CT`,
+          `By: ${dispatcher.name}`,
           ``,
           `Customer: ${joined.customer_name}`,
           `Phone: ${joined.customer_phone}`,
@@ -280,7 +286,7 @@ export async function createBookingManually(input: {
   paymentIntent?: string;
   flightNumber?: string;
 }): Promise<{ ok: boolean; tripId?: string; error?: string }> {
-  guard();
+  const dispatcher = guard();
   const sb = supabaseAdmin();
 
   const year = new Date().getFullYear();
@@ -307,6 +313,7 @@ export async function createBookingManually(input: {
     payment_intent: input.paymentIntent || "in-vehicle",
     paid: false,
     flight_number: input.flightNumber || null,
+    dispatched_by: dispatcher.name,
   };
 
   const { error } = await sb.from("bookings").insert(row);
@@ -363,7 +370,7 @@ export async function createBookingManually(input: {
         `Pay: ${intentLabel}`,
         `Paid: no`,
         ``,
-        `Entered manually by dispatch.`,
+        `Entered by ${dispatcher.name}`,
       ]
         .filter(Boolean)
         .join("\n"),
@@ -481,7 +488,7 @@ export async function cancelBooking(
 export async function deleteBooking(
   bookingId: string
 ): Promise<{ ok: boolean; error?: string }> {
-  guard();
+  guardOwner();
   const sb = supabaseAdmin();
 
   // Best-effort cascade: remove any trip_log rows tied to the booking,
@@ -518,7 +525,7 @@ export async function clearTestBookings(): Promise<{
   deleted: number;
   error?: string;
 }> {
-  guard();
+  guardOwner();
   const sb = supabaseAdmin();
   const { data: matches, error: findErr } = await sb
     .from("bookings")
@@ -569,7 +576,7 @@ export async function createVehicle(input: {
   year?: number;
   plate?: string;
 }): Promise<{ ok: boolean; error?: string }> {
-  guard();
+  guardOwner();
   if (!input.cpncNumber?.trim()) {
     return { ok: false, error: "CPNC number is required." };
   }
@@ -599,7 +606,7 @@ export async function updateVehicle(
     active?: boolean;
   }
 ): Promise<{ ok: boolean; error?: string }> {
-  guard();
+  guardOwner();
   const sb = supabaseAdmin();
   const clean: Record<string, unknown> = {};
   if (patch.make !== undefined) clean.make = patch.make || null;

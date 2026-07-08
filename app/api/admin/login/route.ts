@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setAuthCookie } from "@/lib/adminAuth";
+import { setAuthCookie, verifyDispatcherCode } from "@/lib/adminAuth";
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json().catch(() => ({ password: "" }));
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) {
-    return NextResponse.json({ error: "Admin login not configured." }, { status: 500 });
+  const body = await req.json().catch(() => ({}));
+  const code = typeof body?.code === "string" ? body.code : "";
+  if (!code) {
+    return NextResponse.json({ error: "Code required." }, { status: 400 });
   }
-  if (typeof password !== "string" || password.length === 0 || password !== expected) {
-    return NextResponse.json({ error: "Wrong password." }, { status: 401 });
+  const dispatcher = await verifyDispatcherCode(code);
+  if (!dispatcher) {
+    return NextResponse.json({ error: "Code not recognized." }, { status: 401 });
   }
-  setAuthCookie(expected);
-  return NextResponse.json({ ok: true });
+  await setAuthCookie(dispatcher);
+  return NextResponse.json({
+    ok: true,
+    name: dispatcher.name,
+    role: dispatcher.role,
+  });
 }

@@ -100,6 +100,143 @@ export async function createCheckoutLink(input: {
   }
 }
 
+// Create a Square-hosted invoice for a corporate booking. Returns the
+// public URL Square hosts the invoice at, plus its id for our records.
+export async function createCorporateInvoice(input: {
+  tripId: string;
+  amountCents: number;
+  companyName: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  billingAddress?: string;
+  pickup: string;
+  dropoff: string;
+  tripDate: string;
+  tripTime: string;
+  terms: string; // "Due on receipt" | "Net 15" | "Net 30"
+  poNumber?: string;
+  costCenter?: string;
+}): Promise<{ url: string | null; id: string; number: string | null } | null> {
+  const c = client();
+  const locationId = process.env.SQUARE_LOCATION_ID?.trim();
+  if (!c || !locationId) return null;
+
+  try {
+    // 1) Ensure a customer record for this contact.
+    const customerRes = await c.customers.create({
+      idempotencyKey: `cust-${input.tripId}-${Date.now()}`,
+      givenName: input.contactName,
+      companyName: input.companyName,
+      emailAddress: input.contactEmail,
+      phoneNumber: input.contactPhone,
+      note: [input.poNumber && `PO: ${input.poNumber}`, input.costCenter && `Cost: ${input.costCenter}`]
+        .filter(Boolean)
+        .join(" · "),
+    });
+    const customerId = customerRes.customer?.id;
+    if (!customerId) return null;
+
+    // 2) Create an order with a single line item for the ride.
+    const orderRes = await c.orders.create({
+      idempotencyKey: `order-${input.tripId}-${Date.now()}`,
+      order: {
+        locationId,
+        customerId,
+        lineItems: [
+          {
+            name: `Sky Livery · ${input.tripId}`,
+            quantity: "1",
+            basePriceMoney: {
+              amount: BigInt(input.amountCents),
+              currency: "USD",
+            },
+            note: [
+              `${input.pickup} → ${input.dropoff}`,
+              `Pickup: ${input.tripDate} ${input.tripTime}`,
+              input.poNumber && `PO: ${input.poNumber}`,
+              input.costCenter && `Cost center: ${input.costCenter}`,
+            ]
+              .filter(Boolean)
+              .join(" · "),
+          },
+        ],
+      },
+    });
+    const orderId = orderRes.order?.id;
+    if (!orderId) return null;
+
+    // 3) Create the invoice pointing at the order.
+    const dueDays =
+      input.terms === "Net 30" ? 30 : input.terms === "Net 15" ? 15 : 0;
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + dueDays);
+    const dueDateStr = dueDate.toISOString().slice(0, 10);
+
+    const invoiceRes = await c.invoices.create({
+      idempotencyKey: `inv-${input.tripId}-${Date.now()}`,
+      invoice: {
+        locationId,
+        orderId,
+        primaryRecipient: { customerId },
+        deliveryMethod: "EMAIL",
+        paymentRequests: [
+          {
+            requestType: "BALANCE",
+            dueDate: dueDateStr,
+          },
+        ],
+        acceptedPaymentMethods: {
+          card: true,
+          squareGiftCard: false,
+          bankAccount: true,
+          buyNowPayLater: false,
+        },
+        title: `Sky Livery · ${input.tripId}`,
+        description: [
+          input.pickup,
+          "→",
+          input.dropoff,
+          `· ${input.tripDate} ${input.tripTime}`,
+          input.poNumber ? `· PO ${input.poNumber}` : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        customFields: [
+          input.companyName ? { label: "Company", value: input.companyName } : null,
+          input.billingAddress
+            ? { label: "Billing address", value: input.billingAddress }
+            : null,
+          input.poNumber ? { label: "PO number", value: input.poNumber } : null,
+          input.costCenter
+            ? { label: "Cost center", value: input.costCenter }
+            : null,
+          { label: "Terms", value: input.terms },
+        ].filter(Boolean) as { label: string; value: string }[],
+      },
+    });
+
+    const invoice = invoiceRes.invoice;
+    if (!invoice?.id) return null;
+
+    // 4) Publish the invoice so Square emails it to the customer.
+    const published = await c.invoices.publish({
+      invoiceId: invoice.id,
+      version: invoice.version!,
+      idempotencyKey: `pub-${input.tripId}-${Date.now()}`,
+    });
+
+    return {
+      url: published.invoice?.publicUrl ?? null,
+      id: invoice.id,
+      number: published.invoice?.invoiceNumber ?? null,
+    };
+  } catch (e) {
+    console.error("[square] createCorporateInvoice failed:", e);
+    return null;
+  }
+}
+
 // Refund a Square payment by trip reference. Looks up the most recent
 // completed payment whose note contains the trip_id, then issues a
 // refund for the full or specified amount.
