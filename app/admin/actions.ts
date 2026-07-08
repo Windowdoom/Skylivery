@@ -2,7 +2,11 @@
 import { revalidatePath } from "next/cache";
 import { isAuthed } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { sendReceipt, sendBookingConfirmation } from "@/lib/email";
+import {
+  sendReceipt,
+  sendBookingConfirmation,
+  sendDriverAssigned,
+} from "@/lib/email";
 import { ntfyPush } from "@/lib/ntfy";
 
 function guard() {
@@ -31,7 +35,7 @@ export async function assignDriver(
   const { data: joined } = await sb
     .from("bookings")
     .select(
-      "trip_id, customer_name, customer_phone, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, payment_intent, paid, flight_number, drivers(name, phone), vehicles(cpnc_number)"
+      "trip_id, customer_name, customer_phone, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, payment_intent, paid, flight_number, drivers(name, phone), vehicles(cpnc_number, make, model, color)"
     )
     .eq("id", bookingId)
     .single();
@@ -39,7 +43,16 @@ export async function assignDriver(
   if (joined) {
     const drvName = (joined.drivers as unknown as { name?: string } | null)?.name;
     const drvPhone = (joined.drivers as unknown as { phone?: string } | null)?.phone;
-    const veh = (joined.vehicles as unknown as { cpnc_number?: string } | null)?.cpnc_number;
+    const vehObj = joined.vehicles as unknown as {
+      cpnc_number?: string;
+      make?: string;
+      model?: string;
+      color?: string;
+    } | null;
+    const veh = vehObj?.cpnc_number;
+    const vehDesc = [vehObj?.color, vehObj?.make, vehObj?.model]
+      .filter(Boolean)
+      .join(" ") || null;
     const assignedAt = new Date().toLocaleString("en-US", {
       timeZone: "America/Chicago",
       month: "short",
@@ -60,31 +73,53 @@ export async function assignDriver(
           return joined.payment_intent || "—";
       }
     })();
-    await ntfyPush({
-      title: `Assigned → ${drvName ?? "driver"}${veh ? " · " + veh : ""}`,
-      body: [
-        `${joined.trip_id}`,
-        `Driver: ${drvName ?? "—"}`,
-        drvPhone ? `Driver phone: ${drvPhone}` : "",
-        veh ? `Vehicle: ${veh}` : "",
-        `Assigned at: ${assignedAt} CT`,
-        ``,
-        `Customer: ${joined.customer_name}`,
-        `Phone: ${joined.customer_phone}`,
-        joined.customer_email ? `Email: ${joined.customer_email}` : "",
-        ``,
-        `↑ ${joined.pickup_address}`,
-        `↓ ${joined.dropoff_address}`,
-        joined.flight_number ? `Flight: ${joined.flight_number}` : "",
-        `Pickup: ${joined.trip_date} ${joined.trip_time}`,
-        `Fare: $${joined.rate ?? "?"}`,
-        `Pay: ${intentLabel}`,
-        `Paid: ${joined.paid ? "YES" : "NO"}`,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-      tags: "car,white_check_mark",
-    });
+    await Promise.allSettled([
+      ntfyPush({
+        title: `Assigned → ${drvName ?? "driver"}${veh ? " · " + veh : ""}`,
+        body: [
+          `${joined.trip_id}`,
+          `Driver: ${drvName ?? "—"}`,
+          drvPhone ? `Driver phone: ${drvPhone}` : "",
+          veh ? `Vehicle: ${veh}` : "",
+          vehDesc ? `Car: ${vehDesc}` : "",
+          `Assigned at: ${assignedAt} CT`,
+          ``,
+          `Customer: ${joined.customer_name}`,
+          `Phone: ${joined.customer_phone}`,
+          joined.customer_email ? `Email: ${joined.customer_email}` : "",
+          ``,
+          `↑ ${joined.pickup_address}`,
+          `↓ ${joined.dropoff_address}`,
+          joined.flight_number ? `Flight: ${joined.flight_number}` : "",
+          `Pickup: ${joined.trip_date} ${joined.trip_time}`,
+          `Fare: $${joined.rate ?? "?"}`,
+          `Pay: ${intentLabel}`,
+          `Paid: ${joined.paid ? "YES" : "NO"}`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        tags: "car,white_check_mark",
+      }),
+      joined.customer_email
+        ? sendDriverAssigned({
+            to: joined.customer_email,
+            customerName: joined.customer_name,
+            tripId: joined.trip_id,
+            pickup: joined.pickup_address,
+            dropoff: joined.dropoff_address,
+            tripDate: joined.trip_date,
+            tripTime: joined.trip_time,
+            rate: joined.rate,
+            driverName: drvName ?? null,
+            driverPhone: drvPhone ?? null,
+            vehicleCpnc: veh ?? null,
+            vehicleDescription: vehDesc,
+            paid: joined.paid,
+            paymentIntent: joined.payment_intent,
+            flightNumber: joined.flight_number ?? null,
+          })
+        : Promise.resolve(),
+    ]);
   }
 
   revalidatePath("/admin");

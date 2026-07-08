@@ -223,6 +223,116 @@ export async function sendBookingConfirmation(b: {
   }
 }
 
+// ---------------- Driver-assigned email ----------------
+
+// Fires when dispatch assigns a driver + vehicle to the booking. Tells
+// the customer who is picking them up, in which vehicle, and when to
+// expect them. Payment reminder inline if not paid yet.
+export async function sendDriverAssigned(b: {
+  to: string;
+  customerName: string;
+  tripId: string;
+  pickup: string;
+  dropoff: string;
+  tripDate: string;
+  tripTime: string;
+  rate: number | null | undefined;
+  driverName: string | null;
+  driverPhone: string | null;
+  vehicleCpnc: string | null;
+  vehicleDescription?: string | null;
+  paid: boolean | null;
+  paymentIntent: string | null;
+  flightNumber?: string | null;
+}): Promise<void> {
+  const t = getTransporter();
+  if (!t) return;
+
+  const first = b.customerName.split(" ")[0];
+  const vehLine = [b.vehicleDescription, b.vehicleCpnc]
+    .filter(Boolean)
+    .join(" · ");
+
+  const paymentBlock = (() => {
+    if (b.paid) {
+      return `<div style="padding:12px 14px;background:#EFE3C4;border-left:3px solid #C9A961;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
+        <strong style="color:#8C7A46;">Paid.</strong> Your fare of ${money(b.rate)} is on the books. Nothing to do at drop-off but say goodbye.
+      </div>`;
+    }
+    if (b.paymentIntent === "online") {
+      return `<div style="padding:12px 14px;background:#EFE3C4;border-left:3px solid #C9A961;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
+        <strong style="color:#8C7A46;">Pay before pickup.</strong> Watch your inbox and phone for the secure Square link. Tap and pay in about ten seconds.
+      </div>`;
+    }
+    return `<div style="padding:12px 14px;background:#EFE3C4;border-left:3px solid #C9A961;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
+      <strong style="color:#8C7A46;">Pay in the car.</strong> Your driver carries a Square reader. Tap or insert on drop-off, or pay with cash. Gratuity is already included.
+    </div>`;
+  })();
+
+  const inner = `
+    <tr>
+      <td style="padding:26px 36px 4px 36px;">
+        <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:0.3em;color:#8C7A46;text-transform:uppercase;">Driver assigned</div>
+        <h1 style="font-family:Georgia,serif;font-size:24px;color:#0A1628;font-weight:600;margin:6px 0 12px 0;line-height:1.3;">
+          ${first}, your chauffeur is set.
+        </h1>
+        <p style="font-family:Arial,sans-serif;font-size:14px;color:#0A1628;line-height:1.6;margin:0;">
+          Below is your driver and vehicle so you can spot them at pickup. If your flight moves or you need to change anything, reply to this email or call dispatch.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:22px 36px 8px 36px;">
+        <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:0.3em;color:#8C7A46;text-transform:uppercase;">Reference</div>
+        <div style="font-family:Georgia,serif;font-size:22px;color:#0A1628;font-weight:600;letter-spacing:0.05em;margin-top:2px;">${b.tripId}</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:6px 36px 22px 36px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#EFE3C4;border-left:3px solid #C9A961;">
+          <tr>
+            <td style="padding:16px 18px;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.7;">
+              <div><strong style="color:#8C7A46;">Driver:</strong> ${b.driverName ?? "assigning"}</div>
+              ${b.driverPhone ? `<div><strong style="color:#8C7A46;">Driver phone:</strong> <a href="tel:${b.driverPhone}" style="color:#0A1628;text-decoration:none;">${b.driverPhone}</a></div>` : ""}
+              ${vehLine ? `<div><strong style="color:#8C7A46;">Vehicle:</strong> ${vehLine}</div>` : ""}
+              <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #8C7A46;">
+                <div><strong style="color:#8C7A46;">Pickup:</strong> ${b.pickup}</div>
+                <div><strong style="color:#8C7A46;">Dropoff:</strong> ${b.dropoff}</div>
+                <div><strong style="color:#8C7A46;">When:</strong> ${fmtDate(b.tripDate)} at ${fmtTime(b.tripTime)}</div>
+                ${b.flightNumber ? `<div><strong style="color:#8C7A46;">Flight:</strong> ${b.flightNumber}</div>` : ""}
+                <div><strong style="color:#8C7A46;">Fare:</strong> ${money(b.rate)} <span style="color:#0A1628;opacity:0.6;font-size:11px;">gratuity included</span></div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 36px 22px 36px;">
+        ${paymentBlock}
+      </td>
+    </tr>
+  `;
+
+  const html = shell(
+    `Your Sky Livery driver is on the way · ${b.tripId}`,
+    `Driver assigned for ${b.tripId}. ${b.driverName ?? ""}${vehLine ? " · " + vehLine : ""}. Pickup ${fmtDate(b.tripDate)} ${fmtTime(b.tripTime)}.`,
+    inner
+  );
+
+  try {
+    await t.sendMail({
+      from: fromField(),
+      to: b.to,
+      subject: `Sky Livery: driver assigned (${b.tripId})`,
+      html,
+      replyTo: process.env.GMAIL_USER,
+    });
+  } catch (e) {
+    console.error("[email] driver-assigned failed:", e);
+  }
+}
+
 // ---------------- Receipt email ----------------
 
 export async function sendReceipt(b: {
