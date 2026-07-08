@@ -13,6 +13,8 @@ const paths = [
   "/corporate-transportation-new-orleans",
   "/mardi-gras-transportation",
   "/jazz-fest-transportation",
+  "/terms",
+  "/privacy",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

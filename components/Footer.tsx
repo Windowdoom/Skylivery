@@ -64,7 +64,11 @@ export default function Footer() {
         <p className="text-silver/70 text-xs tracking-wide">
           © {year} <span className="text-silver font-semibold tracking-[0.15em]">SKY LIVERY LLC</span> · Licensed and insured · New Orleans
         </p>
-        <p className="text-gold/70 text-xs italic font-display">Arrive like you own the city.</p>
+        <div className="flex items-center gap-4 text-xs">
+          <a href="/terms" className="text-cream/60 hover:text-gold">Terms</a>
+          <a href="/privacy" className="text-cream/60 hover:text-gold">Privacy</a>
+          <p className="text-gold/70 italic font-display">Arrive like you own the city.</p>
+        </div>
       </div>
     </footer>
   );

@@ -100,6 +100,67 @@ export async function createCheckoutLink(input: {
   }
 }
 
+// Refund a Square payment by trip reference. Looks up the most recent
+// completed payment whose note contains the trip_id, then issues a
+// refund for the full or specified amount.
+export async function refundByTripId(input: {
+  tripId: string;
+  amountCents?: number;
+  reason?: string;
+}): Promise<{ ok: boolean; refundId?: string; error?: string }> {
+  const c = client();
+  if (!c) return { ok: false, error: "Square not configured" };
+
+  try {
+    // Look up recent payments and find the one for this trip.
+    const search = await c.payments.list({
+      limit: "50" as unknown as number,
+      sortOrder: "DESC",
+    });
+
+    let paymentId: string | null = null;
+    let paymentAmount: number | null = null;
+    for await (const p of search) {
+      const note = (p.note || "") + " " + (p.referenceId || "");
+      if (note.includes(input.tripId)) {
+        paymentId = p.id || null;
+        paymentAmount = Number(p.amountMoney?.amount || 0);
+        break;
+      }
+    }
+
+    if (!paymentId) {
+      return { ok: false, error: `No Square payment found for ${input.tripId}` };
+    }
+
+    const refundAmount = input.amountCents ?? paymentAmount ?? 0;
+    if (refundAmount <= 0) {
+      return { ok: false, error: "Refund amount is zero" };
+    }
+
+    const refund = await c.refunds.refundPayment({
+      idempotencyKey: `refund-${input.tripId}-${Date.now()}`,
+      paymentId,
+      amountMoney: {
+        amount: BigInt(refundAmount),
+        currency: "USD",
+      },
+      reason: input.reason || `Refund for ${input.tripId}`,
+    });
+
+    return {
+      ok: true,
+      refundId: refund.refund?.id,
+    };
+  } catch (e) {
+    console.error("[square] refundByTripId failed:", e);
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "refund failed",
+    };
+  }
+}
+
 // Verify the HMAC signature Square puts on webhook deliveries so we
 // only trust real Square events. Body must be the raw request body
 // (not JSON-parsed) for signature verification.

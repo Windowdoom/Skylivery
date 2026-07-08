@@ -480,9 +480,36 @@ function PendingCard({
     });
   }
   function decline() {
-    if (!confirm("Cancel this booking?")) return;
+    const paidNote = b.paid
+      ? "\n\nThis booking is PAID. You will need to refund separately (use the 'Cancel & Refund' button, or refund manually in Square)."
+      : "";
+    if (!confirm(`Cancel this booking?${paidNote}`)) return;
     start(async () => {
       await cancelBooking(b.id);
+    });
+  }
+  function declineAndRefund() {
+    if (!b.paid) {
+      alert("Booking is not marked paid, nothing to refund.");
+      return;
+    }
+    if (
+      !confirm(
+        `Cancel ${b.trip_id} AND refund via Square? Policy: 2+ hrs out = full refund, under 2 hrs or no-show = no refund.`
+      )
+    )
+      return;
+    start(async () => {
+      const res = await cancelBooking(b.id, { refund: true });
+      if (!res.ok) {
+        alert(`Cancel failed: ${res.error}`);
+      } else if (res.error) {
+        alert(res.error);
+      } else if (res.refunded) {
+        alert(`Refunded $${res.refundAmount} to the customer.`);
+      } else {
+        alert("Cancelled. No refund issued (policy = $0 or already refunded).");
+      }
     });
   }
 
@@ -508,11 +535,14 @@ function PendingCard({
           className="bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
         >
           <option value="">Vehicle…</option>
-          {vehicles.map((v) => (
-            <option key={v.id} value={v.id} className="bg-navy">
-              {v.cpnc_number}
-            </option>
-          ))}
+          {vehicles.filter((v) => v.active).map((v) => {
+            const desc = [v.make, v.model].filter(Boolean).join(" ");
+            return (
+              <option key={v.id} value={v.id} className="bg-navy">
+                {v.cpnc_number}{desc ? ` · ${desc}` : ""}
+              </option>
+            );
+          })}
         </select>
       </div>
       <button
@@ -524,12 +554,22 @@ function PendingCard({
       </button>
       <TextCustomerButton b={b} />
       <div className="mt-2 flex items-center justify-between text-xs">
-        <button
-          onClick={decline}
-          className="text-cream/50 hover:text-red-400"
-        >
-          Cancel booking
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={decline}
+            className="text-cream/50 hover:text-red-400"
+          >
+            Cancel booking
+          </button>
+          {b.paid && (
+            <button
+              onClick={declineAndRefund}
+              className="text-yellow-300/80 hover:text-yellow-200"
+            >
+              Cancel &amp; Refund
+            </button>
+          )}
+        </div>
         <button
           onClick={() => {
             if (!confirm(`Permanently delete ${b.trip_id}? Use only for test data.`)) return;

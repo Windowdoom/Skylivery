@@ -8,6 +8,7 @@ import {
   sendDriverAssigned,
 } from "@/lib/email";
 import { ntfyPush } from "@/lib/ntfy";
+import { refundByTripId, createCheckoutLink, squareConfigured } from "@/lib/square";
 
 function guard() {
   if (!isAuthed()) throw new Error("unauthorized");
@@ -311,6 +312,32 @@ export async function createBookingManually(input: {
   const { error } = await sb.from("bookings").insert(row);
   if (error) return { ok: false, error: error.message };
 
+  // If dispatcher chose Pay Before and Square is set up, mint a real
+  // checkout link so the customer gets the pay button in their email.
+  let paymentLink: string | null = null;
+  if (
+    input.paymentIntent === "online" &&
+    input.rate > 0 &&
+    squareConfigured()
+  ) {
+    const link = await createCheckoutLink({
+      tripId,
+      amountCents: Math.round(input.rate * 100),
+      customerName: input.name,
+      customerEmail: input.email || null,
+      pickup: input.pickup,
+      dropoff: input.dropoff,
+    });
+    if (link) {
+      paymentLink = link.url;
+      await sb
+        .from("bookings")
+        .update({ payment_link: link.url, payment_link_id: link.id })
+        .eq("trip_id", tripId)
+        .then(() => undefined, () => undefined);
+    }
+  }
+
   const intentLabel =
     input.paymentIntent === "online"
       ? "Online link (Square)"
@@ -354,6 +381,9 @@ export async function createBookingManually(input: {
           rate: input.rate,
           passengers: input.passengers ?? 1,
           serviceType: input.serviceType || "transfer",
+          flightNumber: input.flightNumber ?? null,
+          paymentIntent: input.paymentIntent ?? "in-vehicle",
+          paymentLink,
         })
       : Promise.resolve(),
   ]);
@@ -362,15 +392,86 @@ export async function createBookingManually(input: {
   return { ok: true, tripId };
 }
 
-export async function cancelBooking(bookingId: string) {
+// Apply our published cancellation policy: figure out what percent of the
+// fare should be refunded based on how far out from pickup the cancel
+// happens. Returns a fraction 0..1.
+function policyRefundFraction(
+  tripDate: string,
+  tripTime: string
+): { fraction: number; label: string } {
+  try {
+    const pickupIso = `${tripDate}T${tripTime}:00`;
+    const pickupMs = new Date(pickupIso).getTime();
+    if (Number.isNaN(pickupMs)) return { fraction: 1, label: "unknown timing" };
+    const hoursUntil = (pickupMs - Date.now()) / (60 * 60 * 1000);
+    if (hoursUntil >= 2) return { fraction: 1, label: "2+ hours out" };
+    return { fraction: 0, label: "under 2 hours" };
+  } catch {
+    return { fraction: 1, label: "unknown timing" };
+  }
+}
+
+export async function cancelBooking(
+  bookingId: string,
+  opts?: { refund?: boolean; overrideFullRefund?: boolean }
+): Promise<{ ok: boolean; refunded?: boolean; refundAmount?: number; error?: string }> {
   guard();
   const sb = supabaseAdmin();
+
+  const { data: booking } = await sb
+    .from("bookings")
+    .select(
+      "trip_id, rate, trip_date, trip_time, paid, customer_name, customer_email"
+    )
+    .eq("id", bookingId)
+    .single();
+
   const { error } = await sb
     .from("bookings")
     .update({ status: "cancelled" })
     .eq("id", bookingId);
-  if (error) throw new Error(error.message);
+  if (error) return { ok: false, error: error.message };
+
+  let refunded = false;
+  let refundAmount = 0;
+
+  if (opts?.refund && booking?.paid && booking.rate) {
+    const policy = opts.overrideFullRefund
+      ? { fraction: 1, label: "manual full refund" }
+      : policyRefundFraction(booking.trip_date, booking.trip_time);
+    const refundCents = Math.round(booking.rate * 100 * policy.fraction);
+    if (refundCents > 0) {
+      const res = await refundByTripId({
+        tripId: booking.trip_id,
+        amountCents: refundCents,
+        reason: `Cancellation (${policy.label})`,
+      });
+      if (res.ok) {
+        refunded = true;
+        refundAmount = refundCents / 100;
+        await sb
+          .from("bookings")
+          .update({ paid: false })
+          .eq("id", bookingId);
+        await ntfyPush({
+          title: `Refunded $${refundAmount} · ${booking.trip_id}`,
+          body: [
+            `${booking.customer_name}`,
+            `Reason: ${policy.label}`,
+            `Amount: $${refundAmount}`,
+          ].join("\n"),
+          tags: "arrows_counterclockwise,moneybag",
+        }).catch(() => {});
+      } else {
+        // Refund failed but cancellation succeeded — surface the error
+        revalidatePath("/admin");
+        return { ok: true, error: `Cancelled, but refund failed: ${res.error}` };
+      }
+    }
+  }
+
   revalidatePath("/admin");
+  return { ok: true, refunded, refundAmount };
 }
 
 // Permanently remove a single booking. Use for test bookings that never
