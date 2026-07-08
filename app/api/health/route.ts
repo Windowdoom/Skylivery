@@ -24,6 +24,12 @@ export async function GET() {
   const gmailPass = process.env.GMAIL_APP_PASSWORD || "";
   const gmailName = process.env.GMAIL_FROM_NAME || "";
   const mapsKey = process.env.GOOGLE_MAPS_API_KEY || "";
+  const sqToken = process.env.SQUARE_ACCESS_TOKEN || "";
+  const sqLoc = process.env.SQUARE_LOCATION_ID || "";
+  const sqApp = process.env.SQUARE_APPLICATION_ID || "";
+  const sqSig = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY || "";
+  const sqEnv = process.env.SQUARE_ENV || "";
+  const siteUrl = process.env.PUBLIC_SITE_URL || "";
 
   return NextResponse.json({
     supabase: {
@@ -47,6 +53,17 @@ export async function GET() {
       keySet: !!mapsKey,
       keyLength: mapsKey.length,
     },
+    square: {
+      accessTokenSet: !!sqToken,
+      accessTokenPrefix: sqToken ? sqToken.slice(0, 5) : null,
+      locationIdSet: !!sqLoc,
+      locationId: sqLoc || null,
+      applicationIdSet: !!sqApp,
+      webhookSigKeySet: !!sqSig,
+      webhookSigKeyLength: sqSig.length,
+      env: sqEnv || null,
+    },
+    siteUrl: siteUrl || null,
     nodeEnv: process.env.NODE_ENV || null,
     vercelEnv: process.env.VERCEL_ENV || null,
   });
