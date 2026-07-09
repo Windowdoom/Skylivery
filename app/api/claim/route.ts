@@ -58,9 +58,13 @@ export async function POST(req: NextRequest) {
       driverId: driver.id,
       vehicleId: vehicleId || null,
       byLabel: `${driver.name} (self-claim)`,
+      requirePending: true,
     });
     if (!res.ok) {
-      return NextResponse.json({ error: res.error }, { status: 500 });
+      return NextResponse.json(
+        { error: res.error === "already taken" ? "Already claimed by someone else." : res.error },
+        { status: res.error === "already taken" ? 409 : 500 }
+      );
     }
 
     revalidatePath("/admin");

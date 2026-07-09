@@ -7,6 +7,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { supabaseAdmin } from "./supabaseAdmin";
 import { ntfyPush } from "./ntfy";
 import { sendDriverAssigned } from "./email";
+import { sendSms, smsConfigured } from "./sms";
 
 const SECRET = () =>
   process.env.ADMIN_HMAC_SECRET ||
@@ -42,6 +43,10 @@ export async function assignDriverToBooking(input: {
   driverId: string;
   vehicleId: string | null;
   byLabel: string; // e.g. "Dispatch 1" or "Marcus (self-claim)"
+  // When true, the update only takes effect if the booking is still
+  // "pending" at write time — used by the self-claim and SMS-accept
+  // paths so two people racing for the same trip can't both win.
+  requirePending?: boolean;
 }): Promise<{ ok: boolean; error?: string }> {
   const sb = supabaseAdmin();
   const assignedAtIso = new Date().toISOString();
@@ -52,11 +57,14 @@ export async function assignDriverToBooking(input: {
     assigned_by: input.byLabel,
   };
   if (input.vehicleId) update.vehicle_id = input.vehicleId;
-  const { error } = await sb
-    .from("bookings")
-    .update(update)
-    .eq("id", input.bookingId);
+
+  let query = sb.from("bookings").update(update).eq("id", input.bookingId);
+  if (input.requirePending) query = query.eq("status", "pending");
+  const { data: touched, error } = await query.select("id");
   if (error) return { ok: false, error: error.message };
+  if (input.requirePending && (!touched || touched.length === 0)) {
+    return { ok: false, error: "already taken" };
+  }
 
   const { data: joined } = await sb
     .from("bookings")
@@ -151,6 +159,22 @@ export async function assignDriverToBooking(input: {
             paymentIntent: joined.payment_intent,
             paymentLink: joined.payment_link ?? null,
             flightNumber: joined.flight_number ?? null,
+          })
+        : Promise.resolve(),
+      drvPhone && smsConfigured()
+        ? sendSms({
+            to: drvPhone,
+            body: [
+              `Confirmed: ${joined.trip_id}`,
+              `${joined.pickup_address} → ${joined.dropoff_address}`,
+              `${joined.trip_date} ${joined.trip_time}`,
+              `Customer: ${joined.customer_name} · ${joined.customer_phone}`,
+              joined.paid
+                ? "Paid — nothing to collect."
+                : joined.payment_intent === "in-vehicle"
+                  ? `Collect $${joined.rate ?? "?"} in the car.`
+                  : "Payment pending online.",
+            ].join("\n"),
           })
         : Promise.resolve(),
     ]);

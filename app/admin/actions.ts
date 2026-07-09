@@ -4,6 +4,7 @@ import { currentDispatcher, requireAuth } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendReceipt, sendBookingConfirmation } from "@/lib/email";
 import { assignDriverToBooking, claimUrl } from "@/lib/assign";
+import { offerTripToDrivers } from "@/lib/driverOffers";
 import { ntfyPush } from "@/lib/ntfy";
 import { refundByTripId, createCheckoutLink, squareConfigured } from "@/lib/square";
 
@@ -302,6 +303,7 @@ export async function createBookingManually(input: {
           paymentLink,
         })
       : Promise.resolve(),
+    offerTripToDrivers(tripId).catch(() => {}),
   ]);
 
   revalidatePath("/admin");

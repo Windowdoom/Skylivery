@@ -4,6 +4,7 @@ import { sendBookingConfirmation } from "@/lib/email";
 import { ntfyPush } from "@/lib/ntfy";
 import { createCheckoutLink, squareConfigured } from "@/lib/square";
 import { claimUrl } from "@/lib/assign";
+import { offerTripToDrivers } from "@/lib/driverOffers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -195,6 +196,7 @@ export async function POST(req: NextRequest) {
             paymentLink,
           })
         : Promise.resolve(),
+      offerTripToDrivers(tripId).catch(() => {}),
     ]);
 
     return NextResponse.json({ ok: true, tripId });

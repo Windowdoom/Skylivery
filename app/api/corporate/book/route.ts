@@ -5,6 +5,7 @@ import { ntfyPush } from "@/lib/ntfy";
 import { createCorporateInvoice, squareConfigured } from "@/lib/square";
 import { calculateRate, distanceMiles } from "@/lib/zones";
 import { claimUrl } from "@/lib/assign";
+import { offerTripToDrivers } from "@/lib/driverOffers";
 
 async function geocode(
   address: string
@@ -284,6 +285,7 @@ export async function POST(req: NextRequest) {
             paymentLink: invoiceUrl,
           })
         : Promise.resolve(),
+      offerTripToDrivers(tripId).catch(() => {}),
     ]);
 
     return NextResponse.json({ ok: true, tripId, invoiceUrl });
