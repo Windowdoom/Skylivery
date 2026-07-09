@@ -4,6 +4,8 @@ import DriverClaimButton from "@/components/admin/DriverClaimButton";
 import DriverTripCard from "@/components/admin/DriverTripCard";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 export const metadata = {
   title: "Your trip | Sky Livery dispatch",
   robots: { index: false, follow: false },

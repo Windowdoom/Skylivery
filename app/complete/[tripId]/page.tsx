@@ -3,6 +3,8 @@ import { verifyCompleteToken } from "@/lib/complete";
 import CompleteForm from "@/components/admin/CompleteForm";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 export const metadata = {
   title: "Complete trip | Sky Livery dispatch",
   robots: { index: false, follow: false },

@@ -3,6 +3,8 @@ import { verifyClaimToken } from "@/lib/assign";
 import ClaimForm from "@/components/admin/ClaimForm";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 export const metadata = {
   title: "Claim trip | Sky Livery dispatch",
   robots: { index: false, follow: false },

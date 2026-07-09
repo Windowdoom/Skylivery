@@ -5,6 +5,7 @@
 // two entry points.
 
 import { createHmac, timingSafeEqual } from "crypto";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "./supabaseAdmin";
 import { ntfyPush } from "./ntfy";
 import { sendReceipt } from "./email";
@@ -55,7 +56,7 @@ export async function completeBookingCore(input: {
   const { data: booking } = await sb
     .from("bookings")
     .select(
-      "trip_id, status, customer_name, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, passengers, service_type, paid, payment_method"
+      "trip_id, status, assigned_driver, customer_name, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, passengers, service_type, paid, payment_method"
     )
     .eq("id", input.bookingId)
     .single();
@@ -155,6 +156,14 @@ export async function completeBookingCore(input: {
       priority: "default",
     }),
   ]);
+
+  // Belt-and-suspenders: these pages are already force-dynamic/no-store
+  // so this shouldn't be load-bearing, but a driver's "current trip"
+  // page must never show a stale completed trip.
+  revalidatePath("/driver/home");
+  if (booking.assigned_driver) {
+    revalidatePath(`/driver/${encodeURIComponent(booking.trip_id)}`);
+  }
 
   return { ok: true };
 }
