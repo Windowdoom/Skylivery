@@ -390,6 +390,7 @@ export async function sendReceipt(b: {
   completedAt: string;
   passengers?: number | null;
   serviceType?: string | null;
+  cardLast4?: string | null;
 }): Promise<void> {
   const t = getTransporter();
   if (!t) return;
@@ -398,7 +399,7 @@ export async function sendReceipt(b: {
     switch ((b.paymentMethod || "").toLowerCase()) {
       case "square":
       case "card":
-        return "Card via Square";
+        return b.cardLast4 ? `Card via Square •••• ${b.cardLast4}` : "Card via Square";
       case "cash":
         return "Cash";
       case "invoice":

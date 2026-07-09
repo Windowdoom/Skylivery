@@ -29,6 +29,7 @@ type SquareEvent = {
         reference_id?: string;
         note?: string;
         order_id?: string;
+        card_details?: { card?: { last_4?: string } };
       };
     };
   };
@@ -134,12 +135,14 @@ export async function POST(req: NextRequest) {
     const amountDollars = payment.amount_money?.amount
       ? Number(payment.amount_money.amount) / 100
       : booking.rate;
+    const cardLast4 = payment.card_details?.card?.last_4 ?? null;
     await sb
       .from("bookings")
       .update({
         paid: true,
         payment_method: "square",
         payment_captured_at: new Date().toISOString(),
+        card_last4: cardLast4,
       })
       .eq("id", booking.id);
 
@@ -153,7 +156,7 @@ export async function POST(req: NextRequest) {
         body: [
           `${tripId}`,
           `${booking.customer_name}`,
-          `Method: Card (Square)`,
+          `Method: Card (Square)${cardLast4 ? ` •••• ${cardLast4}` : ""}`,
           `Paid: YES`,
         ].join("\n"),
         tags: "moneybag,white_check_mark",
@@ -173,6 +176,7 @@ export async function POST(req: NextRequest) {
             completedAt: new Date().toISOString(),
             passengers: booking.passengers,
             serviceType: booking.service_type,
+            cardLast4,
           })
         : Promise.resolve(),
     ]);

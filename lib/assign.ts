@@ -178,7 +178,12 @@ export async function assignDriverToBooking(input: {
                 : joined.payment_intent === "in-vehicle"
                   ? `Collect $${joined.rate ?? "?"} in the car.`
                   : "Payment pending online.",
-            ].join("\n"),
+              !joined.paid && joined.payment_link
+                ? `Tap to charge: ${joined.payment_link}`
+                : "",
+            ]
+              .filter(Boolean)
+              .join("\n"),
           })
         : Promise.resolve(),
     ]);

@@ -49,6 +49,7 @@ export type Booking = {
   dispatched_by: string | null;
   assigned_by: string | null;
   vehicle_id: string | null;
+  card_last4: string | null;
 };
 
 export type Driver = {
@@ -760,6 +761,7 @@ function AssignedCard({
         {b.paid ? (
           <div className="flex-1 flex items-center px-2 text-emerald-300 text-xs font-semibold tracking-[0.1em] uppercase">
             Paid via {b.payment_method === "square" ? "Square" : b.payment_method || "card"}
+            {b.card_last4 ? ` •••• ${b.card_last4}` : ""}
           </div>
         ) : (
           <select
@@ -821,7 +823,8 @@ function CompletedCard({ b, drivers }: { b: Booking; drivers: Driver[] }) {
       <div className="mt-2 text-xs text-cream/60 flex items-center justify-between">
         <span>
           Driver: {driverName(drivers, b.assigned_driver)} · Paid via{" "}
-          {b.payment_method ?? "—"}{" "}
+          {b.payment_method ?? "—"}
+          {b.card_last4 ? ` •••• ${b.card_last4}` : ""}{" "}
           <span
             className={
               isPaid

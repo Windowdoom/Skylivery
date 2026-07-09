@@ -90,10 +90,13 @@ async function PaidCard({ tripRef }: { tripRef?: string }) {
             <TicketRef tripId={tripRef} />
           </div>
         )}
-        <p className="text-cream/70 text-base leading-relaxed mb-8">
+        <p className="text-cream/70 text-base leading-relaxed mb-3">
           Your fare has been captured. Square will email you a branded receipt shortly.
           Dispatch will assign your driver and text or email you their name, vehicle,
           and plate roughly thirty minutes before pickup.
+        </p>
+        <p className="text-cream/50 text-xs mb-8">
+          You should get two emails, one from Square and one from Sky Livery. If either is missing from your inbox, check your spam or promotions folder.
         </p>
         <a
           href="/"

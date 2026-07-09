@@ -436,6 +436,9 @@ export default function BookingForm({
             <br />
             Flat rate ${quote?.rate}, gratuity included.
           </p>
+          <p className="text-cream/50 text-xs mb-4">
+            A confirmation email is on its way. If it doesn&apos;t land in your inbox in a few minutes, check your spam or promotions folder.
+          </p>
           <button onClick={resetAll} className="text-gold text-sm font-semibold hover:underline">
             Book another ride
           </button>

@@ -24,6 +24,7 @@ export default function ClaimForm({
 }) {
   const [driverId, setDriverId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
+  const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,14 +36,14 @@ export default function ClaimForm({
   }
 
   async function claim() {
-    if (!driverId || busy) return;
+    if (!driverId || pin.length !== 4 || busy) return;
     setBusy(true);
     setError(null);
     try {
       const res = await fetch("/api/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tripId, token, driverId, vehicleId: vehicleId || null }),
+        body: JSON.stringify({ tripId, token, driverId, vehicleId: vehicleId || null, pin }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -98,10 +99,21 @@ export default function ClaimForm({
           );
         })}
       </select>
+      {driverId && (
+        <input
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+          type="tel"
+          inputMode="numeric"
+          maxLength={4}
+          placeholder="Last 4 digits of your phone number"
+          className="w-full bg-navy/60 border border-gold/25 rounded-md px-3 py-2.5 text-sm text-cream text-center tracking-[0.3em] placeholder:tracking-normal focus:border-gold focus:outline-none"
+        />
+      )}
       {error && <p className="text-red-400 text-xs">{error}</p>}
       <button
         onClick={claim}
-        disabled={!driverId || busy}
+        disabled={!driverId || pin.length !== 4 || busy}
         className="w-full py-3 bg-gold text-navy rounded-lg font-bold tracking-wide hover:bg-cream transition-colors disabled:opacity-50"
       >
         {busy ? "Claiming…" : "Claim trip"}
