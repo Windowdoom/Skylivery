@@ -8,7 +8,7 @@ import { supabaseAdmin } from "./supabaseAdmin";
 import { ntfyPush } from "./ntfy";
 import { sendDriverAssigned } from "./email";
 import { sendSms, smsConfigured } from "./sms";
-import { mapsDirectionsUrl } from "./maps";
+import { mapsTripUrl } from "./maps";
 import { completeUrl } from "./complete";
 import { sendWebPushToDriver, webPushConfigured } from "./webpush";
 import { driverTripUrl } from "./driverTrip";
@@ -171,9 +171,8 @@ export async function assignDriverToBooking(input: {
             body: [
               `Confirmed: ${joined.trip_id}`,
               `Pickup: ${joined.pickup_address}`,
-              mapsDirectionsUrl(joined.pickup_address),
               `Drop: ${joined.dropoff_address}`,
-              mapsDirectionsUrl(joined.dropoff_address),
+              `Full trip route: ${mapsTripUrl(joined.pickup_address, joined.dropoff_address)}`,
               `${joined.trip_date} ${joined.trip_time}`,
               `Customer: ${joined.customer_name} · ${joined.customer_phone}`,
               joined.paid

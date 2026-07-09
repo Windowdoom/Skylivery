@@ -9,3 +9,16 @@ export function mapsDirectionsUrl(address: string): string {
     address
   )}&travelmode=driving`;
 }
+
+// Full-trip navigation as one link: current location (no origin set,
+// so Maps uses wherever the driver is) -> pickup as a waypoint stop ->
+// dropoff as the final destination. One tap gives the whole route
+// instead of two separate links the driver has to switch between.
+export function mapsTripUrl(pickup: string, dropoff: string): string {
+  return (
+    `https://www.google.com/maps/dir/?api=1` +
+    `&destination=${encodeURIComponent(dropoff)}` +
+    `&waypoints=${encodeURIComponent(pickup)}` +
+    `&travelmode=driving`
+  );
+}

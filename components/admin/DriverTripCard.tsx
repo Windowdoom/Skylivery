@@ -1,4 +1,4 @@
-import { mapsDirectionsUrl } from "@/lib/maps";
+import { mapsTripUrl } from "@/lib/maps";
 import { completeToken } from "@/lib/complete";
 import CompleteForm from "./CompleteForm";
 
@@ -43,24 +43,17 @@ export default function DriverTripCard({
         </a>
       </div>
 
-      <div className="space-y-2">
-        <a
-          href={mapsDirectionsUrl(booking.pickup_address)}
-          target="_blank"
-          className="block bg-navy/60 border border-gold/25 rounded-md px-3 py-2.5 hover:border-gold"
-        >
-          <div className="text-[9px] tracking-[0.2em] uppercase text-gold/70">Pickup, tap to navigate</div>
-          <div className="text-cream text-xs mt-0.5">{booking.pickup_address}</div>
-        </a>
-        <a
-          href={mapsDirectionsUrl(booking.dropoff_address)}
-          target="_blank"
-          className="block bg-navy/60 border border-gold/25 rounded-md px-3 py-2.5 hover:border-gold"
-        >
-          <div className="text-[9px] tracking-[0.2em] uppercase text-gold/70">Dropoff, tap to navigate</div>
-          <div className="text-cream text-xs mt-0.5">{booking.dropoff_address}</div>
-        </a>
-      </div>
+      <a
+        href={mapsTripUrl(booking.pickup_address, booking.dropoff_address)}
+        target="_blank"
+        className="block bg-navy/60 border border-gold/25 rounded-md px-3 py-2.5 hover:border-gold"
+      >
+        <div className="text-[9px] tracking-[0.2em] uppercase text-gold/70 mb-1.5">
+          Tap to navigate full trip
+        </div>
+        <div className="text-cream text-xs">↑ {booking.pickup_address}</div>
+        <div className="text-cream text-xs mt-0.5">↓ {booking.dropoff_address}</div>
+      </a>
 
       <div className="text-cream/60 text-xs">
         {booking.trip_date} · {booking.trip_time}

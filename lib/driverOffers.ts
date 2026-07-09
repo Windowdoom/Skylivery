@@ -9,7 +9,7 @@ import { supabaseAdmin } from "./supabaseAdmin";
 import { sendSms, smsConfigured, phoneDigits } from "./sms";
 import { assignDriverToBooking } from "./assign";
 import { ntfyPush } from "./ntfy";
-import { mapsDirectionsUrl } from "./maps";
+import { mapsTripUrl } from "./maps";
 import { sendWebPushToDriver, webPushConfigured } from "./webpush";
 import { driverTripUrl } from "./driverTrip";
 
@@ -52,8 +52,8 @@ export async function offerTripToDrivers(tripId: string): Promise<void> {
   const msg = [
     `Sky Livery — new trip ${booking.trip_id}`,
     `Pickup: ${booking.pickup_address}`,
-    mapsDirectionsUrl(booking.pickup_address),
     `Drop: ${booking.dropoff_address}`,
+    `Route: ${mapsTripUrl(booking.pickup_address, booking.dropoff_address)}`,
     `${booking.trip_date} ${booking.trip_time} · $${booking.rate ?? "?"}`,
     `Reply Y to take it, N to pass.`,
   ].join("\n");
