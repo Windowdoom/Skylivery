@@ -216,11 +216,6 @@ export function calculateRate(
 
   if (airport) {
     // MSY: $105 base + $3/mi beyond 18mi (using real driving miles)
-    const farPoint = pickupIsMSY ? dropoff : pickup;
-    const dFarCrow = distanceMiles(KENNER_CENTER, farPoint);
-    // Prefer real driving miles when the non-airport point is farther
-    // than the core radius crow-flies. This keeps short trips flat and
-    // long trips accurately priced.
     const perMileMiles = Math.max(0, drivingMiles - CORE_RADIUS_MI);
     const perMileTotal = Math.ceil(perMileMiles * PER_MILE);
     const total = AIRPORT_FLAT_RATE + perMileTotal + oos + rf;
@@ -237,7 +232,6 @@ export function calculateRate(
         state: nonLaState,
       },
     };
-    void dFarCrow;
   }
 
   // Non-airport: zone bands under 40mi (crow-flies from Kenner center to

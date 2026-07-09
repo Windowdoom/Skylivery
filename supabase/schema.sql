@@ -52,6 +52,7 @@ create table if not exists public.bookings (
   payment_link_id text,
   paid boolean not null default false,
   payment_captured_at timestamptz,
+  card_last4 text,                                -- last 4 digits from Square's payment.card_details, if paid by card
   reminder_sent boolean not null default false,   -- day-before SMS reminder, sent at most once
 
   status text not null default 'pending',         -- 'pending' | 'assigned' | 'completed' | 'cancelled'
@@ -79,7 +80,7 @@ create table if not exists public.drivers (
   status text,                                    -- legacy/unused by current code; active flag below is authoritative
   active boolean not null default true,
   primary_vehicle uuid references public.vehicles(id),
-  payout_percent numeric,                         -- e.g. 0.92 for a 92% driver payout split
+  payout_percent numeric,                         -- e.g. 92 for a 92% driver payout split (whole number, not 0.92 — PayoutPanel in AdminDashboard.tsx divides by 100 itself); null defaults to 92
   pin_failures int not null default 0,            -- failed last-4-of-phone attempts (ntfy claim, push setup)
   pin_locked_until timestamptz                    -- set after too many failures; see lib/driverPin.ts
 );

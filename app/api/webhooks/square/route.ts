@@ -66,7 +66,21 @@ export async function POST(req: NextRequest) {
   }
   const payment = event?.data?.object?.payment;
 
-  if (!valid && sigConfigured) {
+  if (!sigConfigured) {
+    // Fail closed: with no signature key set we have no way to tell a
+    // real Square event from a forged one, so refuse to act on it
+    // rather than trusting an unsigned payload. Configure
+    // SQUARE_WEBHOOK_SIGNATURE_KEY in Vercel to enable this endpoint.
+    await ntfyPush({
+      title: "Square webhook: NOT CONFIGURED",
+      body: "SQUARE_WEBHOOK_SIGNATURE_KEY is unset — an incoming payment webhook was rejected untrusted.",
+      tags: "warning,square",
+      priority: "high",
+    }).catch(() => {});
+    return NextResponse.json({ error: "webhook not configured" }, { status: 401 });
+  }
+
+  if (!valid) {
     // Someone posted to our webhook with a bad signature — worth knowing.
     await ntfyPush({
       title: "Square webhook: BAD SIGNATURE",
