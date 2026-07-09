@@ -44,11 +44,17 @@ export default function Page() {
         { title: "Discreet chauffeurs", body: "Suit and tie. NDA on request." },
       ]}
       faqs={[
-        { q: "Can we set up a corporate account?", a: "Yes. Email us and we&apos;ll open an account with monthly invoicing and priority dispatch." },
+        { q: "Can we set up a corporate account?", a: "Yes. Open one instantly at skyliverynola.com/corporate — one form for company details plus your first ride, invoiced with Net 15 or Net 30 terms via Square." },
         { q: "Do you handle multi-city roadshows?", a: "Yes. We quote the day as a block and coordinate with your assistant or EA." },
         { q: "What&apos;s the Convention Center flat rate?", a: "Depends on hotel. The online calculator returns your all-in price in seconds." },
         { q: "Do drivers dress in business attire?", a: "Yes. Suit and tie standard, chauffeur cap available on request." },
       ]}
+      cta={{
+        label: "Open a corporate account",
+        href: "/corporate",
+        eyebrow: "For accounts, not one-time rides",
+        body: "Set up monthly invoicing, PO numbers, and cost centers in about 90 seconds. The first ride goes on your first invoice.",
+      }}
     />
   );
 }

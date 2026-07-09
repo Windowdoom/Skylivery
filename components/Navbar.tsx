@@ -55,6 +55,9 @@ export default function Navbar() {
           <a href="/#areas" className="text-cream/80 text-sm hover:text-gold transition-colors">
             Areas
           </a>
+          <a href="/corporate" className="text-cream/80 text-sm hover:text-gold transition-colors">
+            Corporate
+          </a>
           <a href={PHONE_HREF} className="text-gold text-sm font-semibold tracking-wide">
             {PHONE}
           </a>
@@ -85,6 +88,9 @@ export default function Navbar() {
           </a>
           <a onClick={() => setMenuOpen(false)} href="/#areas" className="text-cream/80 text-base">
             Areas
+          </a>
+          <a onClick={() => setMenuOpen(false)} href="/corporate" className="text-cream/80 text-base">
+            Corporate
           </a>
           <a href={PHONE_HREF} className="text-gold text-base font-semibold">
             {PHONE}

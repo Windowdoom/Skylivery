@@ -12,7 +12,7 @@ const services = [
     title: "Corporate Travel",
     tag: "Monthly billing",
     desc: "Executive rides, roadshows, client entertainment. Discreet, on time, invoiced.",
-    href: "/corporate-transportation-new-orleans",
+    href: "/corporate",
   },
   {
     title: "Weddings & Events",

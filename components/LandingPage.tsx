@@ -14,6 +14,12 @@ type Props = {
   faqs: { q: string; a: string }[];
   bookingContext?: BookingContext;
   schema?: object;
+  cta?: {
+    eyebrow?: string;
+    label: string;
+    body?: string;
+    href: string;
+  };
 };
 
 export default function LandingPage({
@@ -24,6 +30,7 @@ export default function LandingPage({
   faqs,
   bookingContext,
   schema,
+  cta,
 }: Props) {
   return (
     <>
@@ -117,6 +124,33 @@ export default function LandingPage({
           </div>
         </section>
 
+        {cta && (
+          <section className="py-12 bg-dark border-y border-gold/15">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-navy/60 border border-gold/40 rounded-2xl p-8 sm:p-10 text-center">
+                {cta.eyebrow && (
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-2">
+                    {cta.eyebrow}
+                  </p>
+                )}
+                <h3 className="font-display text-2xl sm:text-3xl text-cream font-semibold mb-3">
+                  {cta.label}
+                </h3>
+                {cta.body && (
+                  <p className="text-cream/70 text-sm sm:text-base leading-relaxed mb-6 max-w-xl mx-auto">
+                    {cta.body}
+                  </p>
+                )}
+                <a
+                  href={cta.href}
+                  className="inline-block bg-gold text-navy px-6 py-3 rounded-md font-bold tracking-wide hover:bg-cream transition-colors"
+                >
+                  {cta.label} →
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
         <TrustBar />
         <CTA />
       </main>
