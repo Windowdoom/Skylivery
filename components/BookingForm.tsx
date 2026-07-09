@@ -309,6 +309,10 @@ export default function BookingForm({
           </div>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className={input} />
           <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" type="tel" className={input} />
+          <p className="text-cream/45 text-[10px] leading-relaxed -mt-1.5 px-1">
+            By providing your phone number, you agree to receive text messages about this ride from Sky Livery LLC (confirmation, driver assignment, payment link, receipt). Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. See our{" "}
+            <a href="/privacy" target="_blank" className="underline hover:text-gold">Privacy Policy</a>.
+          </p>
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" type="email" className={input} />
           {(() => {
             // Flight number field is always visible on the details step

@@ -182,6 +182,10 @@ export default function CorporateBookingForm() {
               className={input}
               placeholder="(504) 555-0100"
             />
+            <p className="text-cream/45 text-[10px] leading-relaxed mt-1.5">
+              By providing your phone number, you agree to receive text messages about this booking from Sky Livery LLC. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. See our{" "}
+              <a href="/privacy" target="_blank" className="underline hover:text-gold">Privacy Policy</a>.
+            </p>
           </div>
           <div>
             <label className={label}>Email *</label>
