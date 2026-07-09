@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendReceipt, sendBookingConfirmation } from "@/lib/email";
 import { assignDriverToBooking, claimUrl } from "@/lib/assign";
 import { offerTripToDrivers } from "@/lib/driverOffers";
+import { completeBookingCore } from "@/lib/complete";
 import { ntfyPush } from "@/lib/ntfy";
 import { refundByTripId, createCheckoutLink, squareConfigured } from "@/lib/square";
 
@@ -118,106 +119,20 @@ export async function markCompleted(
   paymentMethod: string,
   paid?: boolean
 ) {
-  guard();
-  const sb = supabaseAdmin();
-  const completedAt = new Date().toISOString();
-
-  // Read current state first — if the customer already paid (via the
-  // Square link, webhook flipped paid=true and sent the receipt), keep
-  // that and don't send a second receipt on completion.
-  const { data: booking } = await sb
-    .from("bookings")
-    .select(
-      "trip_id, customer_name, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, passengers, service_type, paid, payment_method"
-    )
-    .eq("id", bookingId)
-    .single();
-  const wasAlreadyPaid = booking?.paid === true;
-
-  // If caller passes an explicit paid flag, honor it. Otherwise infer:
-  // already-paid stays paid; invoice + online-link default to unpaid;
-  // cash + in-vehicle card default to paid on the spot.
-  const paidResolved =
-    paid !== undefined
-      ? paid
-      : wasAlreadyPaid ||
-        !["invoice", "online"].includes((paymentMethod || "").toLowerCase());
-  const { error } = await sb
-    .from("bookings")
-    .update({
-      status: "completed",
-      completed_at: completedAt,
-      // Don't overwrite how they actually paid (e.g. 'square' from the
-      // webhook) with the dropdown default.
-      payment_method: wasAlreadyPaid
-        ? booking?.payment_method || paymentMethod || null
-        : paymentMethod || null,
-      paid: paidResolved,
-    })
-    .eq("id", bookingId);
-  if (error) throw new Error(error.message);
-
-  // Await ntfy + receipt in parallel so Vercel doesn't drop them the
-  // way it drops fire-and-forget promises in route handlers.
-  const methodLabel = (() => {
-    switch ((paymentMethod || "").toLowerCase()) {
-      case "square":
-      case "card":
-        return "Card (Square)";
-      case "cash":
-        return "Cash";
-      case "invoice":
-        return "Invoice";
-      case "third_party":
-        return "Third-party";
-      default:
-        return paymentMethod || "—";
-    }
-  })();
-
-  const completedAtLocal = new Date().toLocaleString("en-US", {
-    timeZone: "America/Chicago",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
+  const dispatcher = guard();
+  const res = await completeBookingCore({
+    bookingId,
+    paymentMethod,
+    completedByLabel: dispatcher.name,
   });
-
-  await Promise.allSettled([
-    booking?.customer_email && !wasAlreadyPaid
-      ? sendReceipt({
-          to: booking.customer_email,
-          customerName: booking.customer_name,
-          tripId: booking.trip_id,
-          pickup: booking.pickup_address,
-          dropoff: booking.dropoff_address,
-          tripDate: booking.trip_date,
-          tripTime: booking.trip_time,
-          rate: booking.rate,
-          paymentMethod: paymentMethod || null,
-          completedAt,
-          passengers: booking.passengers,
-          serviceType: booking.service_type,
-        })
-      : Promise.resolve(),
-    booking
-      ? ntfyPush({
-          title: `Completed · $${booking.rate ?? "?"} · ${methodLabel}`,
-          body: [
-            `${booking.trip_id}`,
-            `${booking.customer_name}`,
-            `↓ ${booking.dropoff_address}`,
-            `Paid: ${methodLabel}`,
-            `Closed at: ${completedAtLocal} CT`,
-          ].join("\n"),
-          tags: "moneybag,checkered_flag",
-          priority: "default",
-        })
-      : Promise.resolve(),
-  ]);
-
+  // Explicit paid override from the caller (rare — used when dispatch
+  // needs to force a state the inferred logic wouldn't reach).
+  if (paid !== undefined && res.ok) {
+    const sb = supabaseAdmin();
+    await sb.from("bookings").update({ paid }).eq("id", bookingId);
+  }
   revalidatePath("/admin");
+  if (!res.ok) throw new Error(res.error || "completion failed");
 }
 
 // Flip an existing booking's paid flag. Used for invoice and online-

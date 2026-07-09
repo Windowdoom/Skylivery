@@ -13,6 +13,11 @@ type Quote = {
   dropoffLat?: number;
   dropoffLng?: number;
   distanceMiles?: number;
+  // Hourly quotes only: rate is the per-hour price, minimumTotal is the
+  // real charge for the booking (per-hour × minimum hours). The booking
+  // must be submitted at minimumTotal, never at the bare per-hour rate.
+  minimumHours?: number;
+  minimumTotal?: number;
 };
 type Step = "form" | "quote" | "details" | "confirmed" | "phone";
 
@@ -46,6 +51,15 @@ export default function BookingForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tripId, setTripId] = useState<string | null>(null);
+
+  // The real charge for this booking. For hourly quotes, quote.rate is
+  // only the per-hour price — the actual fare is the minimum-hours
+  // total. Every place that shows or submits "the fare" should read
+  // this, never quote.rate directly.
+  const totalFare =
+    quote?.rateType === "hourly" && quote.minimumTotal
+      ? quote.minimumTotal
+      : quote?.rate ?? null;
 
   // Prefill from ?pickup=&dropoff=&date=&time= when routed from the Hero quick-quote bar
   useEffect(() => {
@@ -86,6 +100,8 @@ export default function BookingForm({
           dropoffLat: data.dropoffLat,
           dropoffLng: data.dropoffLng,
           distanceMiles: data.distanceMiles,
+          minimumHours: data.minimumHours,
+          minimumTotal: data.minimumTotal,
         });
         setStep("quote");
       }
@@ -116,7 +132,7 @@ export default function BookingForm({
           time,
           serviceType,
           passengers,
-          rate: quote?.rate ?? null,
+          rate: totalFare,
           rateType: quote?.rateType ?? null,
           pickupLat: quote?.pickupLat ?? null,
           pickupLng: quote?.pickupLng ?? null,
@@ -265,7 +281,25 @@ export default function BookingForm({
             </select>
           </div>
 
-          {quote && step === "quote" && (
+          {quote && step === "quote" && quote.rateType === "hourly" && (
+            <div className="bg-gold/[0.08] border border-gold/40 rounded-xl p-4 mb-4">
+              <p className="text-gold text-[10px] font-semibold tracking-[0.2em] uppercase mb-1">
+                Hourly charter — {quote.minimumHours}-hour minimum
+              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-cream font-display text-4xl font-semibold">
+                  ${quote.minimumTotal ?? quote.rate}
+                </span>
+                <span className="text-cream/70 text-sm">
+                  minimum ({quote.minimumHours} hrs)
+                </span>
+              </div>
+              <p className="text-cream/60 text-xs mt-1">
+                ${quote.rate}/hr, gratuity included. Need more time than the minimum? Dispatch will bill any extra hours at the same rate.
+              </p>
+            </div>
+          )}
+          {quote && step === "quote" && quote.rateType !== "hourly" && (
             <div className="bg-gold/[0.08] border border-gold/40 rounded-xl p-4 mb-4">
               <p className="text-gold text-[10px] font-semibold tracking-[0.2em] uppercase mb-1">
                 Your flat rate
@@ -303,8 +337,12 @@ export default function BookingForm({
         <div className="space-y-3">
           <div className="bg-gold/[0.08] border border-gold/40 rounded-xl p-3 mb-2">
             <p className="text-cream text-sm">
-              <span className="font-bold text-gold">${quote?.rate}</span>{" "}
-              <span className="text-cream/70">flat rate, gratuity included</span>
+              <span className="font-bold text-gold">${totalFare}</span>{" "}
+              <span className="text-cream/70">
+                {quote?.rateType === "hourly"
+                  ? `total (${quote.minimumHours}-hr minimum), gratuity included`
+                  : "flat rate, gratuity included"}
+              </span>
             </p>
           </div>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className={input} />
@@ -434,7 +472,9 @@ export default function BookingForm({
           <p className="text-cream/70 text-sm mb-4">
             We&apos;ll text {phone} shortly to confirm your ride.
             <br />
-            Flat rate ${quote?.rate}, gratuity included.
+            {quote?.rateType === "hourly"
+              ? `Total $${totalFare} (${quote.minimumHours}-hr minimum), gratuity included.`
+              : `Flat rate $${totalFare}, gratuity included.`}
           </p>
           <p className="text-cream/50 text-xs mb-4">
             A confirmation email is on its way. If it doesn&apos;t land in your inbox in a few minutes, check your spam or promotions folder.

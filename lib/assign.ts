@@ -9,6 +9,7 @@ import { ntfyPush } from "./ntfy";
 import { sendDriverAssigned } from "./email";
 import { sendSms, smsConfigured } from "./sms";
 import { mapsDirectionsUrl } from "./maps";
+import { completeUrl } from "./complete";
 
 const SECRET = () =>
   process.env.ADMIN_HMAC_SECRET ||
@@ -174,13 +175,14 @@ export async function assignDriverToBooking(input: {
               `${joined.trip_date} ${joined.trip_time}`,
               `Customer: ${joined.customer_name} · ${joined.customer_phone}`,
               joined.paid
-                ? "Paid — nothing to collect."
+                ? "Paid. Nothing to collect."
                 : joined.payment_intent === "in-vehicle"
                   ? `Collect $${joined.rate ?? "?"} in the car.`
                   : "Payment pending online.",
               !joined.paid && joined.payment_link
                 ? `Tap to charge: ${joined.payment_link}`
                 : "",
+              `Mark complete when done: ${completeUrl(joined.trip_id)}`,
             ]
               .filter(Boolean)
               .join("\n"),
