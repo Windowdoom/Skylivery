@@ -46,6 +46,7 @@ export type Booking = {
   completed_at: string | null;
   dispatched_by: string | null;
   assigned_by: string | null;
+  vehicle_id: string | null;
 };
 
 export type Driver = {
@@ -555,7 +556,8 @@ function PendingCard({
   function submit() {
     if (!driverId) return;
     start(async () => {
-      await assignDriver(b.id, driverId, vehicleId || null);
+      const res = await assignDriver(b.id, driverId, vehicleId || null);
+      if (!res.ok) alert(res.error || "Assignment failed.");
     });
   }
   function decline() {
@@ -679,7 +681,7 @@ function AssignedCard({
   const [paymentMethod, setPaymentMethod] = useState("square");
   const [pending, start] = useTransition();
   const drv = drivers.find((d) => d.id === b.assigned_driver);
-  const veh = vehicles.find((v) => v.id === (b as unknown as { vehicle_id?: string }).vehicle_id);
+  const veh = vehicles.find((v) => v.id === b.vehicle_id);
 
   function complete() {
     start(async () => {

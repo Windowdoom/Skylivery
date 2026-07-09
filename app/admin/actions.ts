@@ -20,16 +20,31 @@ export async function assignDriver(
   bookingId: string,
   driverId: string,
   vehicleId: string | null
-) {
+): Promise<{ ok: boolean; error?: string }> {
   const dispatcher = guard();
+  // requirePending guards against a race with the driver self-claim
+  // link and the SMS Y/N accept flow — without it, a dispatcher who has
+  // the Pending column open could silently overwrite a driver who
+  // already claimed the trip seconds earlier, with no error shown to
+  // either side and two drivers converging on one pickup.
   const res = await assignDriverToBooking({
     bookingId,
     driverId,
     vehicleId,
     byLabel: dispatcher.name,
+    requirePending: true,
   });
-  if (!res.ok) throw new Error(res.error || "assignment failed");
   revalidatePath("/admin");
+  if (!res.ok) {
+    return {
+      ok: false,
+      error:
+        res.error === "already taken"
+          ? "A driver already claimed this trip (self-claim link or SMS accept) — refresh to see who."
+          : res.error,
+    };
+  }
+  return { ok: true };
 }
 
 export async function markCompleted(
