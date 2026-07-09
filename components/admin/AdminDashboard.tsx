@@ -20,6 +20,7 @@ import {
   quoteBooking,
 } from "@/app/admin/actions";
 import { mapsDirectionsUrl } from "@/lib/maps";
+import { HOURLY_RATE, HOURLY_MIN_WEEKDAY, HOURLY_MIN_WEEKEND } from "@/lib/zones";
 
 export type Booking = {
   id: string;
@@ -929,9 +930,12 @@ function NewBookingModal({
   const [email, setEmail] = useState("");
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
-  const [date, setDate] = useState("");
+  // Default to today so a common same-day manual booking never gets
+  // silently blocked by a date field dispatch forgot was empty.
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [time, setTime] = useState("");
   const [rate, setRate] = useState("");
+  const [hours, setHours] = useState("");
   const [passengers, setPassengers] = useState("1");
   const [paymentIntent, setPaymentIntent] = useState("in-vehicle");
   const [serviceType, setServiceType] = useState("transfer");
@@ -940,9 +944,27 @@ function NewBookingModal({
   const [err, setErr] = useState<string | null>(null);
   void drivers;
 
+  const isHourly = serviceType === "hourly";
+  const minHours = (() => {
+    if (!date) return HOURLY_MIN_WEEKDAY;
+    const day = new Date(`${date}T00:00:00`).getDay();
+    const isWeekend = day === 0 || day === 5 || day === 6;
+    return isWeekend ? HOURLY_MIN_WEEKEND : HOURLY_MIN_WEEKDAY;
+  })();
+  const hourlyTotal = HOURLY_RATE * (Number(hours) || minHours);
+  const effectiveRate = isHourly ? hourlyTotal : Math.round(Number(rate)) || 0;
+
   function submit() {
     setErr(null);
-    if (!name || !phone || !pickup || !dropoff || !date || !time || !rate) {
+    if (
+      !name ||
+      !phone ||
+      !pickup ||
+      !dropoff ||
+      !date ||
+      !time ||
+      (!isHourly && !rate)
+    ) {
       setErr("Fill in every field except email.");
       return;
     }
@@ -955,7 +977,7 @@ function NewBookingModal({
         dropoff,
         date,
         time,
-        rate: Math.round(Number(rate)) || 0,
+        rate: effectiveRate,
         serviceType,
         passengers: Number(passengers) || 1,
         paymentIntent,
@@ -1041,13 +1063,24 @@ function NewBookingModal({
             type="time"
             className={input}
           />
-          <input
-            value={rate}
-            onChange={(e) => setRate(e.target.value)}
-            placeholder="Fare in dollars"
-            type="number"
-            className={input}
-          />
+          {isHourly ? (
+            <input
+              value={hours}
+              onChange={(e) => setHours(e.target.value.replace(/[^\d]/g, ""))}
+              placeholder={`Hours (min ${minHours})`}
+              type="number"
+              min={minHours}
+              className={input}
+            />
+          ) : (
+            <input
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              placeholder="Fare in dollars"
+              type="number"
+              className={input}
+            />
+          )}
           <select
             value={passengers}
             onChange={(e) => setPassengers(e.target.value)}
@@ -1088,6 +1121,15 @@ function NewBookingModal({
             maxLength={12}
           />
         </div>
+
+        {isHourly && (
+          <div className="mt-3 flex items-center justify-between bg-gold/[0.08] border border-gold/30 rounded-md px-3 py-2 text-sm">
+            <span className="text-cream/70">
+              {hours || minHours} hrs × ${HOURLY_RATE}/hr ({minHours}-hr minimum)
+            </span>
+            <span className="text-gold font-semibold">${hourlyTotal} total</span>
+          </div>
+        )}
 
         {err && <p className="text-red-400 text-xs mt-3">{err}</p>}
 
