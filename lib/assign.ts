@@ -10,6 +10,8 @@ import { sendDriverAssigned } from "./email";
 import { sendSms, smsConfigured } from "./sms";
 import { mapsDirectionsUrl } from "./maps";
 import { completeUrl } from "./complete";
+import { sendWebPushToDriver, webPushConfigured } from "./webpush";
+import { driverTripUrl } from "./driverTrip";
 
 const SECRET = () =>
   process.env.ADMIN_HMAC_SECRET ||
@@ -186,6 +188,16 @@ export async function assignDriverToBooking(input: {
             ]
               .filter(Boolean)
               .join("\n"),
+          })
+        : Promise.resolve(),
+      webPushConfigured()
+        ? sendWebPushToDriver(input.driverId, {
+            title: `Trip confirmed · ${joined.trip_id}`,
+            body: joined.paid
+              ? "Paid. Tap for pickup/dropoff and directions."
+              : `Tap for directions and payment. Fare $${joined.rate ?? "?"}.`,
+            url: driverTripUrl(joined.trip_id, input.driverId),
+            tag: `trip-${joined.trip_id}`,
           })
         : Promise.resolve(),
     ]);

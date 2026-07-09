@@ -246,6 +246,13 @@ export default function AdminDashboard({
             >
               Vehicles ({vehicles.length})
             </button>
+            <a
+              href="/driver-setup"
+              target="_blank"
+              className="text-xs text-cream/80 border border-gold/30 rounded-md px-3 py-1.5 hover:border-gold hover:text-gold"
+            >
+              Driver setup link
+            </a>
             {isOwner && (
             <button
               onClick={onClearTests}

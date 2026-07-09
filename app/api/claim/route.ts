@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyClaimToken, assignDriverToBooking } from "@/lib/assign";
-import { phoneDigits } from "@/lib/sms";
+import { verifyDriverPin } from "@/lib/driverPin";
 
 export const dynamic = "force-dynamic";
 
@@ -44,29 +44,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data: driver } = await sb
-      .from("drivers")
-      .select("id, name, phone, active")
-      .eq("id", driverId)
-      .eq("active", true)
-      .single();
-    if (!driver) {
-      return NextResponse.json({ error: "Driver not found" }, { status: 404 });
-    }
-
     // The ntfy push and claim link go to a shared channel, so anyone
     // with it could otherwise pick a name that isn't theirs. Requiring
     // the last 4 digits of the phone number already on file for that
-    // driver (something only they'd know offhand) closes that gap. The
-    // SMS accept path doesn't need this. It already identifies the
-    // driver by the real phone number the text came from.
-    const last4 = phoneDigits(driver.phone || "").slice(-4);
-    if (!last4 || String(pin).trim() !== last4) {
-      return NextResponse.json(
-        { error: "That PIN doesn't match our records for this driver." },
-        { status: 401 }
-      );
+    // driver (something only they'd know offhand) closes that gap,
+    // with a lockout after repeated wrong guesses. The SMS accept path
+    // doesn't need this — it already identifies the driver by the real
+    // phone number the text came from.
+    const pinCheck = await verifyDriverPin(driverId, pin);
+    if (!pinCheck.ok || !pinCheck.driver) {
+      return NextResponse.json({ error: pinCheck.error }, { status: 401 });
     }
+    const driver = pinCheck.driver;
 
     const res = await assignDriverToBooking({
       bookingId: booking.id,

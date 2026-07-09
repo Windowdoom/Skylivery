@@ -6,7 +6,17 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/admin", "/admin/", "/book/paid", "/corporate/book", "/claim/", "/complete/"],
+        disallow: [
+          "/api/",
+          "/admin",
+          "/admin/",
+          "/book/paid",
+          "/corporate/book",
+          "/claim/",
+          "/complete/",
+          "/driver/",
+          "/driver-setup",
+        ],
       },
     ],
     sitemap: "https://www.skyliverynola.com/sitemap.xml",

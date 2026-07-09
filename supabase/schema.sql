@@ -79,7 +79,9 @@ create table if not exists public.drivers (
   status text,                                    -- legacy/unused by current code; active flag below is authoritative
   active boolean not null default true,
   primary_vehicle uuid references public.vehicles(id),
-  payout_percent numeric                          -- e.g. 0.92 for a 92% driver payout split
+  payout_percent numeric,                         -- e.g. 0.92 for a 92% driver payout split
+  pin_failures int not null default 0,            -- failed last-4-of-phone attempts (ntfy claim, push setup)
+  pin_locked_until timestamptz                    -- set after too many failures; see lib/driverPin.ts
 );
 
 -- ============================================================
@@ -124,6 +126,24 @@ create table if not exists public.sms_offers (
 
 create index if not exists sms_offers_driver_idx on public.sms_offers(driver_id, response);
 create index if not exists sms_offers_booking_idx on public.sms_offers(booking_id);
+
+-- ============================================================
+-- driver_push_subscriptions — web push endpoints, one row per device
+-- a driver has enabled trip alerts on (via /driver-setup). A driver
+-- switching phones just adds a new row; dead ones are pruned
+-- automatically the first time a push to them fails (404/410).
+-- ============================================================
+create table if not exists public.driver_push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  driver_id uuid not null references public.drivers(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists driver_push_subs_driver_idx on public.driver_push_subscriptions(driver_id);
+grant all on public.driver_push_subscriptions to service_role;
 
 -- ============================================================
 -- Views (documented, not defined — see note at top of file)

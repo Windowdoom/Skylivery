@@ -10,9 +10,10 @@ import { sendSms, smsConfigured, phoneDigits } from "./sms";
 import { assignDriverToBooking } from "./assign";
 import { ntfyPush } from "./ntfy";
 import { mapsDirectionsUrl } from "./maps";
+import { sendWebPushToDriver, webPushConfigured } from "./webpush";
+import { driverTripUrl } from "./driverTrip";
 
 export async function offerTripToDrivers(tripId: string): Promise<void> {
-  if (!smsConfigured()) return;
   const sb = supabaseAdmin();
 
   const { data: booking } = await sb
@@ -36,9 +37,17 @@ export async function offerTripToDrivers(tripId: string): Promise<void> {
     .eq("status", "assigned")
     .not("assigned_driver", "is", null);
   const busyIds = new Set((busyRows || []).map((r) => r.assigned_driver as string));
+  const eligible = (drivers || []).filter((d) => !busyIds.has(d.id));
+  if (eligible.length === 0) return;
 
-  const withPhone = (drivers || []).filter((d) => d.phone && !busyIds.has(d.id));
-  if (withPhone.length === 0) return;
+  // SMS and web push are independent channels — SMS being unconfigured
+  // (or still pending carrier approval) must never block push, and
+  // vice versa. Each is gated on its own availability check.
+  const smsOk = smsConfigured();
+  const pushOk = webPushConfigured();
+  if (!smsOk && !pushOk) return;
+
+  const withPhone = eligible.filter((d) => d.phone);
 
   const msg = [
     `Sky Livery — new trip ${booking.trip_id}`,
@@ -49,18 +58,36 @@ export async function offerTripToDrivers(tripId: string): Promise<void> {
     `Reply Y to take it, N to pass.`,
   ].join("\n");
 
-  await sb.from("sms_offers").insert(
-    withPhone.map((d) => ({
-      booking_id: booking.id,
-      driver_id: d.id,
-      trip_id: booking.trip_id,
-      phone: d.phone,
-    }))
-  );
+  const jobs: Promise<unknown>[] = [];
 
-  await Promise.allSettled(
-    withPhone.map((d) => sendSms({ to: d.phone as string, body: msg }))
-  );
+  if (smsOk && withPhone.length > 0) {
+    await sb.from("sms_offers").insert(
+      withPhone.map((d) => ({
+        booking_id: booking.id,
+        driver_id: d.id,
+        trip_id: booking.trip_id,
+        phone: d.phone,
+      }))
+    );
+    jobs.push(
+      ...withPhone.map((d) => sendSms({ to: d.phone as string, body: msg }))
+    );
+  }
+
+  if (pushOk) {
+    jobs.push(
+      ...eligible.map((d) =>
+        sendWebPushToDriver(d.id, {
+          title: `New trip · $${booking.rate ?? "?"}`,
+          body: `${booking.pickup_address} → ${booking.dropoff_address}. ${booking.trip_date} ${booking.trip_time}. Tap to claim.`,
+          url: driverTripUrl(booking.trip_id, d.id),
+          tag: `offer-${booking.trip_id}`,
+        })
+      )
+    );
+  }
+
+  await Promise.allSettled(jobs);
 }
 
 export async function handleDriverSmsReply(
