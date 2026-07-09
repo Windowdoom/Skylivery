@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Fleur, { FleurIcon } from "@/components/Fleur";
+import TicketRef from "@/components/TicketRef";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
@@ -81,13 +82,13 @@ async function PaidCard({ tripRef }: { tripRef?: string }) {
         <p className="text-[10px] tracking-[0.35em] uppercase text-gold mb-3">
           Payment received
         </p>
-        <h1 className="font-display text-4xl sm:text-5xl text-cream font-semibold mb-4">
+        <h1 className="font-display text-4xl sm:text-5xl text-cream font-semibold mb-6 gold-sweep">
           Merci. You are all set.
         </h1>
         {tripRef && (
-          <p className="text-gold text-xs tracking-[0.25em] uppercase mb-6">
-            Reference {tripRef}
-          </p>
+          <div className="mb-8 flex justify-center">
+            <TicketRef tripId={tripRef} />
+          </div>
         )}
         <p className="text-cream/70 text-base leading-relaxed mb-8">
           Your fare has been captured. Square will email you a branded receipt shortly.
@@ -102,10 +103,13 @@ async function PaidCard({ tripRef }: { tripRef?: string }) {
         </a>
       </div>
       {trip?.pickup_address && trip?.dropoff_address && (
-        <ReturnTripUpsell
-          pickup={trip.pickup_address}
-          dropoff={trip.dropoff_address}
-        />
+        <>
+          <div className="iron-lace max-w-md mx-auto opacity-60" aria-hidden="true" />
+          <ReturnTripUpsell
+            pickup={trip.pickup_address}
+            dropoff={trip.dropoff_address}
+          />
+        </>
       )}
     </>
   );

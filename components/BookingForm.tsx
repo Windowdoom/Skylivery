@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { FleurIcon } from "./Fleur";
 import AddressAutocomplete from "./AddressAutocomplete";
+import TicketRef from "./TicketRef";
 
 type Quote = {
   rate: number;
@@ -416,13 +417,15 @@ export default function BookingForm({
       {step === "confirmed" && (
         <div className="text-center py-4">
           <div className="w-16 h-16 rounded-full border border-gold/60 flex items-center justify-center mx-auto mb-4">
-            <FleurIcon className="w-6 h-8 text-gold" />
+            <FleurIcon className="w-6 h-8 text-gold lamp-flicker" />
           </div>
-          <h3 className="text-cream font-display text-2xl font-semibold mb-2">Merci. Booking received.</h3>
+          <h3 className="text-cream font-display text-2xl font-semibold mb-4 gold-sweep">
+            Merci. Booking received.
+          </h3>
           {tripId && (
-            <p className="text-gold text-xs tracking-[0.25em] uppercase mb-3">
-              Reference {tripId}
-            </p>
+            <div className="mb-5 flex justify-center">
+              <TicketRef tripId={tripId} />
+            </div>
           )}
           <p className="text-cream/70 text-sm mb-4">
             We&apos;ll text {phone} shortly to confirm your ride.
