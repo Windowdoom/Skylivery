@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyWebhookSignature } from "@/lib/square";
 import { ntfyPush } from "@/lib/ntfy";
@@ -141,6 +142,10 @@ export async function POST(req: NextRequest) {
         payment_captured_at: new Date().toISOString(),
       })
       .eq("id", booking.id);
+
+    // Refresh the admin dashboard so the PAID badge shows without a
+    // manual hard refresh.
+    revalidatePath("/admin");
 
     await Promise.allSettled([
       ntfyPush({

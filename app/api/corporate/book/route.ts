@@ -4,6 +4,7 @@ import { sendBookingConfirmation } from "@/lib/email";
 import { ntfyPush } from "@/lib/ntfy";
 import { createCorporateInvoice, squareConfigured } from "@/lib/square";
 import { calculateRate, distanceMiles } from "@/lib/zones";
+import { claimUrl } from "@/lib/assign";
 
 async function geocode(
   address: string
@@ -264,6 +265,8 @@ export async function POST(req: NextRequest) {
           .filter(Boolean)
           .join("\n"),
         tags: "briefcase,receipt,sparkles",
+        click: claimUrl(tripId),
+        actions: [{ label: "Claim trip", url: claimUrl(tripId) }],
       }),
       email
         ? sendBookingConfirmation({

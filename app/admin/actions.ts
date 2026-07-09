@@ -2,11 +2,8 @@
 import { revalidatePath } from "next/cache";
 import { currentDispatcher, requireAuth } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import {
-  sendReceipt,
-  sendBookingConfirmation,
-  sendDriverAssigned,
-} from "@/lib/email";
+import { sendReceipt, sendBookingConfirmation } from "@/lib/email";
+import { assignDriverToBooking, claimUrl } from "@/lib/assign";
 import { ntfyPush } from "@/lib/ntfy";
 import { refundByTripId, createCheckoutLink, squareConfigured } from "@/lib/square";
 
@@ -24,118 +21,13 @@ export async function assignDriver(
   vehicleId: string | null
 ) {
   const dispatcher = guard();
-  const sb = supabaseAdmin();
-  const assignedAtIso = new Date().toISOString();
-  const update: Record<string, unknown> = {
-    assigned_driver: driverId,
-    status: "assigned",
-    assigned_at: assignedAtIso,
-    assigned_by: dispatcher.name,
-  };
-  if (vehicleId) update.vehicle_id = vehicleId;
-  const { error } = await sb.from("bookings").update(update).eq("id", bookingId);
-  if (error) throw new Error(error.message);
-
-  // Fire an assignment push so the driver (and everyone on the shared
-  // dispatch topic) knows the trip is on their plate.
-  const { data: joined } = await sb
-    .from("bookings")
-    .select(
-      "trip_id, customer_name, customer_phone, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, payment_intent, payment_link, paid, flight_number, drivers(name, phone), vehicles(cpnc_number, make, model, color)"
-    )
-    .eq("id", bookingId)
-    .single();
-
-  if (joined) {
-    const drvName = (joined.drivers as unknown as { name?: string } | null)?.name;
-    const drvPhone = (joined.drivers as unknown as { phone?: string } | null)?.phone;
-    const vehObj = joined.vehicles as unknown as {
-      cpnc_number?: string;
-      make?: string;
-      model?: string;
-      color?: string;
-    } | null;
-    const veh = vehObj?.cpnc_number;
-    const vehDesc = [vehObj?.color, vehObj?.make, vehObj?.model]
-      .filter(Boolean)
-      .join(" ") || null;
-    const assignedAt = new Date().toLocaleString("en-US", {
-      timeZone: "America/Chicago",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-    const intentLabel = (() => {
-      switch (joined.payment_intent) {
-        case "online":
-          return "Online link (Square)";
-        case "invoice":
-          return "Invoice";
-        case "in-vehicle":
-          return "In-vehicle (card or cash)";
-        default:
-          return joined.payment_intent || "—";
-      }
-    })();
-    await Promise.allSettled([
-      ntfyPush({
-        title: `Assigned → ${drvName ?? "driver"}${veh ? " · " + veh : ""}`,
-        body: [
-          `${joined.trip_id}`,
-          `Driver: ${drvName ?? "—"}`,
-          drvPhone ? `Driver phone: ${drvPhone}` : "",
-          veh ? `Vehicle: ${veh}` : "",
-          vehDesc ? `Car: ${vehDesc}` : "",
-          `Assigned at: ${assignedAt} CT`,
-          `By: ${dispatcher.name}`,
-          ``,
-          `Customer: ${joined.customer_name}`,
-          `Phone: ${joined.customer_phone}`,
-          joined.customer_email ? `Email: ${joined.customer_email}` : "",
-          ``,
-          `↑ ${joined.pickup_address}`,
-          `↓ ${joined.dropoff_address}`,
-          joined.flight_number ? `Flight: ${joined.flight_number}` : "",
-          `Pickup: ${joined.trip_date} ${joined.trip_time}`,
-          `Fare: $${joined.rate ?? "?"}`,
-          `Pay: ${intentLabel}`,
-          `Paid: ${joined.paid ? "YES" : "NO"}`,
-          !joined.paid && joined.payment_intent === "in-vehicle"
-            ? `⚠ COLLECT $${joined.rate ?? "?"} · REF ${joined.trip_id}`
-            : "",
-          !joined.paid && joined.payment_link
-            ? `Pay link: ${joined.payment_link}`
-            : "",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-        tags: "car,white_check_mark",
-      }),
-      joined.customer_email
-        ? sendDriverAssigned({
-            to: joined.customer_email,
-            customerName: joined.customer_name,
-            tripId: joined.trip_id,
-            pickup: joined.pickup_address,
-            dropoff: joined.dropoff_address,
-            tripDate: joined.trip_date,
-            tripTime: joined.trip_time,
-            rate: joined.rate,
-            driverName: drvName ?? null,
-            driverPhone: drvPhone ?? null,
-            vehicleCpnc: veh ?? null,
-            vehicleDescription: vehDesc,
-            paid: joined.paid,
-            paymentIntent: joined.payment_intent,
-            paymentLink: joined.payment_link ?? null,
-            flightNumber: joined.flight_number ?? null,
-          })
-        : Promise.resolve(),
-    ]);
-  }
-
+  const res = await assignDriverToBooking({
+    bookingId,
+    driverId,
+    vehicleId,
+    byLabel: dispatcher.name,
+  });
+  if (!res.ok) throw new Error(res.error || "assignment failed");
   revalidatePath("/admin");
 }
 
@@ -147,32 +39,41 @@ export async function markCompleted(
   guard();
   const sb = supabaseAdmin();
   const completedAt = new Date().toISOString();
+
+  // Read current state first — if the customer already paid (via the
+  // Square link, webhook flipped paid=true and sent the receipt), keep
+  // that and don't send a second receipt on completion.
+  const { data: booking } = await sb
+    .from("bookings")
+    .select(
+      "trip_id, customer_name, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, passengers, service_type, paid, payment_method"
+    )
+    .eq("id", bookingId)
+    .single();
+  const wasAlreadyPaid = booking?.paid === true;
+
   // If caller passes an explicit paid flag, honor it. Otherwise infer:
-  // invoice + online-link default to unpaid; cash + in-vehicle card
-  // default to paid on the spot.
+  // already-paid stays paid; invoice + online-link default to unpaid;
+  // cash + in-vehicle card default to paid on the spot.
   const paidResolved =
     paid !== undefined
       ? paid
-      : !["invoice", "online"].includes((paymentMethod || "").toLowerCase());
+      : wasAlreadyPaid ||
+        !["invoice", "online"].includes((paymentMethod || "").toLowerCase());
   const { error } = await sb
     .from("bookings")
     .update({
       status: "completed",
       completed_at: completedAt,
-      payment_method: paymentMethod || null,
+      // Don't overwrite how they actually paid (e.g. 'square' from the
+      // webhook) with the dropdown default.
+      payment_method: wasAlreadyPaid
+        ? booking?.payment_method || paymentMethod || null
+        : paymentMethod || null,
       paid: paidResolved,
     })
     .eq("id", bookingId);
   if (error) throw new Error(error.message);
-
-  // Fire-and-forget receipt email if the customer left one.
-  const { data: booking } = await sb
-    .from("bookings")
-    .select(
-      "trip_id, customer_name, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, passengers, service_type"
-    )
-    .eq("id", bookingId)
-    .single();
 
   // Await ntfy + receipt in parallel so Vercel doesn't drop them the
   // way it drops fire-and-forget promises in route handlers.
@@ -202,7 +103,7 @@ export async function markCompleted(
   });
 
   await Promise.allSettled([
-    booking?.customer_email
+    booking?.customer_email && !wasAlreadyPaid
       ? sendReceipt({
           to: booking.customer_email,
           customerName: booking.customer_name,
@@ -381,6 +282,8 @@ export async function createBookingManually(input: {
         .filter(Boolean)
         .join("\n"),
       tags: "telephone_receiver,sparkles",
+      click: claimUrl(tripId),
+      actions: [{ label: "Claim trip", url: claimUrl(tripId) }],
     }),
     input.email
       ? sendBookingConfirmation({

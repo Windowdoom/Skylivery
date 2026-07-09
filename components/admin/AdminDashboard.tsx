@@ -452,7 +452,14 @@ function BookingCore({ b }: { b: Booking }) {
         <span className="text-[10px] tracking-[0.25em] uppercase text-gold">
           {b.trip_id}
         </span>
-        <span className="text-gold font-semibold">{money(b.rate)}</span>
+        <span className="flex items-center gap-2">
+          {b.paid && (
+            <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-emerald-300 border border-emerald-400/50 bg-emerald-400/10 rounded px-1.5 py-0.5">
+              Paid ✓
+            </span>
+          )}
+          <span className="text-gold font-semibold">{money(b.rate)}</span>
+        </span>
       </div>
       <div className="text-cream font-medium">{b.customer_name}</div>
       <a
@@ -635,7 +642,13 @@ function AssignedCard({
 
   function complete() {
     start(async () => {
-      await markCompleted(b.id, paymentMethod);
+      // Already paid (e.g. Square link + webhook): keep the recorded
+      // method and paid state; the dropdown is hidden in that case.
+      if (b.paid) {
+        await markCompleted(b.id, b.payment_method || "square", true);
+      } else {
+        await markCompleted(b.id, paymentMethod);
+      }
     });
   }
 
@@ -653,16 +666,22 @@ function AssignedCard({
         Assigned {fmtStamp(b.assigned_at)}
       </div>
       <div className="mt-3 flex gap-2">
-        <select
-          value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-          className="flex-1 bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
-        >
-          <option value="square" className="bg-navy">Square (card)</option>
-          <option value="cash" className="bg-navy">Cash</option>
-          <option value="invoice" className="bg-navy">Invoice</option>
-          <option value="third_party" className="bg-navy">Third party</option>
-        </select>
+        {b.paid ? (
+          <div className="flex-1 flex items-center px-2 text-emerald-300 text-xs font-semibold tracking-[0.1em] uppercase">
+            Paid via {b.payment_method === "square" ? "Square" : b.payment_method || "card"}
+          </div>
+        ) : (
+          <select
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+            className="flex-1 bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
+          >
+            <option value="square" className="bg-navy">Square (card)</option>
+            <option value="cash" className="bg-navy">Cash</option>
+            <option value="invoice" className="bg-navy">Invoice</option>
+            <option value="third_party" className="bg-navy">Third party</option>
+          </select>
+        )}
         <button
           onClick={complete}
           disabled={pending}

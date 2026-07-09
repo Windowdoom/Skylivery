@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { sendBookingConfirmation } from "@/lib/email";
 import { ntfyPush } from "@/lib/ntfy";
 import { createCheckoutLink, squareConfigured } from "@/lib/square";
+import { claimUrl } from "@/lib/assign";
 
 export async function POST(req: NextRequest) {
   try {
@@ -174,6 +175,8 @@ export async function POST(req: NextRequest) {
           .filter(Boolean)
           .join("\n"),
         tags: "oncoming_automobile,sparkles",
+        click: claimUrl(tripId),
+        actions: [{ label: "Claim trip", url: claimUrl(tripId) }],
       }),
       email
         ? sendBookingConfirmation({
