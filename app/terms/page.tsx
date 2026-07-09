@@ -157,7 +157,16 @@ export default function TermsPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                10. Changes to these terms
+                10. Text messaging
+              </h2>
+              <p>
+                By providing your mobile number when booking, or by being a chauffeur on file with Sky Livery dispatch, you consent to receive text messages related to your ride or your trip assignments, including booking confirmations, driver and vehicle assignments, payment links, receipts, and (for chauffeurs) trip offers. Message frequency varies with activity. Message and data rates may apply. Reply <strong className="text-cream">STOP</strong> to opt out at any time or <strong className="text-cream">HELP</strong> for assistance. See our <a href="/privacy" className="text-gold hover:underline">Privacy Policy</a> for how we handle your mobile number.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="font-display text-2xl text-cream font-semibold mb-3">
+                11. Changes to these terms
               </h2>
               <p>
                 We may update these terms occasionally. The version in effect at the time of your booking is the version that applies. Material changes are noted with a new &ldquo;Last updated&rdquo; date at the top of this page. Continued use of our service after an update constitutes acceptance of the current terms.
@@ -166,7 +175,7 @@ export default function TermsPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                11. Governing law and contact
+                12. Governing law and contact
               </h2>
               <p>
                 These terms are governed by the laws of the State of Louisiana. Any disputes will be resolved in the courts of Orleans Parish, Louisiana. For any questions about this policy or a specific booking, contact:

@@ -132,7 +132,22 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                8. Cookies and tracking
+                8. Text messaging (SMS)
+              </h2>
+              <p className="mb-3">
+                If you provide a mobile number when booking, or if you are a Sky Livery chauffeur on file with dispatch, you may receive text messages related to your ride or trip assignments: booking confirmations, driver and vehicle assignments, payment links and receipts, and, for chauffeurs, trip offers you can accept or decline by reply.
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-cream/80">
+                <li><strong className="text-cream">We do not sell or share your mobile number</strong> with third parties for their own marketing purposes. Your number is used only to operate the Sky Livery dispatch service.</li>
+                <li>Message frequency varies by activity — typically a small number of messages per ride booked, or per trip offered to chauffeurs.</li>
+                <li>Message and data rates may apply, depending on your mobile carrier and plan.</li>
+                <li>Reply <strong className="text-cream">STOP</strong> at any time to stop receiving texts from us, or <strong className="text-cream">HELP</strong> for assistance. You can always reach dispatch by phone at (504) 339-6861.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="font-display text-2xl text-cream font-semibold mb-3">
+                9. Cookies and tracking
               </h2>
               <p>
                 Our website uses only strictly necessary cookies to keep dispatch signed in and to secure the booking form. We do not use advertising cookies or cross-site tracking. If we ever add analytics to help us understand which pages are used, we will use a privacy-friendly, cookieless option.
@@ -141,7 +156,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                9. Children
+                10. Children
               </h2>
               <p>
                 Our service is intended for adults 18 and older. We do not knowingly collect information from anyone under 13. If you believe a minor has provided us information, contact us and we will delete it.
@@ -150,7 +165,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                10. Changes to this policy
+                11. Changes to this policy
               </h2>
               <p>
                 We may revise this policy from time to time. The version in effect at the time of your booking applies. Material changes are noted with a new &ldquo;Last updated&rdquo; date. Continued use of the service after an update means you accept the current policy.
@@ -159,7 +174,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                11. Contact
+                12. Contact
               </h2>
               <div className="mt-3 p-4 bg-navy/40 border-l-2 border-gold/50 rounded-md">
                 <div className="text-cream font-semibold">Sky Livery LLC</div>
