@@ -22,7 +22,7 @@ export function smsConfigured(): boolean {
 
 // Normalize US numbers to E.164. Accepts "(504) 339-6861", "504-339-6861",
 // "5043396861", or already-E.164 "+15043396861".
-function toE164(raw: string): string | null {
+export function toE164(raw: string): string | null {
   const trimmed = raw.trim();
   if (trimmed.startsWith("+")) return trimmed;
   const digits = trimmed.replace(/\D/g, "");
@@ -75,8 +75,14 @@ export async function sendSms(input: {
 }): Promise<{ ok: boolean; error?: string }> {
   const sid = process.env.TWILIO_ACCOUNT_SID?.trim();
   const token = process.env.TWILIO_AUTH_TOKEN?.trim();
-  const from = process.env.TWILIO_SMS_FROM?.trim();
-  if (!sid || !token || !from) return { ok: false, error: "Twilio not configured" };
+  const fromRaw = process.env.TWILIO_SMS_FROM?.trim();
+  if (!sid || !token || !fromRaw) return { ok: false, error: "Twilio not configured" };
+
+  // Twilio's API rejects "From" unless it's strict E.164 — accept
+  // whatever format the env var happens to be in (e.g. "(225) 663-8806")
+  // and normalize it the same way we normalize recipient numbers.
+  const from = toE164(fromRaw);
+  if (!from) return { ok: false, error: `Bad TWILIO_SMS_FROM: ${fromRaw}` };
 
   const to = toE164(input.to);
   if (!to) return { ok: false, error: `Bad phone number: ${input.to}` };

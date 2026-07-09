@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/adminAuth";
+import { toE164 } from "@/lib/sms";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,7 @@ export async function GET() {
       authTokenLength: twToken.length,
       smsFromSet: !!twFrom,
       smsFrom: twFrom || null,
+      smsFromNormalized: twFrom ? toE164(twFrom) : null,
     },
     siteUrl: siteUrl || null,
     nodeEnv: process.env.NODE_ENV || null,
