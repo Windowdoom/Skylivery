@@ -18,6 +18,7 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [historyUrl, setHistoryUrl] = useState<string | null>(null);
+  const [homeUrl, setHomeUrl] = useState<string | null>(null);
 
   async function enable() {
     if (!driverId || pin.length !== 4 || busy) return;
@@ -57,6 +58,7 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
         setError(data.error || "Could not finish setup.");
       } else {
         setHistoryUrl(data.historyUrl || null);
+        setHomeUrl(data.homeUrl || null);
       }
     } catch {
       setError("Something went wrong. Try again, or ask dispatch for help.");
@@ -74,13 +76,24 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
             You&apos;ll get a notification for every new trip, even when this page isn&apos;t open.
           </p>
         </div>
+        {homeUrl && (
+          <a
+            href={homeUrl}
+            className="block mt-4 py-3 bg-gold text-navy rounded-lg font-bold tracking-wide hover:bg-cream"
+          >
+            My current trip
+          </a>
+        )}
+        <p className="text-cream/50 text-[10px] mt-2">
+          Bookmark that link (or add it to your home screen), it always shows what&apos;s assigned to you right
+          now, even if a notification doesn&apos;t show up.
+        </p>
         <a
           href={historyUrl}
-          className="block mt-4 py-3 border border-gold/40 text-cream rounded-lg font-semibold hover:border-gold"
+          className="block mt-3 py-2.5 border border-gold/40 text-cream/80 rounded-lg text-sm hover:border-gold hover:text-gold"
         >
           View my trip history
         </a>
-        <p className="text-cream/50 text-[10px] mt-2">Bookmark that link, it&apos;s yours to keep.</p>
       </div>
     );
   }

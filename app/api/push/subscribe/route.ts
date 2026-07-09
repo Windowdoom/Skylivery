@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyDriverPin } from "@/lib/driverPin";
-import { driverHistoryUrl } from "@/lib/driverTrip";
+import { driverHistoryUrl, driverHomeUrl } from "@/lib/driverTrip";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +42,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, historyUrl: driverHistoryUrl(driverId) });
+    return NextResponse.json({
+      ok: true,
+      historyUrl: driverHistoryUrl(driverId),
+      homeUrl: driverHomeUrl(driverId),
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";
     return NextResponse.json({ error: msg }, { status: 500 });

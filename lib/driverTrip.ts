@@ -61,3 +61,30 @@ export function driverHistoryUrl(driverId: string): string {
   const base = process.env.PUBLIC_SITE_URL || "https://www.skyliverynola.com";
   return `${base}/driver/history?d=${driverId}&t=${driverHistoryToken(driverId)}`;
 }
+
+// Persistent "my current trip" home page — meant to be bookmarked/
+// added to the home screen once, so a driver can always check what's
+// assigned to them even if a push notification never showed (Android
+// battery optimization and blocked notification permissions can
+// silently swallow a push with no error on our end).
+export function driverHomeToken(driverId: string): string {
+  return createHmac("sha256", SECRET())
+    .update(`driverhome:${driverId}`)
+    .digest("hex")
+    .slice(0, 20);
+}
+
+export function verifyDriverHomeToken(driverId: string, token: string): boolean {
+  const expected = driverHomeToken(driverId);
+  if (!token || token.length !== expected.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+}
+
+export function driverHomeUrl(driverId: string): string {
+  const base = process.env.PUBLIC_SITE_URL || "https://www.skyliverynola.com";
+  return `${base}/driver/home?d=${driverId}&t=${driverHomeToken(driverId)}`;
+}

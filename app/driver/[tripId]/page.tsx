@@ -1,9 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { verifyDriverTripToken, driverHistoryUrl } from "@/lib/driverTrip";
-import { completeToken } from "@/lib/complete";
-import { mapsDirectionsUrl } from "@/lib/maps";
+import { verifyDriverTripToken, driverHistoryUrl, driverHomeUrl } from "@/lib/driverTrip";
 import DriverClaimButton from "@/components/admin/DriverClaimButton";
-import CompleteForm from "@/components/admin/CompleteForm";
+import DriverTripCard from "@/components/admin/DriverTripCard";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -11,11 +9,11 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-// The driver's one-stop page for a trip, reached by tapping a web push
-// notification. Handles the whole lifecycle from one URL: claim it
-// (if still pending), then navigate/pay/text-customer/complete it
-// (once assigned to this driver) — no PIN needed since push
-// notifications are per-device, not a shared channel like ntfy.
+// The driver's one-stop page for a specific trip, reached by tapping a
+// web push notification. Handles the whole lifecycle from one URL:
+// claim it (if still pending), then navigate/pay/text-customer/
+// complete it (once assigned to this driver) — no PIN needed since
+// push notifications are per-device, not a shared channel like ntfy.
 
 export default async function DriverTripPage({
   params,
@@ -93,9 +91,6 @@ export default async function DriverTripPage({
   }
 
   // Assigned to this driver — full trip hub.
-  const smsBody = `Hi ${booking.customer_name.split(" ")[0]}, this is your Sky Livery driver. On the way.`;
-  const textCustomerHref = `sms:${booking.customer_phone.replace(/[^\d+]/g, "")}?&body=${encodeURIComponent(smsBody)}`;
-
   return (
     <main className="min-h-screen bg-navy p-5">
       <div className="max-w-md mx-auto">
@@ -103,80 +98,16 @@ export default async function DriverTripPage({
           <div className="text-[10px] tracking-[0.3em] uppercase text-gold">Sky Livery dispatch</div>
           <h1 className="font-display text-2xl text-cream mt-1">Your trip</h1>
         </div>
-
-        <div className="bg-navy/70 border border-gold/40 rounded-2xl p-5 text-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] tracking-[0.25em] uppercase text-gold">{booking.trip_id}</span>
-            <span className="text-gold font-semibold">${booking.rate ?? "?"}</span>
-          </div>
-
-          <div>
-            <div className="text-cream font-medium">{booking.customer_name}</div>
-            <a href={`tel:${booking.customer_phone}`} className="text-cream/70 text-xs hover:text-gold">
-              {booking.customer_phone}
-            </a>
-          </div>
-
-          <div className="space-y-2">
-            <a
-              href={mapsDirectionsUrl(booking.pickup_address)}
-              target="_blank"
-              className="block bg-navy/60 border border-gold/25 rounded-md px-3 py-2.5 hover:border-gold"
-            >
-              <div className="text-[9px] tracking-[0.2em] uppercase text-gold/70">Pickup, tap to navigate</div>
-              <div className="text-cream text-xs mt-0.5">{booking.pickup_address}</div>
-            </a>
-            <a
-              href={mapsDirectionsUrl(booking.dropoff_address)}
-              target="_blank"
-              className="block bg-navy/60 border border-gold/25 rounded-md px-3 py-2.5 hover:border-gold"
-            >
-              <div className="text-[9px] tracking-[0.2em] uppercase text-gold/70">Dropoff, tap to navigate</div>
-              <div className="text-cream text-xs mt-0.5">{booking.dropoff_address}</div>
-            </a>
-          </div>
-
-          <div className="text-cream/60 text-xs">
-            {booking.trip_date} · {booking.trip_time}
-            {booking.flight_number ? ` · ✈ ${booking.flight_number}` : ""}
-          </div>
-
-          {!booking.paid && booking.payment_link && (
-            <a
-              href={booking.payment_link}
-              target="_blank"
-              className="block text-center py-2.5 bg-navy border border-gold/50 text-gold rounded-lg font-semibold hover:bg-gold/10"
-            >
-              Tap to charge ${booking.rate ?? "?"}
-            </a>
-          )}
-          {booking.paid && (
-            <div className="text-emerald-300 text-xs bg-emerald-400/10 border border-emerald-400/30 rounded-md px-3 py-2">
-              Paid via {booking.payment_method === "square" ? "Square" : booking.payment_method || "card"}. Nothing to collect.
-            </div>
-          )}
-
-          <a
-            href={textCustomerHref}
-            className="block text-center py-2.5 border border-gold/30 text-cream/80 rounded-lg text-sm hover:border-gold hover:text-gold"
-          >
-            Text customer
-          </a>
-
-          <div className="pt-2 border-t border-gold/15">
-            <p className="text-cream/60 text-[10px] tracking-[0.2em] uppercase mb-1">When the ride's done</p>
-            <CompleteForm
-              tripId={booking.trip_id}
-              token={completeToken(booking.trip_id)}
-              alreadyPaid={booking.paid === true}
-              paidMethod={booking.payment_method}
-              rate={booking.rate}
-            />
-          </div>
-        </div>
+        <DriverTripCard booking={booking} />
+        <a
+          href={driverHomeUrl(driverId)}
+          className="block text-center mt-4 text-cream text-sm font-semibold hover:text-gold"
+        >
+          My current trip (bookmark this)
+        </a>
         <a
           href={driverHistoryUrl(driverId)}
-          className="block text-center mt-4 text-cream/50 text-xs hover:text-gold"
+          className="block text-center mt-2 text-cream/50 text-xs hover:text-gold"
         >
           View my trip history
         </a>
