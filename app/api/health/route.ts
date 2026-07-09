@@ -30,6 +30,9 @@ export async function GET() {
   const sqSig = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY || "";
   const sqEnv = process.env.SQUARE_ENV || "";
   const siteUrl = process.env.PUBLIC_SITE_URL || "";
+  const twSid = process.env.TWILIO_ACCOUNT_SID || "";
+  const twToken = process.env.TWILIO_AUTH_TOKEN || "";
+  const twFrom = process.env.TWILIO_SMS_FROM || "";
 
   return NextResponse.json({
     supabase: {
@@ -62,6 +65,14 @@ export async function GET() {
       webhookSigKeySet: !!sqSig,
       webhookSigKeyLength: sqSig.length,
       env: sqEnv || null,
+    },
+    twilio: {
+      accountSidSet: !!twSid,
+      accountSidPrefix: twSid ? twSid.slice(0, 6) : null,
+      authTokenSet: !!twToken,
+      authTokenLength: twToken.length,
+      smsFromSet: !!twFrom,
+      smsFrom: twFrom || null,
     },
     siteUrl: siteUrl || null,
     nodeEnv: process.env.NODE_ENV || null,
