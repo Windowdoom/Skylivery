@@ -19,6 +19,7 @@ import {
   activateVehicle,
   quoteBooking,
 } from "@/app/admin/actions";
+import { mapsDirectionsUrl } from "@/lib/maps";
 
 export type Booking = {
   id: string;
@@ -678,6 +679,7 @@ function PendingCard({
           >
             {pending ? "Assigning…" : "Send"}
           </button>
+          <TextDriverButton b={b} driver={drivers.find((d) => d.id === driverId)} />
         </>
       )}
       <TextCustomerButton b={b} />
@@ -880,6 +882,34 @@ function TextCustomerButton({ b }: { b: Booking }) {
       className="mt-2 block text-center text-xs text-cream/70 border border-gold/30 rounded-md px-3 py-1.5 hover:border-gold hover:text-gold"
     >
       Text customer
+    </a>
+  );
+}
+
+// Manual fallback so dispatch can hand-text a driver the exact same
+// trip details the automated SMS offer would have sent — for use if
+// Twilio is ever down, still pending carrier review, or a driver just
+// isn't on the auto-dispatch list yet. Opens the phone's own Messages
+// app pre-filled; nothing is sent until dispatch taps send themselves.
+function TextDriverButton({ b, driver }: { b: Booking; driver?: Driver }) {
+  if (!driver?.phone) return null;
+  const phone = driver.phone.replace(/[^\d+]/g, "");
+  if (!phone) return null;
+  const msg = [
+    `Sky Livery — new trip ${b.trip_id}`,
+    `Pickup: ${b.pickup_address}`,
+    mapsDirectionsUrl(b.pickup_address),
+    `Drop: ${b.dropoff_address}`,
+    `${b.trip_date} ${b.trip_time} · $${b.rate ?? "?"}`,
+    `Can you take it? Call or text back.`,
+  ].join("\n");
+  const href = `sms:${phone}?&body=${encodeURIComponent(msg)}`;
+  return (
+    <a
+      href={href}
+      className="mt-2 block text-center text-xs text-cream/70 border border-gold/30 rounded-md px-3 py-1.5 hover:border-gold hover:text-gold"
+    >
+      Text {driver.name} manually
     </a>
   );
 }
