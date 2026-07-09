@@ -29,13 +29,14 @@ export default async function AdminPage() {
     );
   }
 
-  const [bookingsRes, driversRes, vehiclesRes, monthlyRes, volumeRes] =
+  const [bookingsRes, driversRes, vehiclesRes, monthlyRes, volumeRes, pushSubsRes] =
     await Promise.all([
       sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(200),
       sb.from("drivers").select("*").eq("active", true).order("name"),
       sb.from("vehicles").select("*").eq("active", true).order("cpnc_number"),
       sb.from("monthly_revenue").select("*").limit(12),
       sb.from("driver_volume").select("*"),
+      sb.from("driver_push_subscriptions").select("driver_id, last_success_at"),
     ]);
 
   const errors = [
@@ -45,6 +46,19 @@ export default async function AdminPage() {
     monthlyRes.error && `monthly_revenue: ${monthlyRes.error.message}`,
     volumeRes.error && `driver_volume: ${volumeRes.error.message}`,
   ].filter(Boolean) as string[];
+
+  // Per-driver push channel health, so dispatch can catch a dead
+  // subscription (like the one that caused a missed notification)
+  // before it costs a trip, instead of finding out after the fact.
+  const pushHealth: Record<string, { devices: number; lastSuccessAt: string | null }> = {};
+  for (const row of pushSubsRes.data ?? []) {
+    const driverId = row.driver_id as string;
+    const entry = pushHealth[driverId] || { devices: 0, lastSuccessAt: null };
+    entry.devices += 1;
+    const t = row.last_success_at as string | null;
+    if (t && (!entry.lastSuccessAt || t > entry.lastSuccessAt)) entry.lastSuccessAt = t;
+    pushHealth[driverId] = entry;
+  }
 
   // Roll up SMS offer stats per pending booking, so dispatch can see at
   // a glance whether a trip's driver texts have gone unanswered — no
@@ -82,6 +96,7 @@ export default async function AdminPage() {
         monthly={(monthlyRes.data ?? []) as MonthlyRow[]}
         volume={(volumeRes.data ?? []) as DriverVolumeRow[]}
         offerStats={offerStats}
+        pushHealth={pushHealth}
         me={dispatcher}
       />
     </>

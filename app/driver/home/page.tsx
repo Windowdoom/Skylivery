@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyDriverHomeToken, driverHistoryUrl } from "@/lib/driverTrip";
 import DriverTripCard from "@/components/admin/DriverTripCard";
+import AutoRefresh from "@/components/AutoRefresh";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -53,6 +54,7 @@ export default async function DriverHomePage({
 
   return (
     <main className="min-h-screen bg-navy p-5">
+      <AutoRefresh />
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6 mt-4">
           <div className="text-[10px] tracking-[0.3em] uppercase text-gold">Sky Livery dispatch</div>

@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyDriverTripToken, driverHistoryUrl, driverHomeUrl } from "@/lib/driverTrip";
 import DriverClaimButton from "@/components/admin/DriverClaimButton";
 import DriverTripCard from "@/components/admin/DriverTripCard";
+import AutoRefresh from "@/components/AutoRefresh";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -95,6 +96,7 @@ export default async function DriverTripPage({
   // Assigned to this driver — full trip hub.
   return (
     <main className="min-h-screen bg-navy p-5">
+      <AutoRefresh />
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6 mt-4">
           <div className="text-[10px] tracking-[0.3em] uppercase text-gold">Sky Livery dispatch</div>

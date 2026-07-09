@@ -139,7 +139,8 @@ create table if not exists public.driver_push_subscriptions (
   endpoint text not null unique,
   p256dh text not null,
   auth text not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  last_success_at timestamptz              -- last time a push was successfully handed to this endpoint
 );
 
 create index if not exists driver_push_subs_driver_idx on public.driver_push_subscriptions(driver_id);

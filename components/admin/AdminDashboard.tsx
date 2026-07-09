@@ -136,6 +136,7 @@ export type Me = {
 };
 
 export type OfferStat = { total: number; responded: number; firstSentAt: string };
+export type PushHealth = { devices: number; lastSuccessAt: string | null };
 
 export default function AdminDashboard({
   bookings,
@@ -144,6 +145,7 @@ export default function AdminDashboard({
   monthly,
   volume,
   offerStats,
+  pushHealth,
   me,
 }: {
   bookings: Booking[];
@@ -152,6 +154,7 @@ export default function AdminDashboard({
   monthly: MonthlyRow[];
   volume: DriverVolumeRow[];
   offerStats?: Record<string, OfferStat>;
+  pushHealth?: Record<string, PushHealth>;
   me: Me;
 }) {
   const isOwner = me.role === "owner";
@@ -336,6 +339,9 @@ export default function AdminDashboard({
           </details>
         </section>
       )}
+
+      {/* Driver push notification channel health */}
+      <DriverChannelsPanel drivers={drivers} pushHealth={pushHealth} />
 
       {/* Weekly driver payouts */}
       <PayoutPanel bookings={bookings} drivers={drivers} />
@@ -1457,6 +1463,64 @@ type PayoutLine = {
   percent: number;
   payout: number;
 };
+
+// Shows whether each driver actually has a working push channel, so
+// dispatch can catch a dead subscription (like the one that caused a
+// missed notification) before it costs a trip, rather than after.
+function DriverChannelsPanel({
+  drivers,
+  pushHealth,
+}: {
+  drivers: Driver[];
+  pushHealth?: Record<string, PushHealth>;
+}) {
+  function timeAgo(iso: string | null): string {
+    if (!iso) return "never";
+    const ms = Date.now() - new Date(iso).getTime();
+    const mins = Math.round(ms / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.round(mins / 60);
+    if (hours < 48) return `${hours}h ago`;
+    return `${Math.round(hours / 24)}d ago`;
+  }
+
+  return (
+    <section className="max-w-7xl mx-auto px-6 pb-6">
+      <div className="bg-navy/50 border border-gold/20 rounded-2xl p-5">
+        <h2 className="text-cream font-display text-lg mb-1">Driver push channels</h2>
+        <p className="text-cream/50 text-xs mb-4">
+          Devices registered for trip alerts, and the last time a push was successfully sent
+          (not proof it displayed, but the best signal we have that the channel is alive).
+        </p>
+        <div className="space-y-2">
+          {drivers.length === 0 ? (
+            <p className="text-cream/50 text-sm">No active drivers.</p>
+          ) : (
+            drivers.map((d) => {
+              const h = pushHealth?.[d.id];
+              const devices = h?.devices ?? 0;
+              return (
+                <div
+                  key={d.id}
+                  className="flex items-center justify-between text-sm border-t border-gold/10 pt-2 first:border-t-0 first:pt-0"
+                >
+                  <span className="text-cream">{d.name}</span>
+                  {devices === 0 ? (
+                    <span className="text-yellow-300/80 text-xs">No push set up</span>
+                  ) : (
+                    <span className="text-cream/60 text-xs">
+                      {devices} device{devices === 1 ? "" : "s"} · last push {timeAgo(h?.lastSuccessAt ?? null)}
+                    </span>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function PayoutPanel({
   bookings,

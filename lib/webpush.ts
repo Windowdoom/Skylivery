@@ -70,6 +70,14 @@ export async function sendWebPushToDriver(
           body
         );
         sent += 1;
+        // "Handed off to the push service" — not proof the phone
+        // actually displayed it (that part we can never see), but the
+        // best signal we have, and enough to tell "this driver's
+        // channel is alive" from "we can't reach them at all."
+        await sb
+          .from("driver_push_subscriptions")
+          .update({ last_success_at: new Date().toISOString() })
+          .eq("id", s.id);
       } catch (e) {
         const status = (e as { statusCode?: number })?.statusCode;
         if (status === 404 || status === 410) {
