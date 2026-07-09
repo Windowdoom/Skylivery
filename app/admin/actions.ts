@@ -575,19 +575,49 @@ export async function createVehicle(input: {
   color?: string;
   year?: number;
   plate?: string;
-}): Promise<{ ok: boolean; error?: string }> {
+}): Promise<{ ok: boolean; error?: string; reactivated?: boolean }> {
   guardOwner();
   if (!input.cpncNumber?.trim()) {
     return { ok: false, error: "CPNC number is required." };
   }
   const sb = supabaseAdmin();
-  const { error } = await sb.from("vehicles").insert({
-    cpnc_number: input.cpncNumber.trim().toUpperCase(),
+  const cpnc = input.cpncNumber.trim().toUpperCase();
+  const payload = {
     make: input.make?.trim() || null,
     model: input.model?.trim() || null,
     color: input.color?.trim() || null,
     year: input.year || null,
     plate: input.plate?.trim().toUpperCase() || null,
+  };
+
+  // Look up existing row (active or retired) for this CPNC. If it
+  // exists retired, reactivate + update; if active, reject; otherwise
+  // insert fresh.
+  const { data: existing } = await sb
+    .from("vehicles")
+    .select("id, active")
+    .eq("cpnc_number", cpnc)
+    .maybeSingle();
+
+  if (existing) {
+    if (existing.active) {
+      return {
+        ok: false,
+        error: `CPNC ${cpnc} is already in the active fleet.`,
+      };
+    }
+    const { error: updErr } = await sb
+      .from("vehicles")
+      .update({ ...payload, active: true })
+      .eq("id", existing.id);
+    if (updErr) return { ok: false, error: updErr.message };
+    revalidatePath("/admin");
+    return { ok: true, reactivated: true };
+  }
+
+  const { error } = await sb.from("vehicles").insert({
+    cpnc_number: cpnc,
+    ...payload,
     active: true,
   });
   if (error) return { ok: false, error: error.message };

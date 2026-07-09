@@ -1027,6 +1027,9 @@ function VehiclesModal({
         setErr(res.error || "Could not add vehicle.");
         return;
       }
+      if (res.reactivated) {
+        alert(`Reactivated ${cpnc} and updated its details.`);
+      }
       setCpnc("");
       setPreset("");
       setMake("");
