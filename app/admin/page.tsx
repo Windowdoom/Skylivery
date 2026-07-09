@@ -46,6 +46,28 @@ export default async function AdminPage() {
     volumeRes.error && `driver_volume: ${volumeRes.error.message}`,
   ].filter(Boolean) as string[];
 
+  // Roll up SMS offer stats per pending booking, so dispatch can see at
+  // a glance whether a trip's driver texts have gone unanswered — no
+  // polling job needed, this is just read on every page load.
+  const pendingIds = (bookingsRes.data ?? [])
+    .filter((b) => b.status === "pending")
+    .map((b) => b.id as string);
+  const offerStats: Record<string, { total: number; responded: number; firstSentAt: string }> = {};
+  if (pendingIds.length > 0) {
+    const { data: offerRows } = await sb
+      .from("sms_offers")
+      .select("booking_id, sent_at, response")
+      .in("booking_id", pendingIds);
+    for (const row of offerRows ?? []) {
+      const bid = row.booking_id as string;
+      const entry = offerStats[bid] || { total: 0, responded: 0, firstSentAt: row.sent_at as string };
+      entry.total += 1;
+      if (row.response) entry.responded += 1;
+      if ((row.sent_at as string) < entry.firstSentAt) entry.firstSentAt = row.sent_at as string;
+      offerStats[bid] = entry;
+    }
+  }
+
   return (
     <>
       {errors.length > 0 && (
@@ -59,6 +81,7 @@ export default async function AdminPage() {
         vehicles={(vehiclesRes.data ?? []) as Vehicle[]}
         monthly={(monthlyRes.data ?? []) as MonthlyRow[]}
         volume={(volumeRes.data ?? []) as DriverVolumeRow[]}
+        offerStats={offerStats}
         me={dispatcher}
       />
     </>

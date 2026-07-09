@@ -8,6 +8,7 @@
 import { supabaseAdmin } from "./supabaseAdmin";
 import { sendSms, smsConfigured, phoneDigits } from "./sms";
 import { assignDriverToBooking } from "./assign";
+import { ntfyPush } from "./ntfy";
 
 export async function offerTripToDrivers(tripId: string): Promise<void> {
   if (!smsConfigured()) return;
@@ -24,7 +25,18 @@ export async function offerTripToDrivers(tripId: string): Promise<void> {
     .from("drivers")
     .select("id, name, phone")
     .eq("active", true);
-  const withPhone = (drivers || []).filter((d) => d.phone);
+
+  // Don't offer a trip to a driver who's already out on an unfinished
+  // one — they can still text N if they'd rather pass anyway, but this
+  // keeps the blast relevant once you're running several trips at once.
+  const { data: busyRows } = await sb
+    .from("bookings")
+    .select("assigned_driver")
+    .eq("status", "assigned")
+    .not("assigned_driver", "is", null);
+  const busyIds = new Set((busyRows || []).map((r) => r.assigned_driver as string));
+
+  const withPhone = (drivers || []).filter((d) => d.phone && !busyIds.has(d.id));
   if (withPhone.length === 0) return;
 
   const msg = [
@@ -99,6 +111,30 @@ export async function handleDriverSmsReply(
       .update({ response: "N", responded_at: new Date().toISOString() })
       .eq("id", offer.id);
     await sendSms({ to: driver.phone, body: "Got it, thanks!" });
+
+    // If every driver who was offered this trip has now said no (and
+    // nobody else is still pending a reply), tell dispatch right away
+    // instead of leaving the trip to sit silently unclaimed.
+    const { data: stillOpen } = await sb
+      .from("sms_offers")
+      .select("id")
+      .eq("booking_id", offer.booking_id)
+      .is("response", null);
+    if (!stillOpen || stillOpen.length === 0) {
+      const { data: stillPending } = await sb
+        .from("bookings")
+        .select("status")
+        .eq("id", offer.booking_id)
+        .single();
+      if (stillPending?.status === "pending") {
+        await ntfyPush({
+          title: `⚠ No driver for ${offer.trip_id}`,
+          body: `Every driver texted has passed on ${offer.trip_id}. Call one directly or assign manually.`,
+          tags: "warning,no_entry_sign",
+          priority: "urgent",
+        }).catch(() => {});
+      }
+    }
     return;
   }
 

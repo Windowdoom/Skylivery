@@ -130,12 +130,15 @@ export type Me = {
   role: "owner" | "dispatcher";
 };
 
+export type OfferStat = { total: number; responded: number; firstSentAt: string };
+
 export default function AdminDashboard({
   bookings,
   drivers,
   vehicles,
   monthly,
   volume,
+  offerStats,
   me,
 }: {
   bookings: Booking[];
@@ -143,6 +146,7 @@ export default function AdminDashboard({
   vehicles: Vehicle[];
   monthly: MonthlyRow[];
   volume: DriverVolumeRow[];
+  offerStats?: Record<string, OfferStat>;
   me: Me;
 }) {
   const isOwner = me.role === "owner";
@@ -268,7 +272,13 @@ export default function AdminDashboard({
             <Empty>No pending bookings.</Empty>
           ) : (
             pending.map((b) => (
-              <PendingCard key={b.id} b={b} drivers={drivers} vehicles={vehicles} />
+              <PendingCard
+                key={b.id}
+                b={b}
+                drivers={drivers}
+                vehicles={vehicles}
+                offerStat={offerStats?.[b.id]}
+              />
             ))
           )}
         </Column>
@@ -492,14 +502,44 @@ function BookingCore({ b }: { b: Booking }) {
   );
 }
 
+// Shows how the automatic SMS driver-offer blast is going for this
+// trip, so dispatch can spot a stale/unanswered offer without waiting
+// on a background job (Vercel's free cron tier is once-a-day, too slow
+// for this — this just reads live on every page load instead).
+function OfferStatusBadge({ stat }: { stat?: OfferStat }) {
+  if (!stat || stat.total === 0) return null;
+  const minutesAgo = Math.max(
+    0,
+    Math.round((Date.now() - new Date(stat.firstSentAt).getTime()) / 60000)
+  );
+  const allDeclined = stat.responded >= stat.total;
+  const stale = minutesAgo >= 10 && stat.responded < stat.total;
+  const tone = allDeclined
+    ? "border-red-500/40 bg-red-500/10 text-red-300"
+    : stale
+      ? "border-yellow-500/40 bg-yellow-500/10 text-yellow-300"
+      : "border-gold/25 bg-navy/40 text-cream/60";
+  return (
+    <div className={`mt-2 text-[10px] tracking-[0.15em] uppercase border rounded-md px-2 py-1 inline-flex items-center gap-1.5 ${tone}`}>
+      <span>📲</span>
+      <span>
+        {stat.responded}/{stat.total} drivers responded · texted {minutesAgo}m ago
+        {allDeclined ? " · all passed, call one" : stale ? " · no takers yet" : ""}
+      </span>
+    </div>
+  );
+}
+
 function PendingCard({
   b,
   drivers,
   vehicles,
+  offerStat,
 }: {
   b: Booking;
   drivers: Driver[];
   vehicles: Vehicle[];
+  offerStat?: OfferStat;
 }) {
   const { isOwner } = useRole();
   const [driverId, setDriverId] = useState("");
@@ -555,6 +595,7 @@ function PendingCard({
   return (
     <div className="bg-navy/70 border border-gold/40 rounded-xl p-4">
       <BookingCore b={b} />
+      <OfferStatusBadge stat={offerStat} />
       <div className="mt-3 grid grid-cols-2 gap-2">
         <select
           value={driverId}

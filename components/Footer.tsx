@@ -4,6 +4,8 @@ import { FleurIcon } from "./Fleur";
 const year = new Date().getFullYear();
 
 export default function Footer() {
+  const yelpUrl = process.env.YELP_URL || process.env.NEXT_PUBLIC_YELP_URL;
+  const googlePlaceId = process.env.GOOGLE_PLACE_ID;
   return (
     <footer className="bg-dark border-t border-gold/25 pt-16 pb-8">
       <div className="iron-lace max-w-6xl mx-auto -mt-16 mb-14 opacity-80" aria-hidden="true" />
@@ -60,6 +62,33 @@ export default function Footer() {
             <li>24/7 dispatch</li>
           </ul>
         </div>
+
+        {(yelpUrl || googlePlaceId) && (
+          <div>
+            <div className="text-gold text-xs uppercase tracking-[0.25em] mb-4">Reviews</div>
+            <ul className="space-y-2 text-cream/75 text-sm">
+              {googlePlaceId && (
+                <li>
+                  <a
+                    href={`https://search.google.com/local/writereview?placeid=${googlePlaceId}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="hover:text-gold"
+                  >
+                    Review us on Google
+                  </a>
+                </li>
+              )}
+              {yelpUrl && (
+                <li>
+                  <a href={yelpUrl} target="_blank" rel="noopener" className="hover:text-gold">
+                    Review us on Yelp
+                  </a>
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-14 pt-6 border-t border-gold/15 flex flex-col sm:flex-row justify-between items-center gap-3">
