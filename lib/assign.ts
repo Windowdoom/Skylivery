@@ -8,6 +8,7 @@ import { supabaseAdmin } from "./supabaseAdmin";
 import { ntfyPush } from "./ntfy";
 import { sendDriverAssigned } from "./email";
 import { sendSms, smsConfigured } from "./sms";
+import { mapsDirectionsUrl } from "./maps";
 
 const SECRET = () =>
   process.env.ADMIN_HMAC_SECRET ||
@@ -166,7 +167,10 @@ export async function assignDriverToBooking(input: {
             to: drvPhone,
             body: [
               `Confirmed: ${joined.trip_id}`,
-              `${joined.pickup_address} → ${joined.dropoff_address}`,
+              `Pickup: ${joined.pickup_address}`,
+              mapsDirectionsUrl(joined.pickup_address),
+              `Drop: ${joined.dropoff_address}`,
+              mapsDirectionsUrl(joined.dropoff_address),
               `${joined.trip_date} ${joined.trip_time}`,
               `Customer: ${joined.customer_name} · ${joined.customer_phone}`,
               joined.paid
