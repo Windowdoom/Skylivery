@@ -748,12 +748,16 @@ function AssignedCard({
 
   function complete() {
     start(async () => {
-      // Already paid (e.g. Square link + webhook): keep the recorded
-      // method and paid state; the dropdown is hidden in that case.
-      if (b.paid) {
-        await markCompleted(b.id, b.payment_method || "square", true);
-      } else {
-        await markCompleted(b.id, paymentMethod);
+      try {
+        // Already paid (e.g. Square link + webhook): keep the recorded
+        // method and paid state; the dropdown is hidden in that case.
+        if (b.paid) {
+          await markCompleted(b.id, b.payment_method || "square", true);
+        } else {
+          await markCompleted(b.id, paymentMethod);
+        }
+      } catch (e) {
+        alert(e instanceof Error ? e.message : "Completion failed.");
       }
     });
   }
