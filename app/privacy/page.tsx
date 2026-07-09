@@ -90,14 +90,14 @@ export default function PrivacyPage() {
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-cream/80">
                 <li><strong className="text-cream">Square</strong> for card processing and hosted checkout</li>
-                <li><strong className="text-cream">Google Maps</strong> for geocoding addresses and calculating driving distance</li>
-                <li><strong className="text-cream">Supabase</strong> for encrypted database storage of your booking</li>
-                <li><strong className="text-cream">Vercel</strong> for website hosting</li>
-                <li><strong className="text-cream">Google (Gmail)</strong> for sending you booking emails from skyliveryllc@gmail.com</li>
+                <li>A <strong className="text-cream">mapping and address-verification provider</strong> to confirm pickup/drop-off locations and calculate driving distance</li>
+                <li>A <strong className="text-cream">secure cloud database provider</strong> to store your booking</li>
+                <li>A <strong className="text-cream">website hosting provider</strong></li>
+                <li>An <strong className="text-cream">email delivery service</strong> to send you booking emails from skyliveryllc@gmail.com</li>
                 <li>Your <strong className="text-cream">assigned chauffeur</strong>, who receives your name, phone number, pickup and drop-off addresses, and flight number if provided</li>
               </ul>
               <p className="mt-3">
-                Each of these providers has its own privacy policy governing how they handle data.
+                Each of these providers has its own privacy policy governing how they handle data, and each is a reputable, industry-standard vendor bound to keep your information confidential and secure.
               </p>
             </section>
 
@@ -106,7 +106,7 @@ export default function PrivacyPage() {
                 5. How we protect your information
               </h2>
               <p>
-                Traffic between your device and our website is encrypted with HTTPS. Booking records live in Supabase with encryption at rest. Only authenticated dispatch staff can view booking details, and access is logged. We take the security of your information seriously and use industry-standard measures to prevent unauthorized access. No system is perfectly secure, so we also encourage you to protect the email account where your bookings are sent.
+                Traffic between your device and our website is encrypted with HTTPS. Booking records are stored in an encrypted cloud database at rest. Only authenticated dispatch staff can view booking details, and access is logged. We take the security of your information seriously and use industry-standard measures to prevent unauthorized access. No system is perfectly secure, so we also encourage you to protect the email account where your bookings are sent.
               </p>
             </section>
 
