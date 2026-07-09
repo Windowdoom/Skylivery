@@ -210,6 +210,16 @@ export async function sendBookingConfirmation(b: {
                 <tr>
                   <td style="padding:12px 14px;background:#EFE3C4;border:1px solid #8C7A46;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
                     <strong>Pay in the car.</strong> Your driver carries a Square reader. Tap or insert on drop-off, or pay with cash. Please have reference <strong>${b.tripId}</strong> ready so the driver can log payment against your trip.
+                    ${
+                      b.paymentLink
+                        ? `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #8C7A46;">
+                            Prefer to settle it now? Use our secure Square link — the reference is already attached and your booking is marked paid automatically.
+                            <div style="margin-top:10px;">
+                              <a href="${b.paymentLink}" style="display:inline-block;padding:10px 20px;background:#0A1628;color:#C9A961;text-decoration:none;font-weight:700;letter-spacing:0.05em;border-radius:6px;font-size:13px;">Pay ${money(b.rate)} ahead →</a>
+                            </div>
+                          </div>`
+                        : ""
+                    }
                   </td>
                 </tr>
               </table>`;
@@ -267,6 +277,7 @@ export async function sendDriverAssigned(b: {
   vehicleDescription?: string | null;
   paid: boolean | null;
   paymentIntent: string | null;
+  paymentLink?: string | null;
   flightNumber?: string | null;
 }): Promise<void> {
   const t = getTransporter();
@@ -283,13 +294,20 @@ export async function sendDriverAssigned(b: {
         <strong style="color:#8C7A46;">Paid.</strong> Your fare of ${money(b.rate)} is on the books. Nothing to do at drop-off but say goodbye.
       </div>`;
     }
+    const payButton = b.paymentLink
+      ? `<div style="margin-top:12px;">
+          <a href="${b.paymentLink}" style="display:inline-block;padding:10px 20px;background:#C9A961;color:#0A1628;text-decoration:none;font-weight:700;letter-spacing:0.05em;border-radius:6px;font-size:13px;">Pay ${money(b.rate)} now →</a>
+        </div>`
+      : "";
     if (b.paymentIntent === "online") {
       return `<div style="padding:12px 14px;background:#EFE3C4;border-left:3px solid #C9A961;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
-        <strong style="color:#8C7A46;">Pay before pickup.</strong> Watch your inbox and phone for the secure Square link. Tap and pay in about ten seconds.
+        <strong style="color:#8C7A46;">Pay before pickup.</strong> ${b.paymentLink ? "Your secure Square link is below — reference already attached." : "Watch your inbox and phone for the secure Square link. Tap and pay in about ten seconds."}
+        ${payButton}
       </div>`;
     }
     return `<div style="padding:12px 14px;background:#EFE3C4;border-left:3px solid #C9A961;font-family:Arial,sans-serif;font-size:13px;color:#0A1628;line-height:1.5;">
-      <strong style="color:#8C7A46;">Pay in the car.</strong> Your driver carries a Square reader. Tap or insert on drop-off, or pay with cash. Gratuity is already included.
+      <strong style="color:#8C7A46;">Pay in the car.</strong> Your driver carries a Square reader. Tap or insert on drop-off, or pay with cash. Gratuity is already included.${b.paymentLink ? " Or settle it now with our secure Square link:" : ""}
+      ${payButton}
     </div>`;
   })();
 

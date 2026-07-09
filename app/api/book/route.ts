@@ -107,12 +107,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // If the customer chose "pay before" AND Square is configured, mint a
-    // Checkout link now so the confirmation email can include a real pay
-    // button. The link auto-populates the trip reference and prompts
-    // Square to send its branded receipt straight to the customer.
+    // Mint a Square Checkout link for every priced booking, whatever the
+    // payment choice. "Pay before" customers get it as the main button;
+    // "pay in car" customers get it as an option in the email, and the
+    // driver gets it on assignment so the fare can be settled from a
+    // phone in the vehicle. Either way the webhook auto-marks the
+    // booking paid the moment Square captures it.
     let paymentLink: string | null = null;
-    if (paymentIntent === "online" && rate && squareConfigured()) {
+    if (rate && squareConfigured()) {
       const link = await createCheckoutLink({
         tripId,
         amountCents: Math.round(Number(rate) * 100),
@@ -147,7 +149,9 @@ export async function POST(req: NextRequest) {
           : "Online link (pending manual send)"
         : paymentIntent === "invoice"
           ? "Invoice"
-          : "In-vehicle (card or cash)";
+          : paymentLink
+            ? "In-vehicle (card, cash, or Square link)"
+            : "In-vehicle (card or cash)";
 
     await Promise.allSettled([
       ntfyPush({

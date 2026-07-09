@@ -41,7 +41,7 @@ export async function assignDriver(
   const { data: joined } = await sb
     .from("bookings")
     .select(
-      "trip_id, customer_name, customer_phone, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, payment_intent, paid, flight_number, drivers(name, phone), vehicles(cpnc_number, make, model, color)"
+      "trip_id, customer_name, customer_phone, customer_email, pickup_address, dropoff_address, trip_date, trip_time, rate, payment_intent, payment_link, paid, flight_number, drivers(name, phone), vehicles(cpnc_number, make, model, color)"
     )
     .eq("id", bookingId)
     .single();
@@ -105,6 +105,9 @@ export async function assignDriver(
           !joined.paid && joined.payment_intent === "in-vehicle"
             ? `⚠ COLLECT $${joined.rate ?? "?"} · REF ${joined.trip_id}`
             : "",
+          !joined.paid && joined.payment_link
+            ? `Pay link: ${joined.payment_link}`
+            : "",
         ]
           .filter(Boolean)
           .join("\n"),
@@ -126,6 +129,7 @@ export async function assignDriver(
             vehicleDescription: vehDesc,
             paid: joined.paid,
             paymentIntent: joined.payment_intent,
+            paymentLink: joined.payment_link ?? null,
             flightNumber: joined.flight_number ?? null,
           })
         : Promise.resolve(),
@@ -319,11 +323,13 @@ export async function createBookingManually(input: {
   const { error } = await sb.from("bookings").insert(row);
   if (error) return { ok: false, error: error.message };
 
-  // If dispatcher chose Pay Before and Square is set up, mint a real
-  // checkout link so the customer gets the pay button in their email.
+  // Mint a checkout link for every priced booking (online AND in-car)
+  // so the customer can pay from the email at any point and the driver
+  // has a link to offer in the vehicle. Invoice bookings skip this —
+  // they get a Square Invoice instead.
   let paymentLink: string | null = null;
   if (
-    input.paymentIntent === "online" &&
+    input.paymentIntent !== "invoice" &&
     input.rate > 0 &&
     squareConfigured()
   ) {
