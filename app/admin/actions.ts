@@ -47,6 +47,72 @@ export async function assignDriver(
   return { ok: true };
 }
 
+// Corporate "call to quote" bookings (long trips over the online
+// mileage threshold) land as rate=0 with no driver offer or claim
+// button, since there's nothing to dispatch on yet — dispatch phones
+// the customer, agrees a price, and sets it here. That fare-in turns
+// it into a normal dispatchable trip: sends the customer their
+// confirmation now that the fare is known, and kicks off the same
+// driver SMS offer + claim-trip push every other booking gets.
+export async function quoteBooking(
+  bookingId: string,
+  rate: number
+): Promise<{ ok: boolean; error?: string }> {
+  const dispatcher = guard();
+  if (!rate || rate <= 0) {
+    return { ok: false, error: "Enter a fare greater than $0." };
+  }
+  const sb = supabaseAdmin();
+  const { data: booking, error } = await sb
+    .from("bookings")
+    .update({ rate })
+    .eq("id", bookingId)
+    .eq("status", "pending")
+    .select(
+      "trip_id, customer_name, customer_email, customer_phone, pickup_address, dropoff_address, trip_date, trip_time, passengers, service_type, payment_intent"
+    )
+    .single();
+  if (error || !booking) {
+    return { ok: false, error: error?.message || "Booking not found or no longer pending." };
+  }
+
+  await Promise.allSettled([
+    ntfyPush({
+      title: `Quote set · $${rate} · ${booking.trip_id}`,
+      body: [
+        `${booking.customer_name}`,
+        `↑ ${booking.pickup_address}`,
+        `↓ ${booking.dropoff_address}`,
+        `${booking.trip_date} ${booking.trip_time}`,
+        `Fare confirmed by ${dispatcher.name} — now dispatchable.`,
+      ].join("\n"),
+      tags: "moneybag,car",
+      click: claimUrl(booking.trip_id),
+      actions: [{ label: "Claim trip", url: claimUrl(booking.trip_id) }],
+    }),
+    booking.customer_email
+      ? sendBookingConfirmation({
+          to: booking.customer_email,
+          customerName: booking.customer_name,
+          tripId: booking.trip_id,
+          pickup: booking.pickup_address,
+          dropoff: booking.dropoff_address,
+          tripDate: booking.trip_date,
+          tripTime: booking.trip_time,
+          rate,
+          passengers: booking.passengers ?? 1,
+          serviceType: booking.service_type || "corporate",
+          paymentIntent: booking.payment_intent || "invoice",
+          paymentLink: null,
+        })
+      : Promise.resolve(),
+    offerTripToDrivers(booking.trip_id).catch(() => {}),
+  ]);
+
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 export async function markCompleted(
   bookingId: string,
   paymentMethod: string,

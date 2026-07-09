@@ -17,6 +17,7 @@ import {
   createVehicle,
   retireVehicle,
   activateVehicle,
+  quoteBooking,
 } from "@/app/admin/actions";
 
 export type Booking = {
@@ -545,7 +546,24 @@ function PendingCard({
   const { isOwner } = useRole();
   const [driverId, setDriverId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
+  const [quoteInput, setQuoteInput] = useState("");
   const [pending, start] = useTransition();
+
+  // Corporate "call to quote" trips land with rate 0 — nothing to
+  // dispatch until a human calls the customer and agrees a price.
+  const needsQuote = !b.rate || b.rate <= 0;
+
+  function submitQuote() {
+    const rate = Number(quoteInput);
+    if (!rate || rate <= 0) {
+      alert("Enter a fare greater than $0.");
+      return;
+    }
+    start(async () => {
+      const res = await quoteBooking(b.id, rate);
+      if (!res.ok) alert(res.error || "Failed to set fare.");
+    });
+  }
 
   function onPickDriver(id: string) {
     setDriverId(id);
@@ -598,42 +616,70 @@ function PendingCard({
     <div className="bg-navy/70 border border-gold/40 rounded-xl p-4">
       <BookingCore b={b} />
       <OfferStatusBadge stat={offerStat} />
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <select
-          value={driverId}
-          onChange={(e) => onPickDriver(e.target.value)}
-          className="bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
-        >
-          <option value="">Driver…</option>
-          {drivers.map((d) => (
-            <option key={d.id} value={d.id} className="bg-navy">
-              {d.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={vehicleId}
-          onChange={(e) => setVehicleId(e.target.value)}
-          className="bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
-        >
-          <option value="">Vehicle…</option>
-          {vehicles.filter((v) => v.active).map((v) => {
-            const desc = [v.make, v.model].filter(Boolean).join(" ");
-            return (
-              <option key={v.id} value={v.id} className="bg-navy">
-                {v.cpnc_number}{desc ? ` · ${desc}` : ""}
-              </option>
-            );
-          })}
-        </select>
-      </div>
-      <button
-        onClick={submit}
-        disabled={!driverId || pending}
-        className="mt-2 w-full bg-gold text-navy px-3 py-2 rounded-md text-sm font-bold hover:bg-cream disabled:opacity-50"
-      >
-        {pending ? "Assigning…" : "Send"}
-      </button>
+      {needsQuote ? (
+        <div className="mt-3">
+          <div className="text-[10px] tracking-[0.2em] uppercase text-yellow-300/90 mb-1.5">
+            Call-to-quote — set the fare after calling the customer
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={quoteInput}
+              onChange={(e) => setQuoteInput(e.target.value)}
+              placeholder="Fare $"
+              className="flex-1 bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
+            />
+            <button
+              onClick={submitQuote}
+              disabled={!quoteInput || pending}
+              className="bg-gold text-navy px-3 rounded-md text-sm font-bold hover:bg-cream disabled:opacity-50"
+            >
+              {pending ? "…" : "Set fare & dispatch"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <select
+              value={driverId}
+              onChange={(e) => onPickDriver(e.target.value)}
+              className="bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
+            >
+              <option value="">Driver…</option>
+              {drivers.map((d) => (
+                <option key={d.id} value={d.id} className="bg-navy">
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={vehicleId}
+              onChange={(e) => setVehicleId(e.target.value)}
+              className="bg-navy/60 border border-gold/25 rounded-md px-2 py-2 text-sm text-cream focus:border-gold focus:outline-none"
+            >
+              <option value="">Vehicle…</option>
+              {vehicles.filter((v) => v.active).map((v) => {
+                const desc = [v.make, v.model].filter(Boolean).join(" ");
+                return (
+                  <option key={v.id} value={v.id} className="bg-navy">
+                    {v.cpnc_number}{desc ? ` · ${desc}` : ""}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          <button
+            onClick={submit}
+            disabled={!driverId || pending}
+            className="mt-2 w-full bg-gold text-navy px-3 py-2 rounded-md text-sm font-bold hover:bg-cream disabled:opacity-50"
+          >
+            {pending ? "Assigning…" : "Send"}
+          </button>
+        </>
+      )}
       <TextCustomerButton b={b} />
       <div className="mt-2 flex items-center justify-between text-xs">
         <div className="flex items-center gap-3">
