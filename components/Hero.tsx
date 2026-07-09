@@ -64,9 +64,9 @@ export default function Hero() {
         <div className="text-center max-w-3xl mx-auto">
           <FadeIn>
             <span className="inline-flex items-center gap-3 text-[10px] tracking-[0.35em] uppercase text-gold mt-8 mb-8">
-              <FleurIcon className="w-3 h-4" />
+              <FleurIcon className="w-3 h-4 lamp-flicker" />
               Sky Livery LLC · Nouvelle-Orléans
-              <FleurIcon className="w-3 h-4" />
+              <FleurIcon className="w-3 h-4 lamp-flicker" />
             </span>
           </FadeIn>
 

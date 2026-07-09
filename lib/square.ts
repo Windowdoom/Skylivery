@@ -251,7 +251,7 @@ export async function refundByTripId(input: {
   try {
     // Look up recent payments and find the one for this trip.
     const search = await c.payments.list({
-      limit: "50" as unknown as number,
+      limit: 50,
       sortOrder: "DESC",
     });
 

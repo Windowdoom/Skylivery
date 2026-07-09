@@ -204,10 +204,31 @@ html, body {
   animation: drawLine 1s ease forwards 0.3s;
 }
 
+/* Gas-lamp flicker — warm, irregular, like a French Quarter lantern */
+@keyframes lampFlicker {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px rgba(201, 169, 97, 0.5)); }
+  7%  { opacity: 0.92; }
+  13% { opacity: 1; }
+  31% { opacity: 0.88; filter: drop-shadow(0 0 3px rgba(201, 169, 97, 0.3)); }
+  38% { opacity: 1; }
+  62% { opacity: 0.95; }
+  74% { opacity: 0.85; filter: drop-shadow(0 0 8px rgba(201, 169, 97, 0.6)); }
+  81% { opacity: 1; }
+}
+.lamp-flicker { animation: lampFlicker 5s ease-in-out infinite; }
+
+/* Wrought-iron lace border, like a Royal Street balcony rail */
+.iron-lace {
+  height: 14px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='14' viewBox='0 0 48 14'><g fill='none' stroke='%23C9A961' stroke-width='1' opacity='0.45'><path d='M0 13 L48 13'/><path d='M4 13 Q 12 1 24 7 Q 36 13 44 1'/><circle cx='24' cy='7' r='1.6'/></g></svg>");
+  background-repeat: repeat-x;
+  background-position: center bottom;
+}
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   .ken-burns, .drift-left, .drift-right, .gold-sweep, .marquee, .float-up,
-  .brass-shimmer, .brass-ring::before, .stag > *, .draw-line {
+  .brass-shimmer, .brass-ring::before, .stag > *, .draw-line, .lamp-flicker {
     animation: none !important;
   }
   .stag > * { opacity: 1; }

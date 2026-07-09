@@ -7,6 +7,7 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.skyliverynola.com"),
+  alternates: { canonical: "/" },
   title: "Sky Livery LLC | Luxury SUV Service New Orleans | Airport Transfers from $105",
   description:
     "Flat-rate luxury SUV service in New Orleans. MSY airport transfers, corporate travel, weddings, events. No surge pricing. Licensed and insured. Gratuity included. Book online or call (504) 339-6861.",

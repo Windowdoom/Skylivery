@@ -12,12 +12,15 @@ export default function CTA() {
           <Fleur className="mb-8" />
         </FadeIn>
         <FadeIn delay={0.05}>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-4">Ready when you are</p>
+          <p className="text-[10px] tracking-[0.3em] uppercase text-gold mb-4 lamp-flicker">
+            Laissez les bons temps rouler
+          </p>
           <h2 className="font-display text-4xl sm:text-5xl text-cream font-semibold mb-4">
             Ready to ride?
           </h2>
           <p className="text-cream/70 text-lg mb-10 max-w-xl mx-auto">
-            Get a flat-rate quote in seconds. Or call us. We dispatch 24 hours a day, seven days a week.
+            Get a flat-rate quote in seconds. Or call us. We dispatch 24 hours a day, seven days a
+            week — and the good times roll on schedule.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a

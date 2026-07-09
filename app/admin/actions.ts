@@ -402,13 +402,33 @@ export async function createBookingManually(input: {
 // Apply our published cancellation policy: figure out what percent of the
 // fare should be refunded based on how far out from pickup the cancel
 // happens. Returns a fraction 0..1.
+// Pickup date/time are stored as New Orleans local time, but Vercel runs
+// in UTC — parsing them bare would shift everything 5–6 hours. Interpret
+// them in America/Chicago using the real DST offset at that instant.
+function pickupMsCentral(tripDate: string, hhmm: string): number {
+  const asUtc = new Date(`${tripDate}T${hhmm}:00Z`).getTime();
+  if (Number.isNaN(asUtc)) return NaN;
+  const part = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    timeZoneName: "shortOffset",
+  })
+    .formatToParts(new Date(asUtc))
+    .find((p) => p.type === "timeZoneName")?.value;
+  const m = part?.match(/GMT([+-]\d+)(?::(\d+))?/);
+  const offsetHours = m ? parseInt(m[1], 10) : -6;
+  const offsetMins = m?.[2] ? parseInt(m[2], 10) * Math.sign(offsetHours) : 0;
+  return asUtc - (offsetHours * 60 + offsetMins) * 60 * 1000;
+}
+
 function policyRefundFraction(
   tripDate: string,
   tripTime: string
 ): { fraction: number; label: string } {
   try {
-    const pickupIso = `${tripDate}T${tripTime}:00`;
-    const pickupMs = new Date(pickupIso).getTime();
+    // trip_time comes back from Postgres as HH:MM:SS (time column) but is
+    // stored as HH:MM from the forms — normalize to HH:MM exactly once.
+    const t = (tripTime || "").slice(0, 5);
+    const pickupMs = pickupMsCentral(tripDate, t);
     if (Number.isNaN(pickupMs)) return { fraction: 1, label: "unknown timing" };
     const hoursUntil = (pickupMs - Date.now()) / (60 * 60 * 1000);
     if (hoursUntil >= 2) return { fraction: 1, label: "2+ hours out" };

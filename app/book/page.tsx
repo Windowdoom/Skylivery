@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Book Your Ride | Sky Livery LLC | Luxury SUV, New Orleans",
   description:
     "Reserve a luxury SUV in New Orleans. Flat rate, gratuity included, no surge. MSY airport transfers, hourly charter, weddings, corporate. Book online in 60 seconds.",
+  alternates: { canonical: "https://www.skyliverynola.com/book" },
 };
 
 const promises = [

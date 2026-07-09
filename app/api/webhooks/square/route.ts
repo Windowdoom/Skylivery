@@ -56,39 +56,26 @@ export async function POST(req: NextRequest) {
   const valid = verifyWebhookSignature(raw, sig, url);
   const sigConfigured = !!process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
 
-  // Fire a diagnostic ntfy on every event so we can see whether Square is
-  // reaching us and what's inside. Once we've confirmed the pipeline
-  // works with real bookings, tighten this back to only the completed path.
   let event: SquareEvent = {};
   try {
     event = JSON.parse(raw);
   } catch {
-    // ignore parse error — we'll still fire diagnostic
+    // fall through — treated as an event with no payment below
   }
   const payment = event?.data?.object?.payment;
-  await ntfyPush({
-    title: `Square webhook: ${event?.type ?? "unknown"}`,
-    body: [
-      `Event ID: ${event?.event_id ?? "—"}`,
-      `Type: ${event?.type ?? "—"}`,
-      `Sig configured: ${sigConfigured ? "yes" : "NO"}`,
-      `Sig valid: ${valid ? "yes" : "NO"}`,
-      payment
-        ? [
-            ``,
-            `Payment ID: ${payment.id ?? "—"}`,
-            `Status: ${payment.status ?? "—"}`,
-            `Amount: ${payment.amount_money?.amount ?? "—"}`,
-            `Reference ID: ${payment.reference_id ?? "—"}`,
-            `Note: ${payment.note ?? "—"}`,
-          ].join("\n")
-        : "(no payment object in payload)",
-    ].join("\n"),
-    tags: "test_tube,square",
-    priority: "default",
-  }).catch(() => {});
 
   if (!valid && sigConfigured) {
+    // Someone posted to our webhook with a bad signature — worth knowing.
+    await ntfyPush({
+      title: "Square webhook: BAD SIGNATURE",
+      body: [
+        `Type: ${event?.type ?? "unknown"}`,
+        `Event ID: ${event?.event_id ?? "—"}`,
+        `Rejected — signature did not verify.`,
+      ].join("\n"),
+      tags: "warning,square",
+      priority: "high",
+    }).catch(() => {});
     return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
@@ -98,7 +85,19 @@ export async function POST(req: NextRequest) {
 
   const tripId = extractTripId(payment);
   if (!tripId) {
+    // A real completed payment we couldn't match to a trip — dispatch
+    // should reconcile it manually in the Square dashboard.
     console.error("[square-webhook] no trip_id found on payment", payment.id);
+    await ntfyPush({
+      title: "Square payment UNMATCHED",
+      body: [
+        `Payment ID: ${payment.id ?? "—"}`,
+        `Amount: $${payment.amount_money?.amount ? Number(payment.amount_money.amount) / 100 : "?"}`,
+        `No trip reference found — check the Square dashboard and mark the booking paid by hand.`,
+      ].join("\n"),
+      tags: "warning,moneybag",
+      priority: "high",
+    }).catch(() => {});
     return NextResponse.json({ ok: true, unmatched: true });
   }
 
@@ -114,6 +113,17 @@ export async function POST(req: NextRequest) {
 
   if (!booking) {
     console.error("[square-webhook] no booking for trip_id", tripId);
+    await ntfyPush({
+      title: "Square payment for unknown trip",
+      body: [
+        `Reference: ${tripId}`,
+        `Payment ID: ${payment.id ?? "—"}`,
+        `Amount: $${payment.amount_money?.amount ? Number(payment.amount_money.amount) / 100 : "?"}`,
+        `Paid, but no matching booking in the system.`,
+      ].join("\n"),
+      tags: "warning,moneybag",
+      priority: "high",
+    }).catch(() => {});
     return NextResponse.json({ ok: true, unmatched: true });
   }
 
