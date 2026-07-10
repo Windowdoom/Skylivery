@@ -102,7 +102,7 @@ export default function Footer() {
         </div>
       </div>
       <p className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 text-cream/35 text-[11px] leading-relaxed">
-        Sky Livery serves the New Orleans area under a local chauffeur permit, including the North Shore, Kenner, and Metairie, and airport transfers to and from MSY. We are not an intercity or interstate carrier. Service outside our local area is offered at our discretion, not guaranteed, and our certified area will expand over time.
+        Sky Livery operates under a local chauffeur permit and abides by the laws, rules, and licensing requirements of the City of New Orleans and MSY, serving the Greater New Orleans area, including the North Shore, Kenner, Metairie, and airport transfers to and from MSY. We are not an intercity or interstate carrier. Service outside our local area is offered at our discretion, not guaranteed, and our certified area will expand over time.
       </p>
     </footer>
   );
