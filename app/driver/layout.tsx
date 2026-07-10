@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 // Scoped to /driver/* only, so the customer-facing site is untouched —
 // this is what makes "Add to Home Screen" on a driver's personal link
@@ -19,8 +19,11 @@ export const metadata: Metadata = {
   other: {
     "mobile-web-app-capable": "yes",
   },
-  themeColor: "#0A1628",
   icons: { apple: "/apple-icon.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0A1628",
 };
 
 export default function DriverLayout({ children }: { children: React.ReactNode }) {

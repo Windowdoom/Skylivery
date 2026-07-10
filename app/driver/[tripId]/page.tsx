@@ -10,6 +10,7 @@ import DriverClaimButton from "@/components/admin/DriverClaimButton";
 import DriverTripCard from "@/components/admin/DriverTripCard";
 import AutoRefresh from "@/components/AutoRefresh";
 import LocationReporter from "@/components/LocationReporter";
+import DriverConfigError from "@/components/DriverConfigError";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -40,7 +41,12 @@ export default async function DriverTripPage({
     return <Shell title="Invalid link">This link isn&apos;t valid. Ask dispatch to resend it.</Shell>;
   }
 
-  const sb = supabaseAdmin();
+  let sb;
+  try {
+    sb = supabaseAdmin();
+  } catch {
+    return <DriverConfigError />;
+  }
   const [{ data: booking }, { data: driver }] = await Promise.all([
     sb
       .from("bookings")

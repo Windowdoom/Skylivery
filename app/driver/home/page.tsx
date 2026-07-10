@@ -3,6 +3,7 @@ import { verifyDriverHomeToken, driverHistoryUrl, driverEarningsUrl } from "@/li
 import DriverTripCard from "@/components/admin/DriverTripCard";
 import AutoRefresh from "@/components/AutoRefresh";
 import LocationReporter from "@/components/LocationReporter";
+import DriverConfigError from "@/components/DriverConfigError";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -44,7 +45,12 @@ export default async function DriverHomePage({
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const sb = supabaseAdmin();
+  let sb;
+  try {
+    sb = supabaseAdmin();
+  } catch {
+    return <DriverConfigError />;
+  }
   const [{ data: driver }, { data: trip }, { data: weekTrips }] = await Promise.all([
     sb.from("drivers").select("name, payout_percent").eq("id", driverId).single(),
     sb

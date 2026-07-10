@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import DriverSetupForm from "@/components/admin/DriverSetupForm";
+import DriverConfigError from "@/components/DriverConfigError";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -13,7 +14,12 @@ export const metadata = {
 // anyone, not a private per-driver push link.
 
 export default async function DriverSetupPage() {
-  const sb = supabaseAdmin();
+  let sb;
+  try {
+    sb = supabaseAdmin();
+  } catch {
+    return <DriverConfigError />;
+  }
   const { data: drivers } = await sb
     .from("drivers")
     .select("id, name")

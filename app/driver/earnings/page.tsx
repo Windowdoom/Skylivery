@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyDriverEarningsToken, driverHomeUrl, driverHistoryUrl } from "@/lib/driverTrip";
+import DriverConfigError from "@/components/DriverConfigError";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -47,7 +48,12 @@ export default async function DriverEarningsPage({
   const weekStart = startOfWeek();
   const todayStart = startOfToday();
 
-  const sb = supabaseAdmin();
+  let sb;
+  try {
+    sb = supabaseAdmin();
+  } catch {
+    return <DriverConfigError />;
+  }
   const [{ data: driver }, { data: weekTrips }] = await Promise.all([
     sb.from("drivers").select("name, payout_percent").eq("id", driverId).single(),
     sb
