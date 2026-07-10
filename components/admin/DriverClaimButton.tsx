@@ -14,13 +14,14 @@ export default function DriverClaimButton({
   token: string;
   vehicleId: string | null;
 }) {
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"claim" | "decline" | null>(null);
   const [done, setDone] = useState(false);
+  const [declined, setDeclined] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function claim() {
     if (busy) return;
-    setBusy(true);
+    setBusy("claim");
     setError(null);
     try {
       const res = await fetch("/api/driver/claim", {
@@ -37,7 +38,25 @@ export default function DriverClaimButton({
     } catch {
       setError("Network error, try again.");
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  }
+
+  async function decline() {
+    if (busy) return;
+    setBusy("decline");
+    setError(null);
+    try {
+      await fetch("/api/driver/decline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tripId, driverId, token }),
+      });
+      setDeclined(true);
+    } catch {
+      setError("Network error, try again.");
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -50,16 +69,33 @@ export default function DriverClaimButton({
     );
   }
 
+  if (declined) {
+    return (
+      <div className="mt-4 bg-navy/60 border border-gold/25 rounded-xl p-4 text-center">
+        <div className="text-cream/70 text-sm">Passed. We&apos;ll send you the next one.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4">
       {error && <p className="text-red-400 text-xs mb-2">{error}</p>}
-      <button
-        onClick={claim}
-        disabled={busy}
-        className="w-full py-3 bg-gold text-navy rounded-lg font-bold tracking-wide hover:bg-cream transition-colors disabled:opacity-50"
-      >
-        {busy ? "Claiming…" : "Claim trip"}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={decline}
+          disabled={busy !== null}
+          className="flex-1 py-3 border border-cream/25 text-cream/70 rounded-lg font-semibold tracking-wide hover:border-cream/50 hover:text-cream transition-colors disabled:opacity-50"
+        >
+          {busy === "decline" ? "…" : "Pass"}
+        </button>
+        <button
+          onClick={claim}
+          disabled={busy !== null}
+          className="flex-[2] py-3 bg-gold text-navy rounded-lg font-bold tracking-wide hover:bg-cream transition-colors disabled:opacity-50"
+        >
+          {busy === "claim" ? "Claiming…" : "Claim trip"}
+        </button>
+      </div>
     </div>
   );
 }

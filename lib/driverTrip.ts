@@ -88,3 +88,27 @@ export function driverHomeUrl(driverId: string): string {
   const base = process.env.PUBLIC_SITE_URL || "https://www.skyliverynola.com";
   return `${base}/driver/home?d=${driverId}&t=${driverHomeToken(driverId)}`;
 }
+
+// Persistent "my earnings" link — today/this-week totals and payout,
+// same bookmark-once pattern as home/history.
+export function driverEarningsToken(driverId: string): string {
+  return createHmac("sha256", SECRET())
+    .update(`driverearnings:${driverId}`)
+    .digest("hex")
+    .slice(0, 20);
+}
+
+export function verifyDriverEarningsToken(driverId: string, token: string): boolean {
+  const expected = driverEarningsToken(driverId);
+  if (!token || token.length !== expected.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(token), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+}
+
+export function driverEarningsUrl(driverId: string): string {
+  const base = process.env.PUBLIC_SITE_URL || "https://www.skyliverynola.com";
+  return `${base}/driver/earnings?d=${driverId}&t=${driverEarningsToken(driverId)}`;
+}
