@@ -36,7 +36,10 @@ export default function TermsPage() {
                 1. Who we are
               </h2>
               <p>
-                Sky Livery LLC (&ldquo;Sky Livery,&rdquo; &ldquo;we,&rdquo; &ldquo;our&rdquo;) is a licensed and insured luxury SUV chauffeur service based in New Orleans, Louisiana. We provide airport transfers, corporate transportation, weddings, hourly charter, and event transportation across the Greater New Orleans metropolitan area and beyond. By booking a ride with us, whether through the website at skyliverynola.com or by calling dispatch, you agree to the terms below.
+                Sky Livery LLC (&ldquo;Sky Livery,&rdquo; &ldquo;we,&rdquo; &ldquo;our&rdquo;) is a licensed and insured luxury SUV chauffeur service serving the New Orleans area. We provide airport transfers, corporate transportation, weddings, hourly charter, and event transportation within our permitted local service area. By booking a ride with us, whether through the website at skyliverynola.com or by calling dispatch, you agree to the terms below.
+              </p>
+              <p className="mt-3">
+                Sky Livery operates under a local New Orleans-area chauffeur permit covering trips within the Greater New Orleans area, including the North Shore, Kenner, and Metairie. This includes transfers to and from Louis Armstrong New Orleans International Airport (MSY), which fall within that local jurisdiction. Sky Livery does not hold itself out as an intercity or interstate common carrier, and nothing on this site or in our marketing should be read as an offer of intrastate or interstate transportation requiring separate state-level authorization. Any trip outside our local service area is offered at our discretion on a case-by-case basis and is not a standing service. We plan to expand our certified service area over time; this policy will be updated when that happens.
               </p>
             </section>
 
