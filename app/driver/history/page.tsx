@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyDriverHistoryToken } from "@/lib/driverTrip";
+import DriverConfigError from "@/components/DriverConfigError";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,7 +30,12 @@ export default async function DriverHistoryPage({
     );
   }
 
-  const sb = supabaseAdmin();
+  let sb;
+  try {
+    sb = supabaseAdmin();
+  } catch {
+    return <DriverConfigError />;
+  }
   const [{ data: driver }, { data: trips }] = await Promise.all([
     sb.from("drivers").select("name").eq("id", driverId).single(),
     sb

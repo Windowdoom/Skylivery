@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { verifyDriverPin } from "@/lib/driverPin";
-import { driverHistoryUrl, driverHomeUrl } from "@/lib/driverTrip";
+import { driverHistoryUrl, driverHomeUrl, driverEarningsUrl } from "@/lib/driverTrip";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       historyUrl: driverHistoryUrl(driverId),
       homeUrl: driverHomeUrl(driverId),
+      earningsUrl: driverEarningsUrl(driverId),
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "unknown";

@@ -19,6 +19,7 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
   const [error, setError] = useState<string | null>(null);
   const [historyUrl, setHistoryUrl] = useState<string | null>(null);
   const [homeUrl, setHomeUrl] = useState<string | null>(null);
+  const [earningsUrl, setEarningsUrl] = useState<string | null>(null);
 
   async function enable() {
     if (!driverId || pin.length !== 4 || busy) return;
@@ -59,6 +60,7 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
       } else {
         setHistoryUrl(data.historyUrl || null);
         setHomeUrl(data.homeUrl || null);
+        setEarningsUrl(data.earningsUrl || null);
       }
     } catch {
       setError("Something went wrong. Try again, or ask dispatch for help.");
@@ -88,6 +90,14 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
           Bookmark that link (or add it to your home screen), it always shows what&apos;s assigned to you right
           now, even if a notification doesn&apos;t show up.
         </p>
+        {earningsUrl && (
+          <a
+            href={earningsUrl}
+            className="block mt-3 py-2.5 border border-gold/40 text-cream/80 rounded-lg text-sm hover:border-gold hover:text-gold"
+          >
+            View my earnings
+          </a>
+        )}
         <a
           href={historyUrl}
           className="block mt-3 py-2.5 border border-gold/40 text-cream/80 rounded-lg text-sm hover:border-gold hover:text-gold"

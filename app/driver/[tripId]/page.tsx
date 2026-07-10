@@ -1,8 +1,16 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { verifyDriverTripToken, driverHistoryUrl, driverHomeUrl } from "@/lib/driverTrip";
+import {
+  verifyDriverTripToken,
+  driverHistoryUrl,
+  driverHomeUrl,
+  driverHomeToken,
+  driverEarningsUrl,
+} from "@/lib/driverTrip";
 import DriverClaimButton from "@/components/admin/DriverClaimButton";
 import DriverTripCard from "@/components/admin/DriverTripCard";
 import AutoRefresh from "@/components/AutoRefresh";
+import LocationReporter from "@/components/LocationReporter";
+import DriverConfigError from "@/components/DriverConfigError";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -33,7 +41,12 @@ export default async function DriverTripPage({
     return <Shell title="Invalid link">This link isn&apos;t valid. Ask dispatch to resend it.</Shell>;
   }
 
-  const sb = supabaseAdmin();
+  let sb;
+  try {
+    sb = supabaseAdmin();
+  } catch {
+    return <DriverConfigError />;
+  }
   const [{ data: booking }, { data: driver }] = await Promise.all([
     sb
       .from("bookings")
@@ -77,7 +90,12 @@ export default async function DriverTripPage({
               {booking.trip_date} · {booking.trip_time}
               {booking.flight_number ? ` · ✈ ${booking.flight_number}` : ""}
             </div>
-            <DriverClaimButton tripId={tripId} driverId={driverId} token={token} vehicleId={driver.primary_vehicle} />
+            <DriverClaimButton
+              tripId={tripId}
+              driverId={driverId}
+              token={token}
+              vehicleId={driver.primary_vehicle}
+            />
           </div>
         </div>
       </main>
@@ -103,11 +121,18 @@ export default async function DriverTripPage({
           <h1 className="font-display text-2xl text-cream mt-1">Your trip</h1>
         </div>
         <DriverTripCard booking={booking} />
+        <LocationReporter driverId={driverId} token={driverHomeToken(driverId)} />
         <a
           href={driverHomeUrl(driverId)}
           className="block text-center mt-4 text-cream text-sm font-semibold hover:text-gold"
         >
           My current trip (bookmark this)
+        </a>
+        <a
+          href={driverEarningsUrl(driverId)}
+          className="block text-center mt-2 text-cream/50 text-xs hover:text-gold"
+        >
+          View my earnings
         </a>
         <a
           href={driverHistoryUrl(driverId)}

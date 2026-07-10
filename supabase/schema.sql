@@ -148,6 +148,23 @@ create index if not exists driver_push_subs_driver_idx on public.driver_push_sub
 grant all on public.driver_push_subscriptions to service_role;
 
 -- ============================================================
+-- driver_locations — one row per driver, last-known GPS position.
+-- Reported by the browser's own Geolocation API while a driver has
+-- /driver/home or an active trip page open in the foreground (no
+-- native app, no background tracking — see lib/driverTrip.ts's
+-- driverHomeToken for the auth this rides on). Upserted, not
+-- appended, so this is always just "where were they last seen."
+-- ============================================================
+create table if not exists public.driver_locations (
+  driver_id uuid primary key references public.drivers(id) on delete cascade,
+  lat double precision not null,
+  lng double precision not null,
+  updated_at timestamptz not null default now()
+);
+
+grant all on public.driver_locations to service_role;
+
+-- ============================================================
 -- Views (documented, not defined — see note at top of file)
 -- ============================================================
 --
