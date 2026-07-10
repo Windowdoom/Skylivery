@@ -1,6 +1,7 @@
 import { mapsTripUrl } from "@/lib/maps";
 import { completeToken } from "@/lib/complete";
 import CompleteForm from "./CompleteForm";
+import SquareChargeButton from "./SquareChargeButton";
 
 // Full trip details for a driver's currently assigned trip: customer
 // contact, tap-to-navigate pickup/dropoff, the Square pay link, a
@@ -10,6 +11,7 @@ import CompleteForm from "./CompleteForm";
 // page (the fallback for when a push never showed).
 export default function DriverTripCard({
   booking,
+  callbackUrl,
 }: {
   booking: {
     trip_id: string;
@@ -25,6 +27,7 @@ export default function DriverTripCard({
     payment_link: string | null;
     flight_number: string | null;
   };
+  callbackUrl: string;
 }) {
   const smsBody = `Hi ${booking.customer_name.split(" ")[0]}, this is your Sky Livery driver. On the way.`;
   const textCustomerHref = `sms:${booking.customer_phone.replace(/[^\d+]/g, "")}?&body=${encodeURIComponent(smsBody)}`;
@@ -61,13 +64,12 @@ export default function DriverTripCard({
       </div>
 
       {!booking.paid && booking.payment_link && (
-        <a
-          href={booking.payment_link}
-          target="_blank"
-          className="block text-center py-2.5 bg-navy border border-gold/50 text-gold rounded-lg font-semibold hover:bg-gold/10"
-        >
-          Tap to charge ${booking.rate ?? "?"}
-        </a>
+        <SquareChargeButton
+          tripId={booking.trip_id}
+          rate={booking.rate}
+          paymentLink={booking.payment_link}
+          callbackUrl={callbackUrl}
+        />
       )}
       {booking.paid && (
         <div className="text-emerald-300 text-xs bg-emerald-400/10 border border-emerald-400/30 rounded-md px-3 py-2">

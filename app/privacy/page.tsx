@@ -147,7 +147,21 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                9. Cookies and tracking
+                9. Chauffeur location sharing
+              </h2>
+              <p className="mb-3">
+                While a Sky Livery chauffeur has an active trip open on their phone, their device may share its live location with dispatch so the trip can be monitored. This applies only to chauffeurs on file with dispatch, never to riders, and only while a trip screen is actively open on the chauffeur&apos;s phone.
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-cream/80">
+                <li>Location is shared only in the foreground — it stops the moment the chauffeur closes that page or their phone locks. There is no background or continuous tracking.</li>
+                <li>Only the chauffeur&apos;s most recent known position is stored; we do not keep a location history or route log.</li>
+                <li>A chauffeur can decline to allow location access in their browser and continue using every other part of the dispatch system normally.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="font-display text-2xl text-cream font-semibold mb-3">
+                10. Cookies and tracking
               </h2>
               <p>
                 Our website uses only strictly necessary cookies to keep dispatch signed in and to secure the booking form. We do not use advertising cookies or cross-site tracking. If we ever add analytics to help us understand which pages are used, we will use a privacy-friendly, cookieless option.
@@ -156,7 +170,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                10. Children
+                11. Children
               </h2>
               <p>
                 Our service is intended for adults 18 and older. We do not knowingly collect information from anyone under 13. If you believe a minor has provided us information, contact us and we will delete it.
@@ -165,7 +179,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="font-display text-2xl text-cream font-semibold mb-3">
-                11. Changes to this policy
+                12. Changes to this policy
               </h2>
               <p>
                 We may revise this policy from time to time. The version in effect at the time of your booking applies. Material changes are noted with a new &ldquo;Last updated&rdquo; date. Continued use of the service after an update means you accept the current policy.

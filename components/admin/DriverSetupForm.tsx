@@ -1,7 +1,26 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type DriverOpt = { id: string; name: string };
+
+// Remembers a successful setup on this device so reopening the setup
+// link doesn't ask a driver to pick their name and re-enter their PIN
+// every time — only the first visit (or a fresh phone) should ever
+// need the form. Push notifications themselves are already per-device
+// via the browser's own subscription; this just mirrors that locally
+// so our UI stops pretending it doesn't know.
+const STORAGE_KEY = "sl_driver_setup";
+
+type SavedSetup = { homeUrl: string; historyUrl: string; earningsUrl: string | null };
+
+function loadSaved(): SavedSetup | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as SavedSetup) : null;
+  } catch {
+    return null;
+  }
+}
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -20,6 +39,15 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
   const [historyUrl, setHistoryUrl] = useState<string | null>(null);
   const [homeUrl, setHomeUrl] = useState<string | null>(null);
   const [earningsUrl, setEarningsUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = loadSaved();
+    if (saved) {
+      setHomeUrl(saved.homeUrl);
+      setHistoryUrl(saved.historyUrl);
+      setEarningsUrl(saved.earningsUrl);
+    }
+  }, []);
 
   async function enable() {
     if (!driverId || pin.length !== 4 || busy) return;
@@ -61,6 +89,21 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
         setHistoryUrl(data.historyUrl || null);
         setHomeUrl(data.homeUrl || null);
         setEarningsUrl(data.earningsUrl || null);
+        if (data.homeUrl && data.historyUrl) {
+          try {
+            localStorage.setItem(
+              STORAGE_KEY,
+              JSON.stringify({
+                homeUrl: data.homeUrl,
+                historyUrl: data.historyUrl,
+                earningsUrl: data.earningsUrl || null,
+              })
+            );
+          } catch {
+            // localStorage unavailable (private browsing, etc) — setup
+            // still succeeded, it'll just ask again next visit.
+          }
+        }
       }
     } catch {
       setError("Something went wrong. Try again, or ask dispatch for help.");
@@ -104,6 +147,19 @@ export default function DriverSetupForm({ drivers }: { drivers: DriverOpt[] }) {
         >
           View my trip history
         </a>
+        <button
+          onClick={() => {
+            try {
+              localStorage.removeItem(STORAGE_KEY);
+            } catch {}
+            setHomeUrl(null);
+            setHistoryUrl(null);
+            setEarningsUrl(null);
+          }}
+          className="text-cream/40 text-[10px] mt-5 hover:text-cream/70 underline"
+        >
+          Not you? Set up a different driver on this phone
+        </button>
       </div>
     );
   }

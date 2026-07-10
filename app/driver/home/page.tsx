@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { verifyDriverHomeToken, driverHistoryUrl, driverEarningsUrl } from "@/lib/driverTrip";
+import { verifyDriverHomeToken, driverHistoryUrl, driverEarningsUrl, driverHomeUrl } from "@/lib/driverTrip";
 import DriverTripCard from "@/components/admin/DriverTripCard";
 import AutoRefresh from "@/components/AutoRefresh";
 import LocationReporter from "@/components/LocationReporter";
@@ -108,7 +108,7 @@ export default async function DriverHomePage({
 
         {trip ? (
           <>
-            <DriverTripCard booking={trip} />
+            <DriverTripCard booking={trip} callbackUrl={driverHomeUrl(driverId)} />
             <LocationReporter driverId={driverId} token={token} />
           </>
         ) : (

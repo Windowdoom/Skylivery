@@ -5,6 +5,7 @@ import {
   driverHomeUrl,
   driverHomeToken,
   driverEarningsUrl,
+  driverTripUrl,
 } from "@/lib/driverTrip";
 import DriverClaimButton from "@/components/admin/DriverClaimButton";
 import DriverTripCard from "@/components/admin/DriverTripCard";
@@ -120,7 +121,7 @@ export default async function DriverTripPage({
           <div className="text-[10px] tracking-[0.3em] uppercase text-gold">Sky Livery dispatch</div>
           <h1 className="font-display text-2xl text-cream mt-1">Your trip</h1>
         </div>
-        <DriverTripCard booking={booking} />
+        <DriverTripCard booking={booking} callbackUrl={driverTripUrl(tripId, driverId)} />
         <LocationReporter driverId={driverId} token={driverHomeToken(driverId)} />
         <a
           href={driverHomeUrl(driverId)}
